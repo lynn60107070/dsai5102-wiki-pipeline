@@ -89,7 +89,21 @@ requests, so no custom image is needed until dbt arrives (L6).
 
 DAG `pageviews_hourly`: `wait_for_file` (sensor, reschedule mode) → `fetch` (S2) → `upload` → `cleanup`
 (runs even after a failure). Hourly from 25 Oct with catchup, at most 2 runs at once, 2 retries.
-Idempotent: a re-run overwrites the same two objects.
+Idempotent: a re-run overwrites the same two objects. `upload` updates the Airflow Dataset
+`s3://lake/raw/pageviews`.
+
+DAG `warehouse_hourly` (L9): `compact_clean_zone` → `dbt_build` → `export_marts`, plus an independent
+`check_freshness` that turns red when the stream stops writing (monitoring, not a blocker).
+- **Data-aware scheduling:** `DatasetOrTimeSchedule` = every hour at :20 **or** whenever the pageviews
+  Dataset is updated, so the two DAGs coordinate without either one triggering the other directly.
+- **Quality gate:** `dbt build` runs all data tests; if one fails, the task fails and `export_marts`
+  never runs, so Metabase keeps showing the last good data instead of wrong numbers.
+- **One run at a time** (`max_active_runs=1`), because DuckDB allows a single writer. No catchup: the
+  warehouse is rebuilt from the lake each time, so only the latest run matters.
+- Measured 25 Oct: a full run takes ~20 s (dbt build ~9 s).
+
+The stream services are **not** in Airflow: they run continuously as Compose services; Airflow only
+schedules batch work.
 
 ## 5c. Warehouse, serving and dashboard (thin slice, 25 Oct)
 

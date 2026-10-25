@@ -7,7 +7,8 @@ One run per UTC hour since 25 Oct 2026 (the first day of edit data), so catchup 
 wait_for_file  waits until Wikimedia has published the hour's file (it appears with some delay)
 fetch          ingest.pageviews.fetch_hour (Sumaiya, S2): download, keep Wikipedia rows, write
                articles.parquet (>= 10 views) + wiki_totals.parquet (docs/design.md section 7)
-upload         both files to s3://lake/raw/pageviews/dt=YYYY-MM-DD/hour=HH/ via the `minio_lake` connection
+upload         both files to s3://lake/raw/pageviews/dt=YYYY-MM-DD/hour=HH/ via the `minio_lake` connection;
+               updates the Dataset s3://lake/raw/pageviews, which triggers warehouse_hourly
 cleanup        removes the local copies, even if an earlier step failed
 
 Re-running an hour overwrites the same two objects, so retries and backfills are safe (idempotent).
@@ -15,8 +16,8 @@ Re-running an hour overwrites the same two objects, so retries and backfills are
 Hour alignment: the run for interval [HH:00, HH+1:00) fetches the file named ...-HH0000.gz. S2 checks in the
 Wikimedia docs whether that file holds the hour starting or ending at HH; if it is the ending hour, change
 `_file_hour` below to return start + 1 hour.
-The DAG is paused when first created; unpause it in the UI once S2 is merged. L9 extends it with
-dbt build -> export marts to Postgres.
+The DAG is paused when first created; unpause it in the UI once S2 is merged (and set
+`pageviews_enabled: true` in dbt/dbt_project.yml so the warehouse picks the files up).
 """
 import os
 import shutil
@@ -24,12 +25,14 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
+from airflow.datasets import Dataset
 from airflow.decorators import dag, task
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.sensors.base import PokeReturnValue
 
 LAKE_CONN = "minio_lake"
 BUCKET = "lake"
+PAGEVIEWS = Dataset("s3://lake/raw/pageviews")  # warehouse_hourly runs when this is updated
 STAGING = Path("/tmp/pageviews")  # tasks share the scheduler container (LocalExecutor)
 
 
@@ -72,7 +75,7 @@ def pageviews_hourly():
         paths = fetch_hour(hour.date(), hour.hour, _staging_dir(data_interval_start))
         return {name: str(path) for name, path in paths.items()}
 
-    @task
+    @task(outlets=[PAGEVIEWS])
     def upload(paths: dict, data_interval_start=None) -> list:
         hook = S3Hook(aws_conn_id=LAKE_CONN)
         prefix = f"raw/pageviews/dt={data_interval_start:%Y-%m-%d}/hour={data_interval_start:%H}"
