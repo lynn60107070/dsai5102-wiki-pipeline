@@ -40,6 +40,7 @@ x-airflow-common: &airflow-common
     DBT_PROFILES_DIR: /opt/airflow/project/dbt
     DBT_TARGET_PATH: /opt/airflow/warehouse/dbt-target
     DBT_LOG_PATH: /opt/airflow/logs/dbt
+    DBT_SEND_ANONYMOUS_USAGE_STATS: 'false'
   user: "${AIRFLOW_UID:-50000}:0"
   volumes:
     - ./airflow/dags:/opt/airflow/dags
