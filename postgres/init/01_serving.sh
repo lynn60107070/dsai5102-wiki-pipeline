@@ -17,4 +17,14 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname serving <<-EOSQL
     GRANT USAGE ON SCHEMA public TO metabase_ro;
     GRANT SELECT ON ALL TABLES IN SCHEMA public TO metabase_ro;
     ALTER DEFAULT PRIVILEGES FOR ROLE ${POSTGRES_USER} IN SCHEMA public GRANT SELECT ON TABLES TO metabase_ro;
+
+    -- Filled by the live-stats stream service; created here too, so the dashboard's live tile shows
+    -- "no results" instead of an error if Metabase is set up before the stream has written anything.
+    CREATE TABLE IF NOT EXISTS live_edits_per_minute (
+        minute_ts   timestamptz NOT NULL,
+        wiki_id     text        NOT NULL,
+        bot_edits   integer     NOT NULL,
+        human_edits integer     NOT NULL,
+        PRIMARY KEY (minute_ts, wiki_id)
+    );
 EOSQL
