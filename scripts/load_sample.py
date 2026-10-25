@@ -1,4 +1,4 @@
-"""Sample-data mode: upload sample/lake/ into the lake, but ONLY if the clean zone is still empty.
+"""Sample-data mode: upload sample/ into the lake, but ONLY if the clean zone is still empty.
 
 On a fresh clone the lake is empty, so the bundled sample hours go in and the first warehouse build has
 data to show. Anywhere the stream has already written data, this does nothing, so it can never mix
@@ -12,7 +12,7 @@ from pathlib import Path
 import boto3
 from botocore.config import Config
 
-SAMPLE = Path(os.environ.get("SAMPLE_DIR", "/opt/airflow/project/sample/lake"))
+SAMPLE = Path(os.environ.get("SAMPLE_DIR", "/opt/airflow/project/sample"))
 BUCKET = os.environ.get("LAKE_BUCKET", "lake")
 
 

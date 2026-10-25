@@ -16,7 +16,7 @@ import boto3
 from botocore.config import Config
 
 ROOT = Path(__file__).resolve().parent.parent
-SAMPLE = ROOT / "sample" / "lake"
+SAMPLE = ROOT / "sample"  # short paths: Windows limits full paths to 260 characters
 
 
 def load_env() -> dict:
@@ -50,7 +50,8 @@ def main():
         keys = [o["Key"] for o in s3.list_objects_v2(Bucket="lake", Prefix=prefix).get("Contents", [])]
         if len(keys) != 1 or "compacted" not in keys[0]:
             raise SystemExit(f"{prefix} has {len(keys)} files; run the compaction first (warehouse_hourly does)")
-        target = SAMPLE / keys[0]
+        count = keys[0].rsplit("-n", 1)[1]  # "<events>.parquet"
+        target = SAMPLE / prefix / f"sample-n{count}"
         target.parent.mkdir(parents=True, exist_ok=True)
         s3.download_file("lake", keys[0], str(target))
         total += target.stat().st_size
