@@ -39,7 +39,8 @@ docker compose exec raw-sink python -m stream.status
 | `broker` | Kafka (KRaft, single broker) |
 | `kafka-init` | Creates the topics, then exits |
 | `producer` | Reads Wikimedia EventStreams, keeps edits + new pages, writes to `wiki.raw` keyed by wiki |
-| `raw-sink` | Consumes `wiki.raw`, writes hourly `.jsonl.gz` files to the raw zone |
+| `raw-sink` | Consumes `wiki.raw`, writes gzipped JSON-lines files to the lake: `s3://lake/raw/edits/dt=/hour=/` |
+| `minio` | Data lake (S3 API on `:9000`). Web console: http://localhost:9001, log in with `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` from `.env` |
 
 Stop with `docker compose down` (data is kept). `docker compose down -v` also deletes the data.
 

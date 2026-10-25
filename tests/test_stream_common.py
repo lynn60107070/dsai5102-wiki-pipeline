@@ -1,8 +1,7 @@
 import unittest
 from datetime import datetime, timezone
-from pathlib import Path
 
-from stream.common import event_time, hour_dir, iter_sse, keep_event
+from stream.common import event_time, hour_prefix, iter_sse, keep_event
 
 
 class KeepEventTest(unittest.TestCase):
@@ -27,10 +26,19 @@ class EventTimeTest(unittest.TestCase):
                          datetime(2026, 10, 28, 23, 59, 59, tzinfo=timezone.utc))
 
 
-class HourDirTest(unittest.TestCase):
+class HourPrefixTest(unittest.TestCase):
     def test_hive_style_partition_in_utc(self):
         when = datetime(2026, 10, 28, 7, 30, tzinfo=timezone.utc)
-        self.assertEqual(hour_dir(Path("/data"), when), Path("/data/raw/edits/dt=2026-10-28/hour=07"))
+        self.assertEqual(hour_prefix(when), "raw/edits/dt=2026-10-28/hour=07")
+
+
+class ObjectNameTest(unittest.TestCase):
+    def test_event_count_round_trips_through_the_name(self):
+        from stream import lake
+        name = lake.part_name(1234)
+        self.assertTrue(name.endswith("-n1234.jsonl.gz"))
+        self.assertEqual(lake.count_from_name(f"raw/edits/dt=2026-10-28/hour=07/{name}"), 1234)
+        self.assertIsNone(lake.count_from_name("raw/edits/dt=2026-10-28/hour=07/part-1-host.jsonl.gz"))
 
 
 class IterSseTest(unittest.TestCase):

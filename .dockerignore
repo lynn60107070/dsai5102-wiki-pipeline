@@ -2,5 +2,5 @@
 *
 !stream/
 !ingest/
-stream/__pycache__
+**/__pycache__
 ingest/__pycache__

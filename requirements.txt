@@ -1,4 +1,6 @@
 # For running scripts and tests on your laptop (the containers install their own).
 kafka-python==2.3.2
 requests==2.34.2
+boto3==1.43.118
 pyarrow==26.0.0
+duckdb==2.0.0

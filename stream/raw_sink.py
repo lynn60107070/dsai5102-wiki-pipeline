@@ -1,30 +1,27 @@
-"""Raw sink: Kafka topic `wiki.raw` -> hourly gzipped JSON-lines files (the raw zone of the lake).
+"""Raw sink: Kafka topic `wiki.raw` -> raw zone of the lake (MinIO), one gzipped JSON-lines object per flush.
 
-Events are grouped by the UTC hour they happened in. Every FLUSH_SECONDS, each hour's buffer is
-written as a new file (first under a .tmp name, then renamed, so a crash never leaves a half-written
-file), and only then are the Kafka offsets committed. A crash can therefore repeat events but never
-lose them; dbt removes the duplicates by event id.
+Events are grouped by the UTC hour they happened in. Every FLUSH_SECONDS, each hour's buffer is uploaded
+as a new object under raw/edits/dt=YYYY-MM-DD/hour=HH/ (an S3 object only appears once it is complete,
+so a crash never leaves a half-written file), and only then are the Kafka offsets committed. A crash can
+therefore repeat events but never lose them; dbt removes the duplicates by event id.
 
 Run inside Docker: `python -m stream.raw_sink`
 """
-import gzip
 import json
 import logging
 import os
 import signal
-import socket
 import sys
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
-from pathlib import Path
 
 from kafka import KafkaConsumer
 from kafka.errors import NoBrokersAvailable
 
-from stream.common import BOOTSTRAP, RAW_TOPIC, event_time, hour_dir
+from stream import lake
+from stream.common import BOOTSTRAP, RAW_TOPIC, event_time, hour_prefix
 
-DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
 FLUSH_SECONDS = int(os.environ.get("FLUSH_SECONDS", "300"))
 GROUP_ID = os.environ.get("SINK_GROUP", "raw-archive")
 
@@ -46,25 +43,13 @@ def connect_consumer() -> KafkaConsumer:
             time.sleep(5)
 
 
-def write_files(buffers) -> int:
-    """Write each hour's buffered events to a new .jsonl.gz file in that hour's folder."""
-    name = f"part-{int(time.time() * 1000)}-{socket.gethostname()}.jsonl.gz"
-    for directory, lines in buffers.items():
-        directory.mkdir(parents=True, exist_ok=True)
-        final = directory / name
-        tmp = final.with_name(final.name + ".tmp")
-        with gzip.open(tmp, "wb") as f:
-            f.write(b"\n".join(lines) + b"\n")
-        tmp.replace(final)
-    return sum(len(lines) for lines in buffers.values())
-
-
-def flush(consumer, buffers):
+def flush(consumer, s3, buffers):
     if not buffers:
         return
-    written = write_files(buffers)
+    for prefix, lines in buffers.items():
+        lake.put_lines(s3, f"{prefix}/{lake.part_name(len(lines))}", lines)
     consumer.commit()
-    log.info("wrote %d events into %d hour folder(s)", written, len(buffers))
+    log.info("wrote %d events into %d hour folder(s)", sum(map(len, buffers.values())), len(buffers))
     buffers.clear()
 
 
@@ -72,8 +57,9 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))  # `docker compose stop` -> flush, then exit
 
+    s3 = lake.client()
     consumer = connect_consumer()
-    log.info("Reading %s as group %s; writing to %s every %d s", RAW_TOPIC, GROUP_ID, DATA_DIR, FLUSH_SECONDS)
+    log.info("Reading %s as group %s; writing to s3://%s every %d s", RAW_TOPIC, GROUP_ID, lake.BUCKET, FLUSH_SECONDS)
     buffers = defaultdict(list)
     last_flush = time.monotonic()
     try:
@@ -84,12 +70,12 @@ def main():
                         when = event_time(json.loads(record.value))
                     except (ValueError, KeyError, TypeError):
                         when = datetime.fromtimestamp(record.timestamp / 1000, tz=timezone.utc)
-                    buffers[hour_dir(DATA_DIR, when)].append(record.value)
+                    buffers[hour_prefix(when)].append(record.value)
             if time.monotonic() - last_flush >= FLUSH_SECONDS:
-                flush(consumer, buffers)
+                flush(consumer, s3, buffers)
                 last_flush = time.monotonic()
     finally:
-        flush(consumer, buffers)
+        flush(consumer, s3, buffers)
         consumer.close()
 
 

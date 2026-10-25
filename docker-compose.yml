@@ -1,7 +1,7 @@
 # Wikipedia live edits pipeline. Start everything: docker compose up -d --build
 #
-# Running now (L2, the collector): broker -> kafka-init -> producer -> raw-sink
-# Added later (see SCHEDULE.md): minio (L4), airflow + postgres (L5), dbt (L6), processor (L7), metabase (L6/S9)
+# Running now: broker -> kafka-init -> producer -> raw-sink -> minio (data lake)
+# Added later (see SCHEDULE.md): airflow + postgres (L5), dbt (L6), processor (L7), metabase (L6/S9)
 #
 # All data lives in Docker named volumes, never in this (OneDrive-synced) folder.
 
@@ -75,7 +75,7 @@ services:
     volumes:
       - collector_state:/state
 
-  # wiki.raw -> raw zone (hourly .jsonl.gz files). Moves to MinIO in L4.
+  # wiki.raw -> raw zone of the lake: s3://lake/raw/edits/dt=/hour=/part-*.jsonl.gz
   raw-sink:
     image: wiki-pipeline/stream
     command: python -m stream.raw_sink
@@ -85,14 +85,42 @@ services:
         condition: service_completed_successfully
       producer:
         condition: service_started
+      minio:
+        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP: broker:29092
-      DATA_DIR: /data
       FLUSH_SECONDS: ${FLUSH_SECONDS:-300}
+      S3_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?copy .env.example to .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?copy .env.example to .env}
+      DATA_DIR: /data   # only for the one-off backfill of pre-MinIO files (stream.backfill_local)
     volumes:
       - raw_data:/data
 
+  # Data lake (S3 API). MinIO stopped publishing free official images in 2025; this is the last
+  # free MinIO build, archived by Bitnami, pinned so it never changes under us.
+  # API on :9000, web console on http://localhost:9001 (log in with the .env credentials).
+  minio:
+    image: bitnamilegacy/minio:2025.7.23-debian-12-r5
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?copy .env.example to .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?copy .env.example to .env}
+      MINIO_DEFAULT_BUCKETS: lake
+    volumes:
+      - minio_data:/bitnami/minio/data
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
 volumes:
   kafka_data:
-  raw_data:
+  raw_data:          # pre-MinIO raw files (25 Oct); delete once backfilled and verified
   collector_state:
+  minio_data:

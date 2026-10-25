@@ -4,7 +4,6 @@ Nothing here talks to Kafka or the network, so the unit tests run without Docker
 """
 import os
 from datetime import datetime, timezone
-from pathlib import Path
 
 BOOTSTRAP = os.environ.get("KAFKA_BOOTSTRAP", "localhost:9092")
 RAW_TOPIC = os.environ.get("RAW_TOPIC", "wiki.raw")
@@ -28,10 +27,10 @@ def event_time(event: dict) -> datetime:
     return datetime.fromisoformat(event["meta"]["dt"].replace("Z", "+00:00"))
 
 
-def hour_dir(root: Path, when: datetime) -> Path:
-    """Raw-zone folder for one UTC hour: <root>/raw/edits/dt=YYYY-MM-DD/hour=HH (Hive-style partitions)."""
+def hour_prefix(when: datetime) -> str:
+    """Raw-zone prefix for one UTC hour: raw/edits/dt=YYYY-MM-DD/hour=HH (Hive-style partitions)."""
     when = when.astimezone(timezone.utc)
-    return Path(root) / "raw" / "edits" / f"dt={when:%Y-%m-%d}" / f"hour={when:%H}"
+    return f"raw/edits/dt={when:%Y-%m-%d}/hour={when:%H}"
 
 
 def iter_sse(lines):

@@ -45,14 +45,21 @@ Stream services run all the time as Compose services. Airflow only runs the sche
 ## 5. Lake layout (raw → clean, Hive-style partitions)
 
 ```
-raw/edits/dt=YYYY-MM-DD/hour=HH/part-*.jsonl.gz     ← live now (Docker volume raw_data; MinIO in L4)
+raw/edits/dt=YYYY-MM-DD/hour=HH/part-*-n<events>.jsonl.gz   ← live in MinIO (bucket `lake`) since 25 Oct
 raw/pageviews/dt=YYYY-MM-DD/hour=HH/articles.parquet      ← S2 + L5 (articles with ≥ 10 views)
 raw/pageviews/dt=YYYY-MM-DD/hour=HH/wiki_totals.parquet   ← S2 + L5 (all views, summed per wiki)
 clean/edits/dt=YYYY-MM-DD/*.parquet                 ← L4/L9 (merged, one file per day)
 ```
 
-The raw zone is kept exactly as received (ELT, schema-on-read, lecture 8). Duplicates from at-least-once
-delivery are removed in dbt by event id.
+The raw zone is kept exactly as received (ELT, schema-on-read, lecture 8): gzipped JSON lines, one object
+per sink flush, with the event count in the object name. Parquet only appears in the clean zone. DuckDB
+reads the raw zone straight from MinIO (`read_json('s3://lake/raw/edits/*/*/*.jsonl.gz', hive_partitioning=true)`,
+tested 25 Oct: 0.7 s for ~70k events). Duplicates from at-least-once delivery are removed in dbt by event id.
+
+**Why this MinIO image:** MinIO stopped publishing free official images in 2025 (Docker Hub and quay.io
+both refuse the pull). We use `bitnamilegacy/minio:2025.7.23-debian-12-r5`, the last free MinIO build,
+archived by Bitnami, pinned and multi-arch. Alternatives checked: SeaweedFS, RustFS, the `pgsty/minio`
+community rebuild. MinIO won because it matches the course demo and is the best-tested S3 target for DuckDB.
 
 ## 6. Star schema (warehouse, DuckDB + dbt)
 
