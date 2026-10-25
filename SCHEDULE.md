@@ -67,6 +67,12 @@ builds the batch-side pieces in parallel. Lynn's heavy build is 2–10 Nov.
 ➡️ Tomorrow:     (task IDs)
 ```
 Also post **one line on the collector** (running / gap from X to Y) until the window closes on 11 Nov.
+
+**Collector always-on period: until Wed 11 Nov 23:59 UTC** (Thu 12 Nov, 02:59 Qatar time). Until then
+Lynn's laptop stays plugged in, locked (never signed out) and online; sleep, hibernate and lid-close are off
+when plugged in, Docker starts on sign-in, and Windows Update is paused until 25 Nov. Short unplugged trips
+are fine (the producer catches up after waking). After 11 Nov it only runs while building and on demo day
+(start ~30 min before the presentation).
 Blocked? Message **immediately**. Don't wait for the evening.
 
 **Checkpoint call (15 min):** each person shows the tasks due (a container that runs, a DAG run in the
