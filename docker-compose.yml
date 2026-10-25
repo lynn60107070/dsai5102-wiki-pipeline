@@ -20,7 +20,7 @@ x-airflow-common: &airflow-common
   image: wiki-pipeline/airflow
   environment: &airflow-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${POSTGRES_PASSWORD:?copy .env.example to .env}@postgres/airflow
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${POSTGRES_PASSWORD:-change-me-postgres-123}@postgres/airflow
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__DEFAULT_TIMEZONE: utc
@@ -28,14 +28,14 @@ x-airflow-common: &airflow-common
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     # MinIO as an Airflow connection (conn id `minio_lake`), used by the DAGs through S3Hook.
     AIRFLOW_CONN_MINIO_LAKE: >-
-      {"conn_type": "aws", "login": "${MINIO_ROOT_USER}", "password": "${MINIO_ROOT_PASSWORD}",
+      {"conn_type": "aws", "login": "${MINIO_ROOT_USER:-lakeadmin}", "password": "${MINIO_ROOT_PASSWORD:-change-me-lake-123}",
       "extra": {"endpoint_url": "http://minio:9000", "region_name": "us-east-1"}}
-    WIKI_USER_AGENT: ${WIKI_USER_AGENT}
+    WIKI_USER_AGENT: ${WIKI_USER_AGENT:-dsai5102-wiki-pipeline/0.1 (https://github.com/lynn60107070/dsai5102-wiki-pipeline; student project)}
     PYTHONPATH: /opt/airflow/project
     # dbt + DuckDB warehouse (profiles in dbt/profiles.yml read these)
-    MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-    MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lakeadmin}
+    MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-lake-123}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-postgres-123}
     WAREHOUSE_PATH: /opt/airflow/warehouse/wiki.duckdb
     DBT_PROJECT_DIR: /opt/airflow/project/dbt
     DBT_PROFILES_DIR: /opt/airflow/project/dbt
@@ -48,6 +48,7 @@ x-airflow-common: &airflow-common
     - ./ingest:/opt/airflow/project/ingest
     - ./dbt:/opt/airflow/project/dbt
     - ./scripts:/opt/airflow/project/scripts
+    - ./sample:/opt/airflow/project/sample:ro
     - airflow_logs:/opt/airflow/logs
     - warehouse:/opt/airflow/warehouse
   depends_on: &airflow-depends
@@ -122,7 +123,7 @@ services:
         condition: service_completed_successfully
     environment:
       KAFKA_BOOTSTRAP: broker:29092
-      WIKI_USER_AGENT: ${WIKI_USER_AGENT:?copy .env.example to .env and set WIKI_USER_AGENT}
+      WIKI_USER_AGENT: ${WIKI_USER_AGENT:-dsai5102-wiki-pipeline/0.1 (https://github.com/lynn60107070/dsai5102-wiki-pipeline; student project)}
       STATE_DIR: /state
     volumes:
       - collector_state:/state
@@ -144,8 +145,8 @@ services:
       KAFKA_BOOTSTRAP: broker:29092
       FLUSH_SECONDS: ${FLUSH_SECONDS:-300}
       S3_ENDPOINT: http://minio:9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?copy .env.example to .env}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?copy .env.example to .env}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lakeadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-lake-123}
       DATA_DIR: /data   # only for the one-off backfill of pre-MinIO files (stream.backfill_local)
     volumes:
       - raw_data:/data
@@ -183,8 +184,8 @@ services:
       KAFKA_BOOTSTRAP: broker:29092
       FLUSH_SECONDS: ${FLUSH_SECONDS:-300}
       S3_ENDPOINT: http://minio:9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lakeadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-lake-123}
 
   # edits.per_minute -> Postgres serving.live_edits_per_minute (near-real-time dashboard tile)
   live-stats:
@@ -199,7 +200,7 @@ services:
         condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP: broker:29092
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-postgres-123}
 
   # Data lake (S3 API). MinIO stopped publishing free official images in 2025; this is the last
   # free MinIO build, archived by Bitnami, pinned so it never changes under us.
@@ -211,8 +212,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?copy .env.example to .env}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?copy .env.example to .env}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lakeadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-lake-123}
       MINIO_DEFAULT_BUCKETS: lake
     volumes:
       - minio_data:/bitnami/minio/data
@@ -233,9 +234,9 @@ services:
       - "5433:5432"
     environment:
       POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy .env.example to .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-postgres-123}
       POSTGRES_DB: airflow
-      METABASE_DB_PASSWORD: ${METABASE_DB_PASSWORD:?copy .env.example to .env}
+      METABASE_DB_PASSWORD: ${METABASE_DB_PASSWORD:-change-me-metabase-ro-123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
@@ -255,7 +256,7 @@ services:
       _AIRFLOW_DB_MIGRATE: 'true'
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_ADMIN_USER:-admin}
-      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:?copy .env.example to .env}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:-change-me-airflow-123}
 
   # Web UI: http://localhost:8080 (log in with AIRFLOW_ADMIN_USER / AIRFLOW_ADMIN_PASSWORD from .env)
   airflow-webserver:
@@ -305,7 +306,7 @@ services:
       MB_DB_PORT: 5432
       MB_DB_DBNAME: metabase
       MB_DB_USER: airflow
-      MB_DB_PASS: ${POSTGRES_PASSWORD}
+      MB_DB_PASS: ${POSTGRES_PASSWORD:-change-me-postgres-123}
       MB_ANON_TRACKING_ENABLED: 'false'
       MB_CHECK_FOR_UPDATES: 'false'
       JAVA_OPTS: -Xmx1g
@@ -318,6 +319,26 @@ services:
       timeout: 5s
       retries: 20
       start_period: 60s
+
+  # One-off, last to start: sample data into an empty lake (fresh clone only), first warehouse build
+  # through Airflow, Metabase setup. Safe on every `up`. Follow it: docker compose logs -f bootstrap
+  bootstrap:
+    <<: *airflow-common
+    restart: "no"
+    command: bash /opt/airflow/project/scripts/bootstrap.sh
+    environment:
+      <<: *airflow-env
+      METABASE_URL: http://metabase:3000
+      METABASE_ADMIN_EMAIL: ${METABASE_ADMIN_EMAIL:-admin@example.com}
+      METABASE_ADMIN_PASSWORD: ${METABASE_ADMIN_PASSWORD:-change-me-Metabase-123}
+      METABASE_DB_PASSWORD: ${METABASE_DB_PASSWORD:-change-me-metabase-ro-123}
+    depends_on:
+      airflow-scheduler:
+        condition: service_healthy
+      metabase:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
 
 volumes:
   kafka_data:

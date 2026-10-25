@@ -5,15 +5,18 @@ Safe to run again: each step checks whether its object already exists (by name) 
 chart in CARDS that is missing from the dashboard is added below the existing tiles.
 Sumaiya's dashboard (S9) is built on top of the "Wiki serving" connection this creates.
 
-Run on your laptop, with the stack up:  python scripts/metabase_setup.py
-(reads .env from the repo root; Metabase on http://localhost:3000)
+Runs automatically in the `bootstrap` service on `docker compose up`. To run it by hand on your laptop:
+  python scripts/metabase_setup.py
+Settings: environment variables first, then .env, then .env.example (repo root).
 """
+import os
 import time
 from pathlib import Path
 
 import requests
 
-BASE = "http://localhost:3000"
+BASE = os.environ.get("METABASE_URL", "http://localhost:3000")
+SETTINGS = ("METABASE_ADMIN_EMAIL", "METABASE_ADMIN_PASSWORD", "METABASE_DB_PASSWORD")
 DATABASE_NAME = "Wiki serving"
 DASHBOARD_NAME = "Wikipedia edits"
 
@@ -50,9 +53,20 @@ ORDER BY 1""",
 
 
 def load_env() -> dict:
-    env_file = Path(__file__).resolve().parent.parent / ".env"
-    pairs = (line.strip().split("=", 1) for line in env_file.read_text().splitlines())
-    return {k: v for k, *rest in pairs if rest and not k.startswith("#") for v in rest}
+    values = {}
+    root = Path(__file__).resolve().parent.parent
+    for name in (".env.example", ".env"):
+        path = root / name
+        if path.exists():
+            for line in path.read_text().splitlines():
+                if "=" in line and not line.startswith("#"):
+                    key, value = line.split("=", 1)
+                    values[key.strip()] = value.strip()
+    values.update({k: os.environ[k] for k in SETTINGS if k in os.environ})
+    missing = [k for k in SETTINGS if k not in values]
+    if missing:
+        raise SystemExit(f"missing settings: {', '.join(missing)}")
+    return values
 
 
 def wait_until_healthy():
@@ -63,7 +77,7 @@ def wait_until_healthy():
         except requests.RequestException:
             pass
         time.sleep(5)
-    raise SystemExit("Metabase is not up on http://localhost:3000 (is the stack running?)")
+    raise SystemExit(f"Metabase is not up on {BASE} (is the stack running?)")
 
 
 def as_list(response):
@@ -143,7 +157,7 @@ def main():
                     json={"dashcards": keep + new}).raise_for_status()
         print(f"added {len(new)} chart(s) to the dashboard")
 
-    print(f"done: {BASE}/dashboard/{dashboard_id}")
+    print(f"done: Metabase dashboard id {dashboard_id} ({DASHBOARD_NAME})")
 
 
 if __name__ == "__main__":

@@ -34,3 +34,6 @@ paper/*.fls
 .idea/
 .DS_Store
 Thumbs.db
+
+# sample-data mode: a few real hours of the clean zone, committed on purpose (scripts/make_sample.py)
+!sample/**/*.parquet
