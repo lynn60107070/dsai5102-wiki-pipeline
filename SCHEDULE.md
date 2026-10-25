@@ -101,7 +101,7 @@ Owns `docker-compose.yml`, `stream/`, `airflow/dags/`, `dbt/models/`, `scripts/`
 | L11 | ✅ **v1 done 25 Oct** (quick start, logins, architecture, services, operations, troubleshooting); add S6's diagram image at CP4. README v1: architecture diagram (S6), what each container does, setup, run, sample mode, troubleshooting [R: Reproducibility, Documentation] | 2 h | **CP4** |
 | L12 | 🚧 **Drafted 25 Oct** (`paper/sections/03`–`05`); still to add: S6 diagram, S7 tool table, dbt lineage figure, final numbers from the window. Report: architecture overview, design choices + justification (uses S7's table), implementation details (data flow, topics, schema, DAG, dbt lineage graph) [R: Documentation] | 5 h | **CP5** |
 | L13 | Slides: template, architecture, pipeline walkthrough, design decisions (~7 min); assemble the deck | 2 h | **CP5** |
-| L14 | Live demo script (what to click, in order) + backup screen recording in case the demo fails | 1 h | Rehearsal 2 |
+| L14 | 🚧 **Script written 25 Oct** ([docs/demo.md](docs/demo.md)); record the backup video at Rehearsal 2. Live demo script (what to click, in order) + backup screen recording in case the demo fails | 1 h | Rehearsal 2 |
 | L15 | Final package: repo access for the instructor checked, report PDF, submit | 1 h | **Tue 24 Nov** |
 | L16 | Paper setup **before handover**: LaTeX skeleton in `paper/` (one file per section, workflow in `paper/README.md`) + Lynn's Overleaf project that compiles the PDF. Sections arrive by PR; Lynn compile-checks, merges, copies into Overleaf | 1 h | **Sun 25 Oct** |
 
