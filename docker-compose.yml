@@ -2,7 +2,9 @@
 #
 # Stream:  broker -> kafka-init -> producer -> raw-sink -> minio (data lake)
 # Batch:   postgres <- airflow-init -> airflow-webserver + airflow-scheduler (DAG: pageviews_hourly)
-# Added later (see SCHEDULE.md): dbt (L6), processor (L7), metabase (L6/S9)
+# Warehouse: dbt + DuckDB (inside the Airflow image) -> scripts/export_marts.py -> Postgres `serving`
+# Dashboard: metabase (reads `serving` with a read-only user)
+# Added later (see SCHEDULE.md): processor (L7)
 #
 # All data lives in Docker named volumes, never in this (OneDrive-synced) folder.
 
@@ -11,7 +13,10 @@ name: wiki-pipeline
 # Shared settings for every Airflow container (same pattern as the official Airflow compose file from
 # the lab, cut down to LocalExecutor: no Celery, no Redis, much lighter on a laptop).
 x-airflow-common: &airflow-common
-  image: apache/airflow:2.11.2-python3.12
+  build:
+    context: .
+    dockerfile: airflow/Dockerfile   # official apache/airflow:2.11.2-python3.12 + dbt in its own venv
+  image: wiki-pipeline/airflow
   environment: &airflow-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${POSTGRES_PASSWORD:?copy .env.example to .env}@postgres/airflow
@@ -26,11 +31,23 @@ x-airflow-common: &airflow-common
       "extra": {"endpoint_url": "http://minio:9000", "region_name": "us-east-1"}}
     WIKI_USER_AGENT: ${WIKI_USER_AGENT}
     PYTHONPATH: /opt/airflow/project
+    # dbt + DuckDB warehouse (profiles in dbt/profiles.yml read these)
+    MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+    MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    WAREHOUSE_PATH: /opt/airflow/warehouse/wiki.duckdb
+    DBT_PROJECT_DIR: /opt/airflow/project/dbt
+    DBT_PROFILES_DIR: /opt/airflow/project/dbt
+    DBT_TARGET_PATH: /opt/airflow/warehouse/dbt-target
+    DBT_LOG_PATH: /opt/airflow/logs/dbt
   user: "${AIRFLOW_UID:-50000}:0"
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - ./ingest:/opt/airflow/project/ingest
+    - ./dbt:/opt/airflow/project/dbt
+    - ./scripts:/opt/airflow/project/scripts
     - airflow_logs:/opt/airflow/logs
+    - warehouse:/opt/airflow/warehouse
   depends_on: &airflow-depends
     postgres:
       condition: service_healthy
@@ -147,7 +164,8 @@ services:
       retries: 12
       start_period: 15s
 
-  # Postgres: Airflow's metadata database now; the dashboard (serving) tables join it in L6.
+  # Postgres: databases `airflow` (Airflow metadata), `serving` (dashboard tables, read-only for
+  # Metabase) and `metabase` (Metabase's own settings). postgres/init/ creates them on first start.
   # Host port 5433, because 5432 is often taken by a lab Postgres.
   postgres:
     image: postgres:16.10
@@ -158,8 +176,10 @@ services:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy .env.example to .env}
       POSTGRES_DB: airflow
+      METABASE_DB_PASSWORD: ${METABASE_DB_PASSWORD:?copy .env.example to .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 10s
@@ -213,6 +233,33 @@ services:
       retries: 5
       start_period: 30s
 
+  # Dashboard: http://localhost:3000. Its own settings live in Postgres database `metabase`;
+  # the data it shows comes from `serving` (connection set up by scripts/metabase_setup.py).
+  metabase:
+    image: metabase/metabase:v0.64.3.4
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_HOST: postgres
+      MB_DB_PORT: 5432
+      MB_DB_DBNAME: metabase
+      MB_DB_USER: airflow
+      MB_DB_PASS: ${POSTGRES_PASSWORD}
+      MB_ANON_TRACKING_ENABLED: 'false'
+      MB_CHECK_FOR_UPDATES: 'false'
+      JAVA_OPTS: -Xmx1g
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
 volumes:
   kafka_data:
   raw_data:          # pre-MinIO raw files (25 Oct); delete once backfilled and verified
@@ -220,3 +267,4 @@ volumes:
   minio_data:
   postgres_data:
   airflow_logs:
+  warehouse:         # DuckDB file + dbt artefacts

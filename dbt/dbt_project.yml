@@ -1,0 +1,21 @@
+name: wiki_pipeline
+version: "0.1.0"
+config-version: 2
+profile: wiki
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+
+vars:
+  lake_bucket: lake
+
+models:
+  wiki_pipeline:
+    staging:
+      +schema: staging
+      +materialized: table
+    marts:
+      +schema: marts
+      +materialized: table

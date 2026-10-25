@@ -44,7 +44,17 @@ docker compose exec raw-sink python -m stream.status
 | `postgres` | Airflow's metadata database (and the dashboard tables later). Host port `5433` |
 | `airflow-init` | Sets up Airflow's database and admin login, then exits |
 | `airflow-webserver` | Airflow UI: http://localhost:8080, log in with `AIRFLOW_ADMIN_USER` / `AIRFLOW_ADMIN_PASSWORD` from `.env` |
-| `airflow-scheduler` | Runs the DAGs: `pageviews_hourly` (pageview file → filtered Parquet → lake, every hour) |
+| `airflow-scheduler` | Runs the DAGs: `pageviews_hourly` (pageview file → filtered Parquet → lake, every hour). Its image also contains dbt + DuckDB |
+| `metabase` | Dashboard: http://localhost:3000, log in with `METABASE_ADMIN_EMAIL` / `METABASE_ADMIN_PASSWORD` from `.env`. Reads Postgres `serving` with a read-only user |
+
+### Build the warehouse and the dashboard (until L9 automates it)
+
+```bash
+docker compose exec airflow-scheduler bash -c 'cd $DBT_PROJECT_DIR && /opt/airflow/dbt-venv/bin/dbt build --exclude resource_type:seed'
+docker compose exec airflow-scheduler /opt/airflow/dbt-venv/bin/python /opt/airflow/project/scripts/export_marts.py
+python scripts/metabase_setup.py          # first time only: admin account, connection, first chart
+```
+(Git Bash on Windows: run `export MSYS_NO_PATHCONV=1` first, or the container paths get rewritten.)
 
 Stop with `docker compose down` (data is kept). `docker compose down -v` also deletes the data.
 

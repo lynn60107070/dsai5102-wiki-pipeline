@@ -1,0 +1,18 @@
+# No secrets here: everything comes from environment variables set by docker-compose.yml.
+wiki:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('WAREHOUSE_PATH', '/opt/airflow/warehouse/wiki.duckdb') }}"
+      threads: 4
+      extensions: [httpfs]
+      settings:
+        TimeZone: UTC
+      secrets:
+        - type: s3
+          key_id: "{{ env_var('MINIO_ROOT_USER') }}"
+          secret: "{{ env_var('MINIO_ROOT_PASSWORD') }}"
+          endpoint: "{{ env_var('S3_ENDPOINT_HOST', 'minio:9000') }}"
+          url_style: path
+          use_ssl: false

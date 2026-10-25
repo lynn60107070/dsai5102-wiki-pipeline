@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: stg_edits
+    description: One row per edit or page creation, typed and de-duplicated from the raw zone.
+    columns:
+      - name: event_id
+        description: Wikimedia event id (meta.id).
+        data_tests: [unique, not_null]
+      - name: event_ts
+        data_tests: [not_null]
+      - name: wiki_id
+        data_tests: [not_null]
+      - name: editor_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [bot, anonymous, registered]
+
+  - name: mart_edits_hourly
+    description: Edits per UTC hour, wiki and editor type. Exported to Postgres for Metabase.
+    columns:
+      - name: hour_ts
+        data_tests: [not_null]
+      - name: edits
+        data_tests: [not_null]

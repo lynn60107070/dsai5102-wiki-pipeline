@@ -2,5 +2,6 @@
 *
 !stream/
 !ingest/
+!airflow/requirements-dbt.txt
 **/__pycache__
 ingest/__pycache__

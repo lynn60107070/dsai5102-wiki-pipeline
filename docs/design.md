@@ -74,6 +74,24 @@ DAG `pageviews_hourly`: `wait_for_file` (sensor, reschedule mode) → `fetch` (S
 (runs even after a failure). Hourly from 25 Oct with catchup, at most 2 runs at once, 2 retries.
 Idempotent: a re-run overwrites the same two objects.
 
+## 5c. Warehouse, serving and dashboard (thin slice, 25 Oct)
+
+- **dbt runs inside the Airflow image**, in its own virtual environment (`/opt/airflow/dbt-venv`,
+  dbt-core 1.12.6 + dbt-duckdb 1.11.0 + DuckDB 2.0.0): dbt and Airflow pin different versions of shared
+  libraries. Airflow will run `dbt build` as a DAG task (L9).
+- **Warehouse:** one DuckDB file on the `warehouse` volume. Only dbt writes to it.
+- **Schema-on-read with a contract:** `stg_edits` reads the raw zone with an explicit column list, so a
+  changed field in the stream cannot silently change the table.
+- **Privacy:** user names are never stored in the warehouse, only an MD5 hash (to count distinct
+  editors) and the editor type (bot / registered / anonymous).
+- **DuckDB computes, Postgres serves:** `scripts/export_marts.py` copies every `marts.*` table into the
+  Postgres database `serving` (in-memory DuckDB session: warehouse attached read-only, Postgres
+  read-write; each table replaced inside one transaction).
+- **Least privilege:** Metabase reads `serving` as `metabase_ro`, which can only SELECT (tested: DELETE
+  is denied). Metabase's own settings live in the Postgres database `metabase`, not in a local file.
+- **Reproducible dashboard setup:** `scripts/metabase_setup.py` creates the admin account, the
+  connection and the first chart through Metabase's API, and is safe to run again.
+
 ## 6. Star schema (warehouse, DuckDB + dbt)
 
 | Table | Grain | Key columns |
