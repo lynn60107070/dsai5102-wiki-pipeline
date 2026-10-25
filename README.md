@@ -41,6 +41,10 @@ docker compose exec raw-sink python -m stream.status
 | `producer` | Reads Wikimedia EventStreams, keeps edits + new pages, writes to `wiki.raw` keyed by wiki |
 | `raw-sink` | Consumes `wiki.raw`, writes gzipped JSON-lines files to the lake: `s3://lake/raw/edits/dt=/hour=/` |
 | `minio` | Data lake (S3 API on `:9000`). Web console: http://localhost:9001, log in with `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` from `.env` |
+| `postgres` | Airflow's metadata database (and the dashboard tables later). Host port `5433` |
+| `airflow-init` | Sets up Airflow's database and admin login, then exits |
+| `airflow-webserver` | Airflow UI: http://localhost:8080, log in with `AIRFLOW_ADMIN_USER` / `AIRFLOW_ADMIN_PASSWORD` from `.env` |
+| `airflow-scheduler` | Runs the DAGs: `pageviews_hourly` (pageview file → filtered Parquet → lake, every hour) |
 
 Stop with `docker compose down` (data is kept). `docker compose down -v` also deletes the data.
 

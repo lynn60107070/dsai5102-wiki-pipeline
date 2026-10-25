@@ -61,6 +61,19 @@ both refuse the pull). We use `bitnamilegacy/minio:2025.7.23-debian-12-r5`, the 
 archived by Bitnami, pinned and multi-arch. Alternatives checked: SeaweedFS, RustFS, the `pgsty/minio`
 community rebuild. MinIO won because it matches the course demo and is the best-tested S3 target for DuckDB.
 
+## 5b. Orchestration (Airflow)
+
+`apache/airflow:2.11.2-python3.12`: the newest Airflow 2 release, the same major version as the course
+lab (2.10.2), so the UI and DAG concepts match what was taught. LocalExecutor instead of the lab's
+CeleryExecutor: one machine needs no Redis or Celery workers (about half the memory). Postgres 16 holds
+Airflow's metadata; MinIO is an Airflow connection (`minio_lake`, defined by environment variable, so no
+secrets in the repo or the UI). The official image already includes the Amazon provider, pyarrow and
+requests, so no custom image is needed until dbt arrives (L6).
+
+DAG `pageviews_hourly`: `wait_for_file` (sensor, reschedule mode) → `fetch` (S2) → `upload` → `cleanup`
+(runs even after a failure). Hourly from 25 Oct with catchup, at most 2 runs at once, 2 retries.
+Idempotent: a re-run overwrites the same two objects.
+
 ## 6. Star schema (warehouse, DuckDB + dbt)
 
 | Table | Grain | Key columns |

@@ -1,11 +1,39 @@
 # Wikipedia live edits pipeline. Start everything: docker compose up -d --build
 #
-# Running now: broker -> kafka-init -> producer -> raw-sink -> minio (data lake)
-# Added later (see SCHEDULE.md): airflow + postgres (L5), dbt (L6), processor (L7), metabase (L6/S9)
+# Stream:  broker -> kafka-init -> producer -> raw-sink -> minio (data lake)
+# Batch:   postgres <- airflow-init -> airflow-webserver + airflow-scheduler (DAG: pageviews_hourly)
+# Added later (see SCHEDULE.md): dbt (L6), processor (L7), metabase (L6/S9)
 #
 # All data lives in Docker named volumes, never in this (OneDrive-synced) folder.
 
 name: wiki-pipeline
+
+# Shared settings for every Airflow container (same pattern as the official Airflow compose file from
+# the lab, cut down to LocalExecutor: no Celery, no Redis, much lighter on a laptop).
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.11.2-python3.12
+  environment: &airflow-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${POSTGRES_PASSWORD:?copy .env.example to .env}@postgres/airflow
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__DEFAULT_TIMEZONE: utc
+    AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE: UTC
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    # MinIO as an Airflow connection (conn id `minio_lake`), used by the DAGs through S3Hook.
+    AIRFLOW_CONN_MINIO_LAKE: >-
+      {"conn_type": "aws", "login": "${MINIO_ROOT_USER}", "password": "${MINIO_ROOT_PASSWORD}",
+      "extra": {"endpoint_url": "http://minio:9000", "region_name": "us-east-1"}}
+    WIKI_USER_AGENT: ${WIKI_USER_AGENT}
+    PYTHONPATH: /opt/airflow/project
+  user: "${AIRFLOW_UID:-50000}:0"
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./ingest:/opt/airflow/project/ingest
+    - airflow_logs:/opt/airflow/logs
+  depends_on: &airflow-depends
+    postgres:
+      condition: service_healthy
 
 services:
 
@@ -119,8 +147,76 @@ services:
       retries: 12
       start_period: 15s
 
+  # Postgres: Airflow's metadata database now; the dashboard (serving) tables join it in L6.
+  # Host port 5433, because 5432 is often taken by a lab Postgres.
+  postgres:
+    image: postgres:16.10
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy .env.example to .env}
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # One-off: creates/upgrades Airflow's tables and the web login, then exits.
+  airflow-init:
+    <<: *airflow-common
+    restart: "no"
+    command: version
+    environment:
+      <<: *airflow-env
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_ADMIN_USER:-admin}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:?copy .env.example to .env}
+
+  # Web UI: http://localhost:8080 (log in with AIRFLOW_ADMIN_USER / AIRFLOW_ADMIN_PASSWORD from .env)
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      <<: *airflow-depends
+      airflow-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-depends
+      airflow-init:
+        condition: service_completed_successfully
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8974/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
 volumes:
   kafka_data:
   raw_data:          # pre-MinIO raw files (25 Oct); delete once backfilled and verified
   collector_state:
   minio_data:
+  postgres_data:
+  airflow_logs:
