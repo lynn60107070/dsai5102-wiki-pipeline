@@ -39,6 +39,7 @@ class ObjectNameTest(unittest.TestCase):
         self.assertTrue(name.endswith("-n1234.jsonl.gz"))
         self.assertEqual(lake.count_from_name(f"raw/edits/dt=2026-10-28/hour=07/{name}"), 1234)
         self.assertIsNone(lake.count_from_name("raw/edits/dt=2026-10-28/hour=07/part-1-host.jsonl.gz"))
+        self.assertEqual(lake.count_from_name(lake.part_name(7, suffix=".parquet")), 7)
 
 
 class IterSseTest(unittest.TestCase):

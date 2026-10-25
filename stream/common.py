@@ -8,6 +8,10 @@ from datetime import datetime, timezone
 BOOTSTRAP = os.environ.get("KAFKA_BOOTSTRAP", "localhost:9092")
 RAW_TOPIC = os.environ.get("RAW_TOPIC", "wiki.raw")
 
+# kafka-python 2.3 caps one network response at 1 MB, but a fetch across several partitions can return
+# up to 1 MB per partition (seen during catch-up as "InvalidReceiveError: Invalid frame length").
+CONSUMER_SETTINGS = {"receive_message_max_bytes": 64 * 1024 * 1024}
+
 # Edits and page creations only. Log entries (blocks, moves) and category changes are a different
 # kind of activity, and keeping only these two types halves the volume (~14 events/s instead of ~29).
 KEEP_TYPES = {"edit", "new"}

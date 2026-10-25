@@ -20,7 +20,7 @@ from kafka import KafkaConsumer
 from kafka.errors import NoBrokersAvailable
 
 from stream import lake
-from stream.common import BOOTSTRAP, RAW_TOPIC, event_time, hour_prefix
+from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, RAW_TOPIC, event_time, hour_prefix
 
 FLUSH_SECONDS = int(os.environ.get("FLUSH_SECONDS", "300"))
 GROUP_ID = os.environ.get("SINK_GROUP", "raw-archive")
@@ -36,7 +36,7 @@ def connect_consumer() -> KafkaConsumer:
                 bootstrap_servers=BOOTSTRAP,
                 group_id=GROUP_ID,
                 enable_auto_commit=False,
-                auto_offset_reset="earliest",
+                auto_offset_reset="earliest", **CONSUMER_SETTINGS,
             )
         except NoBrokersAvailable:
             log.info("Kafka not reachable at %s yet, retrying in 5 s", BOOTSTRAP)

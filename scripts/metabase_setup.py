@@ -1,6 +1,8 @@
-"""Set up Metabase through its API: admin account, the `serving` database connection, and the first chart.
+"""Set up Metabase through its API: admin account, the `serving` database connection, the charts in
+CARDS, and the dashboard that holds them.
 
-Safe to run again: each step checks whether its object already exists (by name) and skips it.
+Safe to run again: each step checks whether its object already exists (by name) and skips it, and any
+chart in CARDS that is missing from the dashboard is added below the existing tiles.
 Sumaiya's dashboard (S9) is built on top of the "Wiki serving" connection this creates.
 
 Run on your laptop, with the stack up:  python scripts/metabase_setup.py
@@ -14,14 +16,37 @@ import requests
 BASE = "http://localhost:3000"
 DATABASE_NAME = "Wiki serving"
 DASHBOARD_NAME = "Wikipedia edits"
-CARD_NAME = "Edits per hour: bots vs humans"
-CARD_SQL = """\
+
+CARDS = [
+    {
+        "name": "Live: edits per minute, last 3 hours",
+        "description": "Near-real-time: edits per minute on all Wikimedia wikis, bots vs humans, straight "
+                       "from the stream processor (Kafka topic edits.per_minute). A minute appears about "
+                       "3 minutes after it ends. Add #refresh=60 to the dashboard URL to auto-refresh.",
+        "display": "line",
+        "sql": """\
+SELECT minute_ts AS "Minute (UTC)", SUM(bot_edits) AS "Bots", SUM(human_edits) AS "Humans"
+FROM live_edits_per_minute
+WHERE minute_ts > now() - interval '3 hours'
+GROUP BY 1
+ORDER BY 1""",
+        "viz": {"graph.dimensions": ["Minute (UTC)"], "graph.metrics": ["Bots", "Humans"]},
+    },
+    {
+        "name": "Edits per hour: bots vs humans",
+        "description": "Edits per UTC hour on all Wikimedia wikis, split into bot accounts and humans "
+                       "(registered + logged-out). Source: the warehouse (mart_edits_hourly).",
+        "display": "line",
+        "sql": """\
 SELECT hour_ts AS "Hour (UTC)",
        CASE WHEN editor_type = 'bot' THEN 'Bots' ELSE 'Humans' END AS "Editor",
        SUM(edits) AS "Edits"
 FROM mart_edits_hourly
 GROUP BY 1, 2
-ORDER BY 1"""
+ORDER BY 1""",
+        "viz": {"graph.dimensions": ["Hour (UTC)", "Editor"], "graph.metrics": ["Edits"]},
+    },
+]
 
 
 def load_env() -> dict:
@@ -39,6 +64,11 @@ def wait_until_healthy():
             pass
         time.sleep(5)
     raise SystemExit("Metabase is not up on http://localhost:3000 (is the stack running?)")
+
+
+def as_list(response):
+    data = response.json()
+    return data.get("data", data) if isinstance(data, dict) else data
 
 
 def main():
@@ -61,9 +91,8 @@ def main():
     login.raise_for_status()
     session.headers["X-Metabase-Session"] = login.json()["id"]
 
-    databases = session.get(f"{BASE}/api/database", timeout=30).json()
-    databases = databases.get("data", databases) if isinstance(databases, dict) else databases
-    database_id = next((d["id"] for d in databases if d["name"] == DATABASE_NAME), None)
+    database_id = next((d["id"] for d in as_list(session.get(f"{BASE}/api/database", timeout=30))
+                        if d["name"] == DATABASE_NAME), None)
     if database_id is None:
         response = session.post(f"{BASE}/api/database", timeout=120, json={
             "engine": "postgres", "name": DATABASE_NAME,
@@ -75,32 +104,44 @@ def main():
         print(f"connected Metabase to Postgres `serving` as the read-only user (database id {database_id})")
     session.post(f"{BASE}/api/database/{database_id}/sync_schema", timeout=60).raise_for_status()
 
-    cards = session.get(f"{BASE}/api/card", timeout=30).json()
-    card_id = next((c["id"] for c in cards if c["name"] == CARD_NAME), None)
-    if card_id is None:
-        response = session.post(f"{BASE}/api/card", timeout=60, json={
-            "name": CARD_NAME,
-            "description": "Edits per UTC hour on all Wikimedia wikis, split into bot accounts and humans "
-                           "(registered + logged-out). Source: Wikimedia EventStreams.",
-            "display": "line",
-            "dataset_query": {"type": "native", "database": database_id, "native": {"query": CARD_SQL}},
-            "visualization_settings": {"graph.dimensions": ["Hour (UTC)", "Editor"], "graph.metrics": ["Edits"]},
-        })
-        response.raise_for_status()
-        card_id = response.json()["id"]
-        print(f"created the chart '{CARD_NAME}'")
+    existing_cards = {c["name"]: c["id"] for c in as_list(session.get(f"{BASE}/api/card", timeout=30))}
+    card_ids = []
+    for card in CARDS:
+        if card["name"] not in existing_cards:
+            response = session.post(f"{BASE}/api/card", timeout=60, json={
+                "name": card["name"], "description": card["description"], "display": card["display"],
+                "dataset_query": {"type": "native", "database": database_id, "native": {"query": card["sql"]}},
+                "visualization_settings": card["viz"],
+            })
+            response.raise_for_status()
+            existing_cards[card["name"]] = response.json()["id"]
+            print(f"created the chart '{card['name']}'")
+        card_ids.append(existing_cards[card["name"]])
 
-    dashboards = session.get(f"{BASE}/api/dashboard", timeout=30).json()
-    dashboard_id = next((d["id"] for d in dashboards if d["name"] == DASHBOARD_NAME), None)
+    dashboard_id = next((d["id"] for d in as_list(session.get(f"{BASE}/api/dashboard", timeout=30))
+                         if d["name"] == DASHBOARD_NAME), None)
     if dashboard_id is None:
         response = session.post(f"{BASE}/api/dashboard", timeout=30, json={
             "name": DASHBOARD_NAME,
             "description": "Who edits Wikipedia, and when. Data: Wikimedia EventStreams + pageview dumps (UTC)."})
         response.raise_for_status()
         dashboard_id = response.json()["id"]
-        session.put(f"{BASE}/api/dashboard/{dashboard_id}", timeout=30, json={"dashcards": [
-            {"id": -1, "card_id": card_id, "row": 0, "col": 0, "size_x": 24, "size_y": 8}]}).raise_for_status()
         print(f"created the dashboard '{DASHBOARD_NAME}'")
+
+    dashcards = session.get(f"{BASE}/api/dashboard/{dashboard_id}", timeout=30).json()["dashcards"]
+    on_dashboard = {d["card_id"] for d in dashcards}
+    next_row = max((d["row"] + d["size_y"] for d in dashcards), default=0)
+    keep = [{k: d[k] for k in ("id", "card_id", "row", "col", "size_x", "size_y")} for d in dashcards]
+    new = []
+    for card_id in card_ids:
+        if card_id not in on_dashboard:
+            new.append({"id": -(len(new) + 1), "card_id": card_id, "row": next_row, "col": 0,
+                        "size_x": 24, "size_y": 8})
+            next_row += 8
+    if new:
+        session.put(f"{BASE}/api/dashboard/{dashboard_id}", timeout=30,
+                    json={"dashcards": keep + new}).raise_for_status()
+        print(f"added {len(new)} chart(s) to the dashboard")
 
     print(f"done: {BASE}/dashboard/{dashboard_id}")
 

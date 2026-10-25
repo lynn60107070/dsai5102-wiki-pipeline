@@ -40,6 +40,9 @@ docker compose exec raw-sink python -m stream.status
 | `kafka-init` | Creates the topics, then exits |
 | `producer` | Reads Wikimedia EventStreams, keeps edits + new pages, writes to `wiki.raw` keyed by wiki |
 | `raw-sink` | Consumes `wiki.raw`, writes gzipped JSON-lines files to the lake: `s3://lake/raw/edits/dt=/hour=/` |
+| `processor` | Consumes `wiki.raw`: validates, removes user names, splits into `edits.bot` / `edits.human`, counts edits per minute (`edits.per_minute`); failures go to `wiki.deadletter` |
+| `clean-sink` (×2) | Consumer group on `edits.bot` + `edits.human`: writes Parquet to `s3://lake/clean/edits/dt=/hour=/`. Scale with `docker compose up -d --scale clean-sink=3` |
+| `live-stats` | Consumes `edits.per_minute` into Postgres `serving.live_edits_per_minute` (the dashboard's live tile) |
 | `minio` | Data lake (S3 API on `:9000`). Web console: http://localhost:9001, log in with `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` from `.env` |
 | `postgres` | Airflow's metadata database (and the dashboard tables later). Host port `5433` |
 | `airflow-init` | Sets up Airflow's database and admin login, then exits |

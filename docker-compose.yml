@@ -1,10 +1,11 @@
 # Wikipedia live edits pipeline. Start everything: docker compose up -d --build
 #
-# Stream:  broker -> kafka-init -> producer -> raw-sink -> minio (data lake)
+# Stream:  broker -> kafka-init -> producer -> wiki.raw -> raw-sink -> minio raw zone
+#                                              wiki.raw -> processor -> edits.bot / edits.human -> clean-sink x2 -> minio clean zone
+#                                                                    -> edits.per_minute -> live-stats -> postgres serving
 # Batch:   postgres <- airflow-init -> airflow-webserver + airflow-scheduler (DAG: pageviews_hourly)
 # Warehouse: dbt + DuckDB (inside the Airflow image) -> scripts/export_marts.py -> Postgres `serving`
 # Dashboard: metabase (reads `serving` with a read-only user)
-# Added later (see SCHEDULE.md): processor (L7)
 #
 # All data lives in Docker named volumes, never in this (OneDrive-synced) folder.
 
@@ -98,10 +99,14 @@ services:
       broker:
         condition: service_healthy
     restart: "no"
+    # topic : partitions : retention (ms). 3 days = 259200000, 1 day = 86400000, 7 days = 604800000.
     command: >
-      bash -c "kafka-topics --bootstrap-server broker:29092 --create --if-not-exists
-      --topic wiki.raw --partitions 3 --replication-factor 1 --config retention.ms=259200000
-      && kafka-topics --bootstrap-server broker:29092 --describe --topic wiki.raw"
+      bash -c "for spec in wiki.raw:3:259200000 edits.bot:3:259200000 edits.human:3:259200000
+      edits.per_minute:1:86400000 wiki.deadletter:1:604800000; do
+      IFS=: read topic parts keep <<< \"$$spec\";
+      kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic $$topic
+      --partitions $$parts --replication-factor 1 --config retention.ms=$$keep || exit 1; done
+      && kafka-topics --bootstrap-server broker:29092 --list"
 
   # Wikimedia EventStreams -> wiki.raw
   producer:
@@ -111,6 +116,7 @@ services:
     image: wiki-pipeline/stream
     command: python -m stream.producer
     restart: unless-stopped
+    stop_grace_period: 60s
     depends_on:
       kafka-init:
         condition: service_completed_successfully
@@ -126,6 +132,7 @@ services:
     image: wiki-pipeline/stream
     command: python -m stream.raw_sink
     restart: unless-stopped
+    stop_grace_period: 60s
     depends_on:
       kafka-init:
         condition: service_completed_successfully
@@ -142,6 +149,57 @@ services:
       DATA_DIR: /data   # only for the one-off backfill of pre-MinIO files (stream.backfill_local)
     volumes:
       - raw_data:/data
+
+  # wiki.raw -> validate + clean (user names dropped) -> edits.bot / edits.human / edits.per_minute,
+  # failures -> wiki.deadletter
+  processor:
+    image: wiki-pipeline/stream
+    command: python -m stream.processor
+    restart: unless-stopped
+    stop_grace_period: 60s
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      producer:
+        condition: service_started
+    environment:
+      KAFKA_BOOTSTRAP: broker:29092
+
+  # edits.bot + edits.human -> clean zone (Parquet). Consumer group of 2: Kafka shares the 6
+  # partitions between the replicas. Scale with: docker compose up -d --scale clean-sink=3
+  clean-sink:
+    image: wiki-pipeline/stream
+    command: python -m stream.clean_sink
+    restart: unless-stopped
+    stop_grace_period: 60s
+    deploy:
+      replicas: 2
+    depends_on:
+      processor:
+        condition: service_started
+      minio:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP: broker:29092
+      FLUSH_SECONDS: ${FLUSH_SECONDS:-300}
+      S3_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+
+  # edits.per_minute -> Postgres serving.live_edits_per_minute (near-real-time dashboard tile)
+  live-stats:
+    image: wiki-pipeline/stream
+    command: python -m stream.live_stats
+    restart: unless-stopped
+    stop_grace_period: 60s
+    depends_on:
+      processor:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP: broker:29092
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   # Data lake (S3 API). MinIO stopped publishing free official images in 2025; this is the last
   # free MinIO build, archived by Bitnami, pinned so it never changes under us.

@@ -9,7 +9,7 @@ import boto3
 from botocore.config import Config
 
 BUCKET = os.environ.get("LAKE_BUCKET", "lake")
-COUNT_IN_NAME = re.compile(r"-n(\d+)\.jsonl\.gz$")
+COUNT_IN_NAME = re.compile(r"-n(\d+)\.(jsonl\.gz|parquet)$")
 
 
 def client():
@@ -23,9 +23,9 @@ def client():
     )
 
 
-def part_name(count: int) -> str:
+def part_name(count: int, suffix: str = ".jsonl.gz") -> str:
     """Object name for one flush. The event count is in the name so status checks never download files."""
-    return f"part-{int(time.time() * 1000)}-{socket.gethostname()}-n{count}.jsonl.gz"
+    return f"part-{int(time.time() * 1000)}-{socket.gethostname()}-n{count}{suffix}"
 
 
 def count_from_name(key: str):

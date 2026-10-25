@@ -35,12 +35,28 @@ Stream services run all the time as Compose services. Airflow only runs the sche
 
 ## 4. Kafka topics
 
-| Topic | Partitions | Key | Written by | Status |
-|---|---|---|---|---|
-| `wiki.raw` | 3 | wiki | producer | **live** |
-| `edits.bot`, `edits.human` | 3 | wiki | processor | L7 |
-| `edits.per_minute` | 1 | wiki | processor | L7 |
-| `wiki.deadletter` | 1 | — | processor | L7 |
+| Topic | Partitions | Key | Written by | Read by (consumer group) | Retention |
+|---|---|---|---|---|---|
+| `wiki.raw` | 3 | wiki | producer | raw-sink (`raw-archive`), processor (`processor`) | 3 days |
+| `edits.bot`, `edits.human` | 3 each | wiki | processor | clean-sink ×2 (`clean-archive`) | 3 days |
+| `edits.per_minute` | 1 | wiki | processor | live-stats (`live-stats`) | 1 day |
+| `wiki.deadletter` | 1 | none | processor | (inspected by hand) | 7 days |
+
+All live since 25 Oct. Topics are created explicitly by `kafka-init` (auto-creation is off).
+
+**Processor** (`stream/processor.py`, logic in `stream/clean.py`, unit-tested): validates each event
+(dead-letter with the reason if it fails), drops the user name and edit summary (keeps an MD5 key and
+the editor type), flags reverts, routes to `edits.bot` / `edits.human`, and counts edits per wiki and
+minute in event time. The watermark is the slowest partition's newest event, so a partition racing
+ahead during catch-up can't make the others look late (first version counted 205,814 events as late
+during the backlog; fixed and tested). Minutes close 2 minutes after they end.
+
+**Delivery guarantees:** every consumer commits offsets only after its output is written
+(at-least-once). Measured on 25 Oct: after restarting the sinks mid-backlog, the clean zone held
+381,066 duplicates and 0 missing events; `scripts/compact_clean_zone.py` merged each hour into one file
+and removed all of them. Stream services now get 60 s to shut down (`stop_grace_period`) so they can
+flush and commit. **Known limitation:** the per-minute counts live in memory, so the live tile dips
+for the 2–3 minutes around a processor restart (the warehouse is unaffected).
 
 ## 5. Lake layout (raw → clean, Hive-style partitions)
 
@@ -48,7 +64,8 @@ Stream services run all the time as Compose services. Airflow only runs the sche
 raw/edits/dt=YYYY-MM-DD/hour=HH/part-*-n<events>.jsonl.gz   ← live in MinIO (bucket `lake`) since 25 Oct
 raw/pageviews/dt=YYYY-MM-DD/hour=HH/articles.parquet      ← S2 + L5 (articles with ≥ 10 views)
 raw/pageviews/dt=YYYY-MM-DD/hour=HH/wiki_totals.parquet   ← S2 + L5 (all views, summed per wiki)
-clean/edits/dt=YYYY-MM-DD/*.parquet                 ← L4/L9 (merged, one file per day)
+clean/edits/dt=YYYY-MM-DD/hour=HH/part-*-n<events>.parquet   ← clean-sink ×2 (no user names), live since 25 Oct;
+                                                               compacted to one file per hour, duplicates removed
 ```
 
 The raw zone is kept exactly as received (ELT, schema-on-read, lecture 8): gzipped JSON lines, one object
