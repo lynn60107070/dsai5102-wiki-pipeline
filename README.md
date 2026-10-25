@@ -53,7 +53,7 @@ docker compose exec raw-sink python -m stream.status
 ### Build the warehouse and the dashboard (until L9 automates it)
 
 ```bash
-docker compose exec airflow-scheduler bash -c 'cd $DBT_PROJECT_DIR && /opt/airflow/dbt-venv/bin/dbt build --exclude resource_type:seed'
+docker compose exec airflow-scheduler bash -c 'cd $DBT_PROJECT_DIR && /opt/airflow/dbt-venv/bin/dbt build'
 docker compose exec airflow-scheduler /opt/airflow/dbt-venv/bin/python /opt/airflow/project/scripts/export_marts.py
 python scripts/metabase_setup.py          # first time only: admin account, connection, first chart
 ```

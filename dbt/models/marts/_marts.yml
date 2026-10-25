@@ -1,0 +1,36 @@
+version: 2
+
+# Every model here is copied to Postgres `serving` by scripts/export_marts.py and read by Metabase.
+
+models:
+  - name: mart_edits_hourly
+    description: Edits per UTC hour, wiki and editor type. Tile - edits over time, bots vs humans.
+    columns:
+      - name: hour_ts
+        data_tests: [not_null]
+      - name: edits
+        data_tests: [not_null]
+
+  - name: mart_wiki_activity
+    description: >
+      Activity per wiki and UTC day. Tiles - bot share by wiki, top languages, reverts.
+      Sum counts over a date range before dividing (shares are not stored).
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: wiki_id
+        data_tests: [not_null]
+
+  - name: mart_data_completeness
+    description: One row per finished UTC hour with edit volume and gap / partial flags.
+    columns:
+      - name: hour_ts
+        data_tests: [unique, not_null]
+
+  - name: mart_attention_vs_edits
+    description: >
+      Article-hours with >= 1,000 views, with the previous 24-hour baseline, a spike flag, and edits in
+      the same hour and the 2 hours after. Tile - do attention spikes cause edit surges?
+    columns:
+      - name: hour_ts
+        data_tests: [not_null]

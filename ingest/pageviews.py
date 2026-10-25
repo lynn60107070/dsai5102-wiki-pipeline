@@ -38,6 +38,10 @@ TODO (S2):
   3. Record for the report: file size, rows before -> after each filter, time taken.
   4. Send a User-Agent header (use WIKI_USER_AGENT from .env), as Wikimedia asks.
 Test on one hour: `python -m ingest.pageviews 2026-10-28 12 --out data/pageviews`
+
+Downstream (Lynn, already built and tested on a fixture with this exact contract): dbt models
+stg_pageviews / stg_wiki_views -> fact_pageviews_hourly / fact_wiki_views_hourly -> mart_attention_vs_edits.
+They switch on with `pageviews_enabled: true` in dbt/dbt_project.yml once real files are in the lake.
 """
 import argparse
 from datetime import date

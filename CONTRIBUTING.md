@@ -82,7 +82,7 @@ You edit only the files you own. To change someone else's file, ask them or open
 | Task | Start here |
 |---|---|
 | S2 pageview script | [ingest/pageviews.py](ingest/pageviews.py): the signature, output columns and TODOs are written; the DAG [airflow/dags/pageviews_hourly.py](airflow/dags/pageviews_hourly.py) calls `fetch_hour` exactly as defined. Test it inside Airflow (which has pyarrow 22, so don't rely on newer features): `docker compose exec airflow-scheduler airflow tasks test pageviews_hourly fetch 2026-10-28T12:00:00+00:00` |
-| S3 `dim_wiki` seed | [dbt/seeds/dim_wiki.csv](dbt/seeds/dim_wiki.csv): the header is set; fill it from the sitematrix API (a small script in `ingest/` is fine) |
+| S3 wiki names seed | [dbt/seeds/dim_wiki_names.csv](dbt/seeds/dim_wiki_names.csv): the header is set; fill it from the sitematrix API (a small script in `ingest/` is fine). [dbt/models/core/dim_wiki.sql](dbt/models/core/dim_wiki.sql) already joins it on `wiki_id`, so once it has rows the dashboard shows language names (e.g. "Arabic" instead of `ar`) |
 | S9 dashboard (later) | Metabase at http://localhost:3000 already has the "Wiki serving" connection and a first chart on dashboard "Wikipedia edits" (created by `python scripts/metabase_setup.py`). Build new tiles there on the `mart_*` tables |
 | S6 diagram | [docs/design.md](docs/design.md) §3–§6; save files in `docs/diagram/` |
 

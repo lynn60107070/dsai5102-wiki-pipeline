@@ -1,0 +1,19 @@
+version: 2
+
+# Views over the lake (no data is copied). Duplicates are allowed here; the facts remove them.
+
+models:
+  - name: stg_edits
+    description: Clean zone (Parquet from the stream processor), one row per delivered event.
+    columns:
+      - name: event_id
+        data_tests: [not_null]
+      - name: editor_type
+        data_tests:
+          - accepted_values: {arguments: {values: [bot, registered, anonymous]}}
+
+  - name: stg_pageviews
+    description: Article pageviews (>= 10 views per hour) from ingest/pageviews.py.
+
+  - name: stg_wiki_views
+    description: Total views per wiki and hour from ingest/pageviews.py.

@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: fact_edit
+    description: >
+      Fact table, one row per edit or page creation (grain: event_id). Incremental: reloads the last
+      day of partitions each run and replaces rows by event_id. No user names, only editor_key (MD5).
+    columns:
+      - name: event_id
+        description: Wikimedia event id (meta.id).
+        data_tests: [unique, not_null]
+      - name: hour_ts
+        description: Start of the UTC hour of the edit.
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_time'), field: hour_ts}}
+      - name: wiki_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_wiki'), field: wiki_id}}
+      - name: article_key
+        description: md5(wiki_id:title).
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_article'), field: article_key}}
+      - name: editor_type
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_editor_type'), field: editor_type}}
+      - name: editor_key
+        description: MD5 of the user name, only to count distinct editors.
+        data_tests: [not_null]
+
+  - name: dim_time
+    description: One row per UTC hour from the first day of data to the latest edit (continuous spine).
+    columns:
+      - name: hour_ts
+        data_tests: [unique, not_null]
+
+  - name: dim_wiki
+    description: One row per wiki. Project and language parsed from the server name, names from the S3 seed.
+    columns:
+      - name: wiki_id
+        data_tests: [unique, not_null]
+      - name: project_family
+        data_tests: [not_null]
+
+  - name: dim_article
+    description: One row per article seen in the edits (and the pageviews, when enabled).
+    columns:
+      - name: article_key
+        data_tests: [unique, not_null]
+
+  - name: dim_editor_type
+    description: Bot, registered human, or logged-out human.
+    columns:
+      - name: editor_type
+        data_tests:
+          - unique
+          - accepted_values: {arguments: {values: [bot, registered, anonymous]}}
+
+  - name: fact_pageviews_hourly
+    description: Views per article, hour and access type, for articles with >= 10 views in that hour.
+    columns:
+      - name: hour_ts
+        data_tests: [not_null]
+      - name: wiki_id
+        data_tests:
+          - relationships: {arguments: {to: ref('dim_wiki'), field: wiki_id}}
+      - name: article_key
+        data_tests:
+          - relationships: {arguments: {to: ref('dim_article'), field: article_key}}
+      - name: access
+        data_tests:
+          - accepted_values: {arguments: {values: [desktop, mobile]}}
+
+  - name: fact_wiki_views_hourly
+    description: Total views per wiki, hour and access type, over all articles (no threshold).
+    columns:
+      - name: wiki_id
+        data_tests:
+          - relationships: {arguments: {to: ref('dim_wiki'), field: wiki_id}}

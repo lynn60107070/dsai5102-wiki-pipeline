@@ -97,8 +97,10 @@ Idempotent: a re-run overwrites the same two objects.
   dbt-core 1.12.6 + dbt-duckdb 1.11.0 + DuckDB 2.0.0): dbt and Airflow pin different versions of shared
   libraries. Airflow will run `dbt build` as a DAG task (L9).
 - **Warehouse:** one DuckDB file on the `warehouse` volume. Only dbt writes to it.
-- **Schema-on-read with a contract:** `stg_edits` reads the raw zone with an explicit column list, so a
-  changed field in the stream cannot silently change the table.
+- **Schema contract at the stream:** the processor validates every event and the clean sink writes
+  Parquet with a fixed schema, so a changed field in the stream cannot silently change the warehouse.
+  (The L6 thin slice read the raw JSON with an explicit column list; since L8, dbt reads the clean
+  Parquet zone instead: no JSON parsing, and the raw zone stays as the untouched archive.)
 - **Privacy:** user names are never stored in the warehouse, only an MD5 hash (to count distinct
   editors) and the editor type (bot / registered / anonymous).
 - **DuckDB computes, Postgres serves:** `scripts/export_marts.py` copies every `marts.*` table into the
@@ -109,20 +111,38 @@ Idempotent: a re-run overwrites the same two objects.
 - **Reproducible dashboard setup:** `scripts/metabase_setup.py` creates the admin account, the
   connection and the first chart through Metabase's API, and is safe to run again.
 
-## 6. Star schema (warehouse, DuckDB + dbt)
+## 6. Star schema (warehouse, DuckDB + dbt), built 25 Oct
 
-| Table | Grain | Key columns |
+Layers: `staging` (views over the lake, no copies) → `core` (facts + dimensions) → `marts` (one per
+dashboard tile, copied to Postgres). Natural keys instead of surrogate integers: they are stable across
+full rebuilds and readable in the dashboard; `article_key` is `md5(wiki_id:title)` because titles are
+long and only unique within a wiki.
+
+| Table | Grain | Keys → dimension | Built as |
+|---|---|---|---|
+| `fact_edit` | one edit or page creation (`event_id`) | `hour_ts` → dim_time, `wiki_id` → dim_wiki, `article_key` → dim_article, `editor_type` → dim_editor_type | incremental (last day reloaded, `delete+insert` by `event_id`, so duplicates can't survive) |
+| `fact_pageviews_hourly` | hour × wiki × article × access (≥ 10 views) | `wiki_id`, `article_key` | incremental, switched on by `pageviews_enabled` |
+| `fact_wiki_views_hourly` | hour × wiki × access (all views) | `wiki_id` | incremental, switched on by `pageviews_enabled` |
+| `dim_time` | one UTC hour, continuous from the first hour of data | `hour_ts` | table; flags `is_weekend`, `in_analysis_window` |
+| `dim_wiki` | one wiki | `wiki_id` | parsed from the server name (project, language), enriched by the S3 seed `dim_wiki_names` |
+| `dim_article` | one article | `article_key` | from edits (+ pageviews when enabled) |
+| `dim_editor_type` | bot / registered / anonymous | `editor_type` | static |
+
+| Mart | Grain | Tile |
 |---|---|---|
-| `fact_edit` | one edit or page creation | edit_id, hour_key, wiki_id, article_key, editor_type, is_bot, is_minor, is_new_page, bytes_changed, is_revert (comment heuristic) |
-| `fact_pageviews_hourly` | wiki × article × hour × access (articles with ≥ 10 views in that hour) | hour_key, wiki_id, article_key, access, views |
-| `fact_wiki_views_hourly` | wiki × hour × access (all views) | hour_key, wiki_id, access, views, articles_viewed |
-| `dim_wiki` | one wiki | wiki_id, language, project family, is_arabic (seed, S3) |
-| `dim_article` | one wiki + title | article_key, wiki_id, title, namespace, first_seen |
-| `dim_time` | one UTC hour | hour_key, date, hour, weekday, is_weekend |
-| `dim_editor_type` | bot / registered / anonymous or temporary account | editor_type |
+| `mart_edits_hourly` | hour × wiki × editor type | edits over time, bots vs humans |
+| `mart_wiki_activity` | day × wiki (counts only; shares computed after summing) | bot share by wiki, top languages, reverts |
+| `mart_data_completeness` | finished hour | gaps (`is_gap`) and partial hours (< 50% of median) |
+| `mart_attention_vs_edits` | article-hour with ≥ 1,000 views | attention spikes (≥ 5× previous-24 h average, full baseline only) vs edits in the same + next 2 hours |
 
-**Marts** (one per dashboard tile, exported to Postgres): `mart_edits_hourly`, `mart_bot_share`,
-`mart_attention_vs_edits`, `mart_data_completeness`.
+**Tests: 38** with pageviews off, **49** with them on (unique and not-null keys, accepted values, and a
+relationship test from every fact key to its dimension). Measured 25 Oct: full build 19 s, incremental
+`fact_edit` 1.3 s instead of 6.5 s; 630,405 edits, 0 duplicates; 396 wikis, 482,975 articles.
+The pageview models were tested on a fixture following the S2 contract (throwaway warehouse, deleted
+afterwards); it caught one bug: without a full 24-hour baseline everything looked like a spike.
+
+**Finding:** Wikidata + Commons are ~48% of all edits, so `dim_wiki.project_family` / `is_wikipedia`
+matter for every language question.
 
 ## 7. Decision: which pageviews we keep (decided 25 Oct, measured on the 24 Oct 12:00 UTC file)
 

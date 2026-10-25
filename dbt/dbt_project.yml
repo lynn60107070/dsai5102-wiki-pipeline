@@ -1,5 +1,5 @@
 name: wiki_pipeline
-version: "0.1.0"
+version: "0.2.0"
 config-version: 2
 profile: wiki
 
@@ -10,12 +10,37 @@ test-paths: ["tests"]
 
 vars:
   lake_bucket: lake
+  # First day of edit data, and the frozen analysis window used in the report (UTC, end exclusive).
+  data_start: "2026-10-25"
+  analysis_start: "2026-10-28"
+  analysis_end: "2026-11-12"
+  # Turn on once ingest/pageviews.py (S2) has written files to s3://lake/raw/pageviews/.
+  pageviews_enabled: false
+  pageviews_path: "s3://lake/raw/pageviews"
+  # Reload this many days back on each incremental run (late or re-delivered events).
+  lookback_days: 1
 
 models:
   wiki_pipeline:
     staging:
       +schema: staging
+      +materialized: view
+    core:
+      +schema: core
       +materialized: table
     marts:
       +schema: marts
       +materialized: table
+
+seeds:
+  wiki_pipeline:
+    +schema: core
+    dim_wiki_names:
+      +column_types:
+        wiki_id: varchar
+        language_code: varchar
+        language_name: varchar
+        local_language_name: varchar
+        project_family: varchar
+        site_url: varchar
+        is_arabic: boolean
