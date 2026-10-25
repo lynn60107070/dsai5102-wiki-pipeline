@@ -31,7 +31,7 @@ marks on, **Lec n** = the lecture or lab it applies. The full deliverables list 
 | Kick-off | Sun 25 Oct | Plan shared; both read this file and DELIVERABLES.md |
 | **CP0** | **Mon 26 Oct** | **Both set up**: repo cloned, Docker Desktop running, the Kafka lab compose starts (proof in the chat, no call) |
 | Collector | **Tue 27 Oct** | **Stream collector live** and writing data 24/7 (L2) |
-| **CP1** | **Thu 29 Oct** | Problem statement, topics, lake layout and star schema agreed (L3); pageview download script works on one hour (S2); `dim_wiki` seed (S3); Overleaf skeleton (S4) |
+| **CP1** | **Thu 29 Oct** | Problem statement, topics, lake layout and star schema agreed (L3); pageview download script works on one hour (S2); `dim_wiki` seed (S3); Overleaf skeleton (L16) |
 | **CP2** | **Fri 6 Nov** | **Thin slice works end to end**: Kafka → MinIO → dbt/DuckDB → Postgres → one Metabase chart; Airflow pageview DAG v0 runs; diagram v1 |
 | **CP3** | **Tue 10 Nov** | **Pipeline frozen**: stream processor + split topics + consumer group, full star schema + dbt tests, full Airflow DAG. Only bug fixes after this |
 | **CP4** | **Fri 13 Nov** | **Analysis window frozen**; dashboard final; insights with numbers; one-command setup + sample-data mode; README v1 |
@@ -78,11 +78,11 @@ Done means finished, not started.
 ## Tasks
 
 ### Lynn (lead): architecture, streaming, lake, orchestration, warehouse + dbt, integration
-Owns `docker-compose.yml`, `stream/`, `airflow/dags/`, `dbt/models/`, `scripts/`, `README.md`.
+Owns `docker-compose.yml`, `stream/`, `airflow/dags/`, `dbt/models/`, `scripts/`, `README.md`, `report/` (+ the Overleaf project).
 
 | ID | Task | Effort | Due |
 |---|---|---|---|
-| L1 | ✅ Folder layout done 25 Oct (GitHub repo + inviting Sumaiya still to do). GitHub repo + folder layout, add Sumaiya, `.gitignore` for data and `.env`. **Data lives in Docker named volumes, never in the OneDrive folder** (OneDrive sync + millions of small files = locks and slowdowns) | 45 min | **CP0** |
+| L1 | ✅ Done 25 Oct (private repo `lynn60107070/dsai5102-wiki-pipeline`, Sumaiya invited). GitHub repo + folder layout, add Sumaiya, `.gitignore` for data and `.env`. **Data lives in Docker named volumes, never in the OneDrive folder** (OneDrive sync + millions of small files = locks and slowdowns) | 45 min | **CP0** |
 | L2 | ✅ **Live since 25 Oct 05:58 UTC** (~950 events/min kept, resume after restart tested). **Collector live**: compose with Kafka (single broker, from the lab) + producer reading the EventStreams `recentchange` feed into topic `wiki.raw` (key = wiki, so each wiki stays in one partition) + a raw sink consumer writing hourly `.jsonl.gz` files. Keep only `edit` + `new` events and drop `canary` events (~14/s, ~1.2M/day). Laptop set to **never sleep when plugged in**; test whether `?since=` can backfill short gaps [R: Stream, Lec 10] | 3 h | **Tue 27 Oct** |
 | L3 | Design note (`docs/design.md`): problem statement as one sentence, topic list, lake layout (`raw/` → `clean/`, partitioned `dt=/hour=`), star schema draft (table, grain, keys). Shared with Sumaiya for the diagram (S6) [R: Problem, Warehouse, Lec 4 star schema] | 2 h | **CP1** |
 | L4 | MinIO in compose (**pin an image tag**, no `latest`); sink writes Parquet to `s3://lake/raw/edits/dt=/hour=`; backfill the `.jsonl.gz` files collected since 27 Oct [R: Warehouse, Lec 5 data lake, Lec 8 ELT] | 3 h | **CP2** |
@@ -97,16 +97,16 @@ Owns `docker-compose.yml`, `stream/`, `airflow/dags/`, `dbt/models/`, `scripts/`
 | L13 | Slides: template, architecture, pipeline walkthrough, design decisions (~7 min); assemble the deck | 2 h | **CP5** |
 | L14 | Live demo script (what to click, in order) + backup screen recording in case the demo fails | 1 h | Rehearsal 2 |
 | L15 | Final package: repo access for the instructor checked, report PDF, submit | 1 h | **Tue 24 Nov** |
+| L16 | Overleaf project: one file per section (5–10 pages), shared with Sumaiya; link in `report/README.md` | 1 h | **CP1** |
 
 ### Sumaiya: batch ingestion pieces, reference data, diagram, dashboard, insights
-Owns `ingest/`, `dbt/seeds/`, `docs/diagram/`, `metabase/`, `report/` (Overleaf project).
+Owns `ingest/`, `dbt/seeds/`, `docs/diagram/`, `metabase/`.
 
 | ID | Task | Effort | Due |
 |---|---|---|---|
 | S1 | Setup: clone, Docker Desktop with **≥ 8 GB RAM** allotted, start the Kafka lab compose, post a screenshot | 30 min | **CP0** |
 | S2 | `ingest/pageviews.py`: `fetch_hour(date, hour)` downloads one hourly file from `dumps.wikimedia.org/other/pageviews/`, keeps only Wikipedia projects, writes Parquet. Test on one hour; record file size and rows before → after the filter (goes in the report) [R: Batch, Lec 3 data sources] | 3 h | **CP1** |
 | S3 | `dbt/seeds/dim_wiki.csv` from the sitematrix API (`action=sitematrix`): wiki id (`enwiki`), language code, language name, project family, Arabic/local flag [R: Warehouse] | 1.5 h | **CP1** |
-| S4 | Overleaf project, one file per section (5–10 pages), shared with Lynn | 1 h | **CP1** |
 | S5 | Ask Dr. Bouguelia: our presentation date, any report template preference, a 2-person group is fine | 10 min | **CP1** |
 | S6 | Architecture diagram (draw.io, export PNG + SVG) from L3: v1 at CP2, final at CP4 [R: Documentation: "with diagram"] | 2 h | **CP2** / **CP4** |
 | S7 | Tool justification table: for each tool, its job, 1–2 alternatives, why we picked it (stress the 2 not covered in class: DuckDB, dbt) [R: "explain tools not covered in the course"] | 2 h | **CP2** |
@@ -137,7 +137,7 @@ Owns `ingest/`, `dbt/seeds/`, `docs/diagram/`, `metabase/`, `report/` (Overleaf 
 
 **CP0 · Mon 26 Oct (in the chat, by 10 pm):** L1 · S1. Each person posts `docker ps` with the Kafka broker up.
 **Collector · Tue 27 Oct:** L2. Lynn posts the first hour's file and its event count.
-**CP1 · Thu 29 Oct:** L3 · S2 S3 S4 S5 · T1
+**CP1 · Thu 29 Oct:** L3 L16 · S2 S3 S5 · T1
 **CP2 · Fri 6 Nov:** L4 L5 L6 · S6 (v1) S7 (thin slice end to end)
 **CP3 · Tue 10 Nov:** L7 L8 L9 (pipeline frozen)
 **CP4 · Fri 13 Nov:** L10 L11 · S6 (final) S8 S9 S10 (window frozen, dashboard final)

@@ -1,6 +1,6 @@
 # Report
 
-Written on Overleaf (task S4). Overleaf link: _(add here)_
+Written on Overleaf (set up by Lynn, task L16). Overleaf link: _(add here)_
 
 5–10 pages, PDF. Required parts (from the project brief): problem statement and dataset · architecture
 overview with diagram · design choices and justification · implementation details · results and insights

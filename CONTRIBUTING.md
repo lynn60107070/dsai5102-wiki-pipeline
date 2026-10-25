@@ -70,8 +70,8 @@ You edit only the files you own. To change someone else's file, ask them or open
 
 | Owner | Files | Job |
 |---|---|---|
-| **Lynn** (lead) | `docker-compose.yml`, `stream/`, `airflow/`, `dbt/models/`, `tests/`, `README.md`, `docs/design.md` | Architecture, Kafka, lake, Airflow, dbt star schema, integration |
-| **Sumaiya** | `ingest/`, `dbt/seeds/`, `docs/diagram/`, `metabase/`, `report/` (+ the Overleaf project) | Pageview ingestion, reference data, diagram, dashboard, insights |
+| **Lynn** (lead) | `docker-compose.yml`, `stream/`, `airflow/`, `dbt/models/`, `tests/`, `README.md`, `docs/design.md`, `report/` (+ the Overleaf project) | Architecture, Kafka, lake, Airflow, dbt star schema, integration, report setup |
+| **Sumaiya** | `ingest/`, `dbt/seeds/`, `docs/diagram/`, `metabase/` | Pageview ingestion, reference data, diagram, dashboard, insights |
 | **Both** | `SCHEDULE.md`, `DELIVERABLES.md`, `CONTRIBUTING.md` | Change only when both agree |
 
 ## 4. Where your first tasks start
@@ -80,7 +80,6 @@ You edit only the files you own. To change someone else's file, ask them or open
 |---|---|
 | S2 pageview script | [ingest/pageviews.py](ingest/pageviews.py): the signature, output columns and TODOs are written; the DAG will call `fetch_hour` exactly as defined |
 | S3 `dim_wiki` seed | [dbt/seeds/dim_wiki.csv](dbt/seeds/dim_wiki.csv): the header is set; fill it from the sitematrix API (a small script in `ingest/` is fine) |
-| S4 Overleaf | Put the link in [report/README.md](report/README.md) |
 | S6 diagram | [docs/design.md](docs/design.md) §3–§6; save files in `docs/diagram/` |
 
 ## 5. Git workflow
