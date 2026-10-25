@@ -31,7 +31,7 @@ marks on, **Lec n** = the lecture or lab it applies. The full deliverables list 
 | Kick-off | Sun 25 Oct | Plan shared; both read this file and DELIVERABLES.md |
 | **CP0** | **Mon 26 Oct** | **Both set up**: repo cloned, Docker Desktop running, the Kafka lab compose starts (proof in the chat, no call) |
 | Collector | **Tue 27 Oct** | **Stream collector live** and writing data 24/7 (L2) |
-| **CP1** | **Thu 29 Oct** | Problem statement, topics, lake layout and star schema agreed (L3); pageview download script works on one hour (S2); `dim_wiki` seed (S3); Overleaf skeleton (L16) |
+| **CP1** | **Thu 29 Oct** | Problem statement, topics, lake layout and star schema agreed (L3); pageview download script works on one hour (S2); `dim_wiki` seed (S3) |
 | **CP2** | **Fri 6 Nov** | **Thin slice works end to end**: Kafka → MinIO → dbt/DuckDB → Postgres → one Metabase chart; Airflow pageview DAG v0 runs; diagram v1 |
 | **CP3** | **Tue 10 Nov** | **Pipeline frozen**: stream processor + split topics + consumer group, full star schema + dbt tests, full Airflow DAG. Only bug fixes after this |
 | **CP4** | **Fri 13 Nov** | **Analysis window frozen**; dashboard final; insights with numbers; one-command setup + sample-data mode; README v1 |
@@ -78,7 +78,7 @@ Done means finished, not started.
 ## Tasks
 
 ### Lynn (lead): architecture, streaming, lake, orchestration, warehouse + dbt, integration
-Owns `docker-compose.yml`, `stream/`, `airflow/dags/`, `dbt/models/`, `scripts/`, `README.md`, `report/` (+ the Overleaf project).
+Owns `docker-compose.yml`, `stream/`, `airflow/dags/`, `dbt/models/`, `scripts/`, `README.md`, `paper/main.tex`, `paper/sections/03`–`05` (+ the Overleaf project).
 
 | ID | Task | Effort | Due |
 |---|---|---|---|
@@ -97,7 +97,7 @@ Owns `docker-compose.yml`, `stream/`, `airflow/dags/`, `dbt/models/`, `scripts/`
 | L13 | Slides: template, architecture, pipeline walkthrough, design decisions (~7 min); assemble the deck | 2 h | **CP5** |
 | L14 | Live demo script (what to click, in order) + backup screen recording in case the demo fails | 1 h | Rehearsal 2 |
 | L15 | Final package: repo access for the instructor checked, report PDF, submit | 1 h | **Tue 24 Nov** |
-| L16 | Overleaf project: one file per section (5–10 pages), shared with Sumaiya; link in `report/README.md` | 1 h | **CP1** |
+| L16 | Paper setup **before handover**: LaTeX skeleton in `paper/` (one file per section, workflow in `paper/README.md`) + Lynn's Overleaf project that compiles the PDF. Sections arrive by PR; Lynn compile-checks, merges, copies into Overleaf | 1 h | **Sun 25 Oct** |
 
 ### Sumaiya: batch ingestion pieces, reference data, diagram, dashboard, insights
 Owns `ingest/`, `dbt/seeds/`, `docs/diagram/`, `metabase/`.
@@ -137,7 +137,7 @@ Owns `ingest/`, `dbt/seeds/`, `docs/diagram/`, `metabase/`.
 
 **CP0 · Mon 26 Oct (in the chat, by 10 pm):** L1 · S1. Each person posts `docker ps` with the Kafka broker up.
 **Collector · Tue 27 Oct:** L2. Lynn posts the first hour's file and its event count.
-**CP1 · Thu 29 Oct:** L3 L16 · S2 S3 S5 · T1
+**CP1 · Thu 29 Oct:** L3 · S2 S3 S5 · T1
 **CP2 · Fri 6 Nov:** L4 L5 L6 · S6 (v1) S7 (thin slice end to end)
 **CP3 · Tue 10 Nov:** L7 L8 L9 (pipeline frozen)
 **CP4 · Fri 13 Nov:** L10 L11 · S6 (final) S8 S9 S10 (window frozen, dashboard final)

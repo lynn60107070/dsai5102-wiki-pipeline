@@ -43,7 +43,9 @@ Sumaiya (dashboard + insights, ~4 min) → Lynn (challenges + lessons + conclusi
 | Fresh-clone test passed on a second laptop (S13) | Reproducibility | Sumaiya | CP6 |
 | Instructor can access the repo (public, or invited). **Check before submitting** | — | Lynn | Submit |
 
-## 3. Report (PDF, 5–10 pages, written on Overleaf) · **Tue 24 Nov**
+## 3. Report (PDF, 5–10 pages, LaTeX in `paper/`, compiled on Overleaf) · **Tue 24 Nov**
+
+Written through GitHub PRs, one file per section; workflow in [paper/README.md](paper/README.md).
 
 | Section (required by the brief) | Rubric row | Owner | Due |
 |---|---|---|---|

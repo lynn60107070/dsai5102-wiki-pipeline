@@ -1,0 +1,44 @@
+% DSAI5102 final project report. Owner: Lynn (only Lynn edits this file).
+% Each section lives in sections/ and is edited only by its owner (see README.md).
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+\graphicspath{{figures/}}
+\lstset{basicstyle=\ttfamily\small, breaklines=true, frame=single}
+
+% \todo{...} shows open items in red while drafting; remove them all before submitting.
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\title{Wikipedia Live Edits: An End-to-End Streaming and Batch Data Pipeline\\
+  \large DSAI5102 Data Architecture \& Engineering, Final Project}
+\author{Lynn Younes (60107070) \and Sumaiya \todo{student ID}}
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+\noindent\textbf{Code:} \url{https://github.com/lynn60107070/dsai5102-wiki-pipeline}
+
+\input{sections/01_introduction}
+\input{sections/02_dataset}
+\input{sections/03_architecture}
+\input{sections/04_design_choices}
+\input{sections/05_implementation}
+\input{sections/06_results}
+\input{sections/07_discussion}
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}

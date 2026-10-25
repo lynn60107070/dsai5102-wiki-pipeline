@@ -18,6 +18,16 @@ dbt/logs/
 dbt/dbt_packages/
 airflow/logs/
 
+# LaTeX build files (the PDF is built on Overleaf)
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.synctex.gz
+paper/*.fdb_latexmk
+paper/*.fls
+
 # editors / OS
 .vscode/
 .idea/

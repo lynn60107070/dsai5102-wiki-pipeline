@@ -1,0 +1,17 @@
+% Owner: Lynn. Brief: "Implementation details (technologies, data flow)".
+\section{Implementation}\label{sec:implementation}
+
+\subsection{Stream ingestion}\label{sec:impl-stream}
+\todo{Producer, topics and keys, processor, consumer group, delivery guarantees (at-least-once + dedup).}
+
+\subsection{Batch ingestion and orchestration}\label{sec:impl-batch}
+\todo{Airflow DAG: tasks, schedule, retries.}
+
+\subsection{Data lake}\label{sec:impl-lake}
+\todo{MinIO layout: raw and clean zones.}
+
+\subsection{Warehouse and transformations}\label{sec:impl-dbt}
+\todo{Star schema table (tables, grain, keys), dbt layers, incremental models, tests, lineage graph.}
+
+\subsection{Reproducibility}\label{sec:impl-repro}
+\todo{One-command setup, sample-data mode.}

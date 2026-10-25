@@ -70,9 +70,12 @@ You edit only the files you own. To change someone else's file, ask them or open
 
 | Owner | Files | Job |
 |---|---|---|
-| **Lynn** (lead) | `docker-compose.yml`, `stream/`, `airflow/`, `dbt/models/`, `tests/`, `README.md`, `docs/design.md`, `report/` (+ the Overleaf project) | Architecture, Kafka, lake, Airflow, dbt star schema, integration, report setup |
-| **Sumaiya** | `ingest/`, `dbt/seeds/`, `docs/diagram/`, `metabase/` | Pageview ingestion, reference data, diagram, dashboard, insights |
-| **Both** | `SCHEDULE.md`, `DELIVERABLES.md`, `CONTRIBUTING.md` | Change only when both agree |
+| **Lynn** (lead) | `docker-compose.yml`, `stream/`, `airflow/`, `dbt/models/`, `tests/`, `README.md`, `docs/design.md`, `paper/main.tex` + `paper/sections/03`–`05` (+ the Overleaf project) | Architecture, Kafka, lake, Airflow, dbt star schema, integration, paper assembly |
+| **Sumaiya** | `ingest/`, `dbt/seeds/`, `docs/diagram/`, `metabase/`, `paper/sections/01`, `02`, `06`, `07` | Pageview ingestion, reference data, diagram, dashboard, insights |
+| **Both** | `SCHEDULE.md`, `DELIVERABLES.md`, `CONTRIBUTING.md`, `paper/refs.bib` (add only) | Change only when both agree |
+
+**The paper** is written the same way as the code (branches + PRs, one file per section); see
+[paper/README.md](paper/README.md).
 
 ## 4. Where your first tasks start
 
