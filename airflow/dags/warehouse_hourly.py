@@ -36,6 +36,8 @@ SCRIPTS = "/opt/airflow/project/scripts"
     start_date=datetime(2026, 10, 25, tzinfo=timezone.utc),
     catchup=False,
     max_active_runs=1,
+    is_paused_upon_creation=False,  # safe to run from the start: it only reads the lake
+
     default_args={
         "retries": 1,
         "retry_delay": timedelta(minutes=5),

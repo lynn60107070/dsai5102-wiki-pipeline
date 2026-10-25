@@ -1,12 +1,34 @@
 % Owner: Lynn. Brief: "Architecture overview (with diagram)".
 \section{Architecture}\label{sec:architecture}
 
-\todo{Architecture diagram (S6) as \cref{fig:architecture}, then a walk through the data flow: stream
-path, batch path, warehouse, serving.}
+\Cref{fig:architecture} shows the pipeline. It has two ingestion paths that meet in a shared data
+lake, one warehouse that models both, and a serving layer for the dashboard. All fourteen services run
+in Docker Compose and start with one command.
 
 % \begin{figure}[t]
 %   \centering
 %   \includegraphics[width=\linewidth]{architecture.pdf}
-%   \caption{End-to-end architecture.}
+%   \caption{End-to-end architecture. Solid arrows: the always-on stream path; dashed arrows: the
+%     scheduled batch path (Airflow). Square brackets: Kafka topics.}
 %   \label{fig:architecture}
 % \end{figure}
+\todo{Architecture diagram from S6 as \cref{fig:architecture} (uncomment the figure above).}
+
+\paragraph{Stream path (always on).} A producer reads Wikimedia's live \emph{recentchange} feed
+(server-sent events), keeps edits and page creations (about 16 events per second), and publishes them
+to the Kafka topic \texttt{wiki.raw}, keyed by wiki so that each wiki's events stay in order. Two
+independent consumers read it. The \emph{raw sink} archives every event unchanged in the lake's raw
+zone. The \emph{processor} validates each event, removes personal data, separates bots from humans into
+\texttt{edits.bot} and \texttt{edits.human}, counts edits per wiki and minute into
+\texttt{edits.per\_minute}, and sends anything invalid to \texttt{wiki.deadletter}. A consumer group of
+two \emph{clean sinks} writes the cleaned events to the lake's clean zone as Parquet, and a
+\emph{live-stats} consumer keeps the per-minute counts in Postgres for a near-real-time dashboard tile.
+
+\paragraph{Batch path (scheduled).} Airflow runs two DAGs. \texttt{pageviews\_hourly} waits for
+Wikimedia to publish each hourly pageview file, filters it, and uploads it to the lake.
+\texttt{warehouse\_hourly} runs every hour and whenever new pageview files arrive: it compacts the clean
+zone, runs dbt (models and data tests) on DuckDB, and exports the dashboard tables to Postgres.
+
+\paragraph{Storage and serving.} MinIO (S3 API) holds the lake, partitioned by date and hour. DuckDB
+holds the star schema. Because DuckDB allows only one writer, the dashboard never reads it directly:
+the finished tables are copied into a Postgres database that Metabase reads through a read-only account.

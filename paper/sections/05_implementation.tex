@@ -1,17 +1,80 @@
 % Owner: Lynn. Brief: "Implementation details (technologies, data flow)".
 \section{Implementation}\label{sec:implementation}
 
-\subsection{Stream ingestion}\label{sec:impl-stream}
-\todo{Producer, topics and keys, processor, consumer group, delivery guarantees (at-least-once + dedup).}
+\subsection{Stream ingestion and processing}\label{sec:impl-stream}
+
+\Cref{tab:topics} lists the Kafka topics. The producer stores the id of the last event it forwarded, so
+after a restart it asks Wikimedia to resume from that point and short outages fill themselves in. The
+processor's validation, privacy and windowing logic is separated from Kafka and covered by unit tests.
+
+\begin{table}[h]
+  \centering\small
+  \begin{tabular}{lcll}
+    \toprule
+    Topic & Partitions & Written by & Read by (consumer group) \\
+    \midrule
+    \texttt{wiki.raw}          & 3 & producer  & raw sink, processor \\
+    \texttt{edits.bot}, \texttt{edits.human} & 3 each & processor & clean sinks $\times$2 \\
+    \texttt{edits.per\_minute} & 1 & processor & live-stats \\
+    \texttt{wiki.deadletter}   & 1 & processor & inspected by hand \\
+    \bottomrule
+  \end{tabular}
+  \caption{Kafka topics and consumer groups.}
+  \label{tab:topics}
+\end{table}
+
+\paragraph{Per-minute counts.} The processor counts edits in one-minute windows by event time and emits
+a minute two minutes after it ends, so slightly late events are still counted. Its first version used
+the newest event seen on any partition as the clock. While catching up on a backlog, partitions are
+read unevenly, so one partition raced ahead and 205,814 events from the others were wrongly treated as
+late. The fix, standard in stream processors, is a per-partition watermark: a minute closes only when
+every assigned partition has passed it.
+
+\paragraph{Delivery guarantees in practice.} Docker stops a container after ten seconds by default.
+When the sinks were restarted mid-backlog, they were killed before committing their offsets and later
+re-processed those events. Measured against the raw zone, the clean zone then held 381,066 duplicate
+rows and no missing events. A compaction job removed every duplicate, and the stream services now get
+60 seconds to shut down cleanly.
 
 \subsection{Batch ingestion and orchestration}\label{sec:impl-batch}
-\todo{Airflow DAG: tasks, schedule, retries.}
 
-\subsection{Data lake}\label{sec:impl-lake}
-\todo{MinIO layout: raw and clean zones.}
+\texttt{pageviews\_hourly} runs one task chain per UTC hour: a sensor waits until the file is
+published, the pageview script filters it (\cref{sec:data}), the upload writes two Parquet files to
+the lake, and a clean-up step removes local copies even after a failure. Re-running an hour overwrites
+the same objects, so retries and backfills are safe. The upload updates an Airflow \emph{Dataset};
+\texttt{warehouse\_hourly} is scheduled on that Dataset \emph{or} hourly, so the two DAGs coordinate
+without calling each other. A separate freshness check turns red when the stream has not written for
+fifteen minutes.
 
 \subsection{Warehouse and transformations}\label{sec:impl-dbt}
-\todo{Star schema table (tables, grain, keys), dbt layers, incremental models, tests, lineage graph.}
+
+dbt organises the SQL in three layers (\cref{tab:schema}): \emph{staging} views over the lake,
+\emph{core} facts and dimensions, and \emph{marts}, one per dashboard tile. The fact tables are
+incremental: each run reloads only the last day and replaces rows by key. Thirty-eight data tests check
+unique and non-null keys, accepted values, and a relationship from every fact key to its dimension.
+\todo{dbt lineage graph as a figure (dbt docs generate).}
+
+\begin{table}[h]
+  \centering\small
+  \begin{tabularx}{\linewidth}{lX}
+    \toprule
+    Table & Grain \\
+    \midrule
+    \texttt{fact\_edit} & one edit or page creation \\
+    \texttt{fact\_pageviews\_hourly} & hour $\times$ wiki $\times$ article $\times$ access (articles with $\geq$ 10 views) \\
+    \texttt{fact\_wiki\_views\_hourly} & hour $\times$ wiki $\times$ access (all views) \\
+    \texttt{dim\_time}, \texttt{dim\_wiki}, \texttt{dim\_article}, \texttt{dim\_editor\_type} & one UTC hour; one wiki; one article; one editor type \\
+    \texttt{mart\_*} (4) & edits per hour; activity per wiki and day; completeness per hour; attention vs edits per article-hour \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Star schema and marts.}
+  \label{tab:schema}
+\end{table}
 
 \subsection{Reproducibility}\label{sec:impl-repro}
-\todo{One-command setup, sample-data mode.}
+
+\texttt{docker compose up -d --build} on a fresh clone is the only step: every setting has a default,
+and a one-off bootstrap service loads six bundled hours of real data into the empty lake (never into
+one that already has data), runs the warehouse DAG once through Airflow, and configures Metabase
+through its API. Testing this on a fresh clone found two problems, both fixed: file paths longer than
+Windows allows, and a dashboard tile that failed before the stream had created its table.

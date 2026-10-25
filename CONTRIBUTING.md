@@ -14,18 +14,12 @@ Intel/AMD (`amd64`) and Apple Silicon (`arm64`) builds. Only the local Python co
    *Start Docker Desktop when you sign in*.
 2. Clone and configure:
 
-   **macOS** (Terminal)
    ```bash
    git clone https://github.com/lynn60107070/dsai5102-wiki-pipeline.git
    cd dsai5102-wiki-pipeline
-   cp .env.example .env
    ```
-   **Windows** (cmd)
-   ```bat
-   git clone https://github.com/lynn60107070/dsai5102-wiki-pipeline.git
-   cd dsai5102-wiki-pipeline
-   copy .env.example .env
-   ```
+   A `.env` file is optional (every setting has a default). Make one only to change passwords:
+   `cp .env.example .env` (macOS) or `copy .env.example .env` (Windows).
 3. Python 3.12 for scripts and tests on your laptop (on a Mac without it: `brew install python@3.12`):
 
    **macOS**
@@ -54,8 +48,10 @@ docker compose ps
 docker compose logs -f producer
 ```
 
-Within a minute the producer logs about `950 sent to wiki.raw` per minute. The raw sink writes its
-first files after 5 minutes. Check them with:
+Within a minute the producer logs about `950 sent to wiki.raw` per minute. The one-off `bootstrap`
+service loads the sample data, builds the warehouse and sets up Metabase (`docker compose logs -f bootstrap`,
+about 5 minutes); then the dashboard is at http://localhost:3000 (logins in the README). The raw sink
+writes its first files after 5 minutes. Check them with:
 
 ```bash
 docker compose exec raw-sink python -m stream.status
@@ -83,7 +79,7 @@ You edit only the files you own. To change someone else's file, ask them or open
 |---|---|
 | S2 pageview script | [ingest/pageviews.py](ingest/pageviews.py): the signature, output columns and TODOs are written; the DAG [airflow/dags/pageviews_hourly.py](airflow/dags/pageviews_hourly.py) calls `fetch_hour` exactly as defined. Test it inside Airflow (which has pyarrow 22, so don't rely on newer features): `docker compose exec airflow-scheduler airflow tasks test pageviews_hourly fetch 2026-10-28T12:00:00+00:00` |
 | S3 wiki names seed | [dbt/seeds/dim_wiki_names.csv](dbt/seeds/dim_wiki_names.csv): the header is set; fill it from the sitematrix API (a small script in `ingest/` is fine). [dbt/models/core/dim_wiki.sql](dbt/models/core/dim_wiki.sql) already joins it on `wiki_id`, so once it has rows the dashboard shows language names (e.g. "Arabic" instead of `ar`) |
-| S9 dashboard (later) | Metabase at http://localhost:3000 already has the "Wiki serving" connection and a first chart on dashboard "Wikipedia edits" (created by `python scripts/metabase_setup.py`). Build new tiles there on the `mart_*` tables |
+| S9 dashboard (later) | Metabase at http://localhost:3000 already has the "Wiki serving" connection and two charts on dashboard "Wikipedia edits" (set up automatically by `bootstrap`). Build new tiles on the `mart_*` tables; when a tile is final, add it to `CARDS` in [scripts/metabase_setup.py](scripts/metabase_setup.py) (or ask Lynn) so a fresh install recreates it |
 | S6 diagram | [docs/design.md](docs/design.md) §3–§6; save files in `docs/diagram/` |
 
 ## 5. Git workflow

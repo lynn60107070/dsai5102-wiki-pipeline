@@ -11,12 +11,17 @@ quiet() { "$@" 2>/dev/null | grep -vE "INFO -|plugins.py|Warning|warn" || true; 
 
 "$PY" "$SCRIPTS/load_sample.py"
 
-echo "waiting for Airflow to load the DAGs..."
-for _ in $(seq 1 30); do
-    airflow dags list 2>/dev/null | grep -q warehouse_hourly && break
-    sleep 10
+# Wait until the scheduler has registered the DAG in Airflow's database AND it is unpaused. (Checking
+# `airflow dags list` is not enough: it reads the DAG files, so it can see the DAG before the database
+# row exists; an unpause then does nothing and a triggered run stays queued forever.)
+echo "waiting for Airflow to register warehouse_hourly..."
+for _ in $(seq 1 60); do
+    airflow dags unpause warehouse_hourly >/dev/null 2>&1 || true
+    airflow dags details warehouse_hourly -o plain 2>/dev/null | grep -qE "^is_paused +False" && break
+    sleep 5
 done
-quiet airflow dags unpause warehouse_hourly
+airflow dags details warehouse_hourly -o plain 2>/dev/null | grep -qE "^is_paused +False" \
+    || { echo "warehouse_hourly was not registered/unpaused after 5 min: check the Airflow UI"; exit 1; }
 
 run_id="bootstrap__$(date -u +%Y%m%dT%H%M%S)"
 quiet airflow dags trigger warehouse_hourly -r "$run_id"

@@ -125,6 +125,23 @@ schedules batch work.
 - **Reproducible dashboard setup:** `scripts/metabase_setup.py` creates the admin account, the
   connection and the first chart through Metabase's API, and is safe to run again.
 
+## 5d. Reproducibility: one command (L10, 25 Oct)
+
+- **`.env` is optional.** Every variable in `docker-compose.yml` has a working default (the
+  `.env.example` values); `.env` only overrides them. A fresh clone needs only `docker compose up -d --build`.
+- **`bootstrap` service** (Airflow image, one-off, last to start, safe on every `up`):
+  1. `scripts/load_sample.py`: loads `sample/` (6 real hours of the clean zone, 386,992 edits, 17 MB,
+     no user names) **only if the lake's clean zone is empty**, so sample rows can never mix with real data;
+  2. unpauses `warehouse_hourly` and triggers it **through Airflow** (not by running dbt directly), so it
+     can't collide with a scheduled run over DuckDB's single writer; waits for `export_marts`;
+  3. `scripts/metabase_setup.py`: admin account, connection, charts, dashboard.
+- `scripts/make_sample.py` regenerates the sample from compacted hours (planned: a day inside the
+  analysis window, once it exists).
+- **Fresh-clone test (25 Oct)**, isolated project with other ports, no `.env`: found two real problems,
+  both fixed and re-tested: (1) sample file paths were over Windows' 260-character limit, so the clone
+  failed on checkout (paths shortened from ~85 to 62 characters); (2) the live tile errored when Metabase
+  was set up before the stream had created its table (now created by `postgres/init`).
+
 ## 6. Star schema (warehouse, DuckDB + dbt), built 25 Oct
 
 Layers: `staging` (views over the lake, no copies) → `core` (facts + dimensions) → `marts` (one per

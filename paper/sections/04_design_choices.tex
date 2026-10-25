@@ -1,10 +1,40 @@
 % Owner: Lynn. Brief: "Design choices and justification"; explain especially tools not covered in the course.
 \section{Design Choices}\label{sec:design}
 
-\todo{Tool table (from S7): layer, tool, job, alternatives considered, why chosen.}
+\todo{Tool table from S7 (Sumaiya): layer, tool, job, alternatives considered, why chosen.}
 
-\todo{Stream and batch: why the edits are streamed and the pageviews are batch.}
+\paragraph{Stream and batch.} Edits are a genuine event stream: they arrive continuously and cannot be
+re-downloaded later, so they go through Kafka, which buffers them durably and lets several consumers
+read the same events independently (the raw archive, the processor). Pageviews are published by
+Wikimedia as hourly files that stay available, so a scheduled batch job is the natural fit; it can
+also backfill missed hours automatically.
 
-\todo{DuckDB computes, Postgres serves: the single-writer lock and why marts are exported.}
+\paragraph{Lake zones (ELT).} The raw zone keeps every event exactly as received (schema-on-read), so
+any later cleaning mistake can be redone from it. The clean zone holds validated, typed, privacy-safe
+Parquet, which the warehouse reads directly without parsing JSON. Data is partitioned by
+\texttt{dt=}/\texttt{hour=} so that queries over a date range only read the matching folders.
 
-\todo{Star schema and partitioning: why this grain, why Hive-style dt/hour partitions.}
+\paragraph{DuckDB computes, Postgres serves.} DuckDB is a columnar, in-process engine: it scans and
+aggregates hundreds of thousands of rows in well under a second on a laptop and reads Parquet from S3
+directly, which suits an analytical workload. But a DuckDB file accepts one writer at a time, so a
+dashboard reading it while dbt rebuilds it would fail. The marts are therefore copied into Postgres
+after every successful build, each inside one transaction, and Metabase reads only those copies.
+
+\paragraph{Star schema.} The warehouse follows a star schema~\cite{kimball2013toolkit}: a fact table
+at the finest grain (one row per edit), surrounded by dimensions for time, wiki, article and editor
+type. Natural keys are used instead of surrogate integers because they are stable across full rebuilds
+and readable in the dashboard. Marts are pre-aggregated per dashboard tile and store counts, not shares,
+so that any date range can be summed correctly before dividing.
+
+\paragraph{Reliability.} Every consumer commits its Kafka offsets only after its output is safely
+written (at-least-once delivery). This can repeat events after a crash but never loses them; duplicates
+are removed by event id in the compaction step and again in dbt. dbt's data tests act as a quality gate:
+if any test fails, the export does not run and the dashboard keeps the last good data.
+
+\paragraph{Privacy and access.} User names are dropped in the stream processor; only an MD5 hash
+(to count distinct editors) and the editor type are kept. Metabase connects with an account that can
+only read the serving tables.
+
+\paragraph{Constraints we hit.} MinIO stopped publishing free official container images in 2025, so we
+pin the last free build archived by Bitnami. Airflow follows the course lab's major version (2.x) with
+the lighter LocalExecutor, which needs no Redis or Celery workers on a single machine.
