@@ -1,0 +1,25 @@
+# secrets
+.env
+
+# data never goes in git (it lives in Docker volumes; samples for L10 get an explicit exception later)
+data/
+*.parquet
+*.jsonl.gz
+*.gz
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# dbt / airflow artefacts
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+airflow/logs/
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

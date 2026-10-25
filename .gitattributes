@@ -1,0 +1,9 @@
+# Same line endings on macOS and Windows: LF everywhere, so shell scripts and Dockerfiles
+# edited on Windows still run inside Linux containers and on a Mac.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.pdf binary
+*.png binary
+*.jpg binary
+*.gz binary
+*.parquet binary

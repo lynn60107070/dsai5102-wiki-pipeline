@@ -1,0 +1,6 @@
+# Only send what the images need (the repo sits in OneDrive with PDFs and docs we don't want in the build)
+*
+!stream/
+!ingest/
+stream/__pycache__
+ingest/__pycache__

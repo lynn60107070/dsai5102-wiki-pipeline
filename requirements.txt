@@ -1,0 +1,4 @@
+# For running scripts and tests on your laptop (the containers install their own).
+kafka-python==2.3.2
+requests==2.34.2
+pyarrow==26.0.0
