@@ -8,7 +8,8 @@ Source: `requirements_rubrics/Project Description - End-to-End Data Pipeline.pdf
 (project = 40% of the course; submission due **Tue 24 Nov 2026**; presentations in weeks 14–15).
 Checkpoint dates are in [SCHEDULE.md](SCHEDULE.md).
 
-## 0. Decided
+## 0. Decided / built
+- [x] Pipeline built and running end to end (25–26 Oct): see SCHEDULE.md "Where we are"
 - [x] Topic: Wikipedia live edits (stream) + hourly pageview files (batch) + sitematrix (reference data)
 - [x] Stack: Docker Compose · Kafka · MinIO · Airflow · DuckDB + dbt · Postgres (dashboard tables only) · Metabase
 - [ ] Problem statement agreed as one sentence (L3, CP1). Working version: *Wikipedia's volunteer patrollers
@@ -34,12 +35,12 @@ Sumaiya (dashboard + insights, ~4 min) → Lynn (challenges + lessons + conclusi
 
 | Deliverable | Rubric row | Owner | Due |
 |---|---|---|---|
-| Pipeline code: `stream/` (producer, processor, sinks), `ingest/` (pageviews), `dbt/` (models, seeds, tests) | Ingestion, Transformations | Lynn (+ Sumaiya: `ingest/`, seeds) | CP3 |
-| Orchestration: `airflow/dags/` (pageviews → dbt build → export to Postgres) | Ingestion (batch) | Lynn | CP3 |
-| `docker-compose.yml` that starts everything with one command; pinned image tags; `.env.example` | Reproducibility | Lynn | CP4 |
-| Sample-data mode (one bundled day) so the dashboard works without waiting for the stream | Reproducibility | Lynn | CP4 |
-| Metabase dashboard export (or setup steps) so it can be recreated | Dashboard, Reproducibility | Sumaiya | CP4 |
-| `README.md`: architecture + diagram, what each container does, setup, run (sample + live), troubleshooting | Reproducibility, Documentation | Lynn | CP4 |
+| Pipeline code: `stream/` (producer, processor, sinks), `ingest/` (pageviews, wiki names), `dbt/` (models, seeds, tests) | Ingestion, Transformations | Lynn | ✅ 26 Oct |
+| Orchestration: `airflow/dags/` (`pageviews_hourly`, `warehouse_hourly`) | Ingestion (batch) | Lynn | ✅ 25 Oct |
+| `docker-compose.yml` that starts everything with one command; pinned image tags; `.env` optional | Reproducibility | Lynn | ✅ 25 Oct |
+| Sample-data mode (6 bundled hours) so the dashboard works without waiting for the stream; regenerate from a window day | Reproducibility | Lynn | ✅ / CP4 |
+| Dashboard recreated on a fresh install: final tiles' SQL in `CARDS` in `scripts/metabase_setup.py` | Dashboard, Reproducibility | Sumaiya (SQL) + Lynn (merge) | CP4 |
+| `README.md`: architecture + diagram, what each container does, setup, run (sample + live), troubleshooting | Reproducibility, Documentation | Lynn (diagram image from S6) | ✅ v1 / CP4 |
 | Fresh-clone test passed on a second laptop (S13) | Reproducibility | Sumaiya | CP6 |
 | Instructor can access the repo (public, or invited). **Check before submitting** | — | Lynn | Submit |
 

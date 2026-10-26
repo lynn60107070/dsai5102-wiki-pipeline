@@ -1,97 +1,76 @@
 # Team guide: start here
 
-The stream collector already works: Kafka, the producer (Wikipedia's live edits → `wiki.raw`) and the
-raw sink (→ hourly files). You build your own part on top of it.
+The whole pipeline is built and running: live Wikipedia edits through Kafka into the MinIO lake, hourly
+pageviews through Airflow, a dbt star schema on DuckDB rebuilt every hour, and a Metabase dashboard.
+What's left is mostly **diagram, dashboard, insights, report and slides**.
 Tasks and deadlines: **[SCHEDULE.md](SCHEDULE.md)**. Everything we hand in: **[DELIVERABLES.md](DELIVERABLES.md)**.
-Design decisions: **[docs/design.md](docs/design.md)**.
+How it works and why: **[README.md](README.md)** (start here) and **[docs/design.md](docs/design.md)** (details).
 
 ## 1. One-time setup (macOS or Windows)
 
-The project runs the same on both: everything heavy runs in Docker, and every image we use has both
-Intel/AMD (`amd64`) and Apple Silicon (`arm64`) builds. Only the local Python commands differ.
+Everything runs in Docker, and every image has both Intel/AMD and Apple Silicon builds.
 
-1. **Docker Desktop** → Settings → Resources: give it **at least 8 GB of memory**. Also tick
-   *Start Docker Desktop when you sign in*.
-2. Clone and configure:
-
+1. **Accept the GitHub invite** (email, or https://github.com/lynn60107070/dsai5102-wiki-pipeline/invitations):
+   the repo is private, so cloning fails until you do.
+2. **Docker Desktop** → Settings → Resources: give it **at least 8 GB of memory**.
+3. Clone and start everything (no configuration needed; a `.env` file is optional):
    ```bash
    git clone https://github.com/lynn60107070/dsai5102-wiki-pipeline.git
    cd dsai5102-wiki-pipeline
+   docker compose up -d --build
+   docker compose logs -f bootstrap        # ends with "ready: ..." after ~3 min; Ctrl+C to stop watching
    ```
-   A `.env` file is optional (every setting has a default). Make one only to change passwords:
-   `cp .env.example .env` (macOS) or `copy .env.example .env` (Windows).
-3. Python 3.12 for scripts and tests on your laptop (on a Mac without it: `brew install python@3.12`):
+4. Open the **dashboard**: http://localhost:3000 → *Wikipedia edits*. Logins for the dashboard,
+   Airflow and MinIO are in the README's Quick start table.
 
-   **macOS**
-   ```bash
-   python3.12 -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   python -m unittest -v
-   ```
-   **Windows**
-   ```bat
-   py -3.12 -m venv .venv
-   .venv\Scripts\activate
-   pip install -r requirements.txt
-   python -m unittest -v
-   ```
-   All tests must pass (offline, no Docker needed).
+Your copy starts with **6 hours of real sample data** (bundled in the repo) plus whatever your own
+stream collects while it runs. **Only Lynn's laptop collects the project's data 24/7**, so on yours run
+it while you work, then `docker compose down` (add `-v` to also delete your local data).
 
-## 2. Run the collector
-
-Same commands on both systems:
-
+Optional, only for running the Python tests or scripts on your laptop (Python 3.12; on a Mac without it:
+`brew install python@3.12`):
 ```bash
-docker compose up -d --build
-docker compose ps
-docker compose logs -f producer
+python3.12 -m venv .venv && source .venv/bin/activate      # Windows: py -3.12 -m venv .venv && .venv\Scripts\activate
+pip install -r requirements.txt
+python -m unittest -v
 ```
 
-Within a minute the producer logs about `950 sent to wiki.raw` per minute. The one-off `bootstrap`
-service loads the sample data, builds the warehouse and sets up Metabase (`docker compose logs -f bootstrap`,
-about 5 minutes); then the dashboard is at http://localhost:3000 (logins in the README). The raw sink
-writes its first files after 5 minutes. Check them with:
-
-```bash
-docker compose exec raw-sink python -m stream.status
-```
-
-**Only Lynn's laptop runs the collector 24/7** (that's where the project's data comes from). On your laptop,
-run it briefly to test, then `docker compose down` (add `-v` to delete your test data too).
-
-## 3. Who owns what
+## 2. Who owns what
 
 You edit only the files you own. To change someone else's file, ask them or open a PR they review.
 
 | Owner | Files | Job |
 |---|---|---|
-| **Lynn** (lead) | `docker-compose.yml`, `stream/`, `airflow/`, `dbt/models/`, `tests/`, `README.md`, `docs/design.md`, `paper/main.tex` + `paper/sections/03`–`05` (+ the Overleaf project) | Architecture, Kafka, lake, Airflow, dbt star schema, integration, paper assembly |
-| **Sumaiya** | `ingest/`, `dbt/seeds/`, `docs/diagram/`, `metabase/`, `paper/sections/01`, `02`, `06`, `07` | Pageview ingestion, reference data, diagram, dashboard, insights |
+| **Sumaiya** | `docs/diagram/`, `metabase/`, `paper/sections/01`, `02`, `06`, `07` | Diagram, tool table, dashboard, insights, half the report and slides |
+| **Lynn** (lead) | everything else: `docker-compose.yml`, `stream/`, `ingest/`, `airflow/`, `dbt/`, `scripts/`, `postgres/`, `sample/`, `tests/`, `README.md`, `docs/design.md`, `paper/main.tex` + `paper/sections/03`–`05` (+ the Overleaf project) | Architecture and all pipeline code, report assembly |
 | **Both** | `SCHEDULE.md`, `DELIVERABLES.md`, `CONTRIBUTING.md`, `paper/refs.bib` (add only) | Change only when both agree |
 
 **The paper** is written the same way as the code (branches + PRs, one file per section); see
 [paper/README.md](paper/README.md).
 
-## 4. Where your first tasks start
+## 3. Where your tasks start
 
 | Task | Start here |
 |---|---|
-| S2 pageview script | [ingest/pageviews.py](ingest/pageviews.py): the signature, output columns and TODOs are written; the DAG [airflow/dags/pageviews_hourly.py](airflow/dags/pageviews_hourly.py) calls `fetch_hour` exactly as defined. Test it inside Airflow (which has pyarrow 22, so don't rely on newer features): `docker compose exec airflow-scheduler airflow tasks test pageviews_hourly fetch 2026-10-28T12:00:00+00:00` |
-| S3 wiki names seed | [dbt/seeds/dim_wiki_names.csv](dbt/seeds/dim_wiki_names.csv): the header is set; fill it from the sitematrix API (a small script in `ingest/` is fine). [dbt/models/core/dim_wiki.sql](dbt/models/core/dim_wiki.sql) already joins it on `wiki_id`, so once it has rows the dashboard shows language names (e.g. "Arabic" instead of `ar`) |
-| S9 dashboard (later) | Metabase at http://localhost:3000 already has the "Wiki serving" connection and two charts on dashboard "Wikipedia edits" (set up automatically by `bootstrap`). Build new tiles on the `mart_*` tables; when a tile is final, add it to `CARDS` in [scripts/metabase_setup.py](scripts/metabase_setup.py) (or ask Lynn) so a fresh install recreates it |
-| S6 diagram | [docs/design.md](docs/design.md) §3–§6; save files in `docs/diagram/` |
+| S1 setup | Section 1 above. Post a screenshot of the dashboard + `docker compose ps` in the chat |
+| S5 ask Dr. Bouguelia | Presentation date (25 Nov or 2 Dec?), report template preference, 2-person group OK |
+| S6 diagram | The README's text diagram + [docs/design.md](docs/design.md) §3–§5. Draw it in draw.io; save `.drawio` + `.svg` + `.png` + `.pdf` in `docs/diagram/` |
+| S7 tool table | README's "Layer / Tool / Job / Why" table is a start; add 1–2 alternatives per tool and why we didn't pick them. Goes in [paper/sections/04_design_choices.tex](paper/sections/04_design_choices.tex) at the `\todo` |
+| S9 dashboard | Metabase at http://localhost:3000 already has the "Wiki serving" connection and two tiles. Build new tiles on the `mart_*` tables (each table's grain and meaning: [docs/design.md](docs/design.md) §6). When a tile is final, add its SQL to `CARDS` in [scripts/metabase_setup.py](scripts/metabase_setup.py) (or send it to Lynn) so a fresh install recreates it |
+| S8, S10, S11 | After the analysis window closes (11 Nov): numbers from the dashboard/marts into the report sections |
 
-## 5. Git workflow
+Useful while exploring the data: the Postgres database `serving` (host port **5433**, user `metabase_ro`,
+password `METABASE_DB_PASSWORD` from `.env.example`) holds exactly the tables the dashboard sees.
 
-- `main` always works. Work on a branch (`sumaiya/pageviews`, `lynn/minio`), open a PR, and merge when it runs.
+## 4. Git workflow
+
+- `main` always works. Work on a branch (`sumaiya/diagram`, `sumaiya/paper-intro`), open a PR into `main`.
 - **Never commit data or `.env`.** Both are git-ignored. Data lives in Docker volumes.
-- Small commits with clear messages (`ingest: filter pageviews to Wikipedia projects`).
-- **Mac + Windows rules:** use `pathlib` for file paths in Python (never hard-code `\` or `/data/...` on
-  your laptop); any new Docker image must have an `arm64` build (check with
-  `docker manifest inspect <image> | grep arm64`); line endings are fixed to LF by `.gitattributes`.
+- Small commits with clear messages (`diagram: v1 architecture`).
+- **Mac + Windows rules:** use `pathlib` for file paths in Python; any new Docker image must have an
+  `arm64` build (`docker manifest inspect <image> | grep arm64`); line endings are fixed to LF by `.gitattributes`.
 
-## 6. Daily update (group chat, by 10 pm)
+## 5. Daily update (group chat, by 10 pm)
 
 ```
 ✅ Done today:   (task IDs)
