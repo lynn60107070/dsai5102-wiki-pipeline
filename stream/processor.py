@@ -20,7 +20,7 @@ from kafka import KafkaConsumer, KafkaProducer
 from kafka.errors import NoBrokersAvailable
 
 from stream.clean import InvalidEvent, MinuteCounter, clean_event
-from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, RAW_TOPIC
+from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, RAW_TOPIC, safe_commit
 
 GROUP_ID = os.environ.get("PROCESSOR_GROUP", "processor")
 BOT_TOPIC, HUMAN_TOPIC = "edits.bot", "edits.human"
@@ -78,7 +78,7 @@ def main():
 
             if batch:
                 producer.flush()   # outputs are safely in Kafka before the input offsets move on
-                consumer.commit()
+                safe_commit(consumer, log)
 
             if time.monotonic() - last_log >= LOG_EVERY_S:
                 log.info("last %.0f s: %d bot, %d human, %d dead-letter events; %d per-minute rows; %d late",

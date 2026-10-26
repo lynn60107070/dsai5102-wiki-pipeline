@@ -10,7 +10,27 @@ RAW_TOPIC = os.environ.get("RAW_TOPIC", "wiki.raw")
 
 # kafka-python 2.3 caps one network response at 1 MB, but a fetch across several partitions can return
 # up to 1 MB per partition (seen during catch-up as "InvalidReceiveError: Invalid frame length").
-CONSUMER_SETTINGS = {"receive_message_max_bytes": 64 * 1024 * 1024}
+# A 30 s session (default 10 s) keeps a consumer in its group through a short stall of the machine.
+CONSUMER_SETTINGS = {
+    "receive_message_max_bytes": 64 * 1024 * 1024,
+    "session_timeout_ms": 30_000,
+    "heartbeat_interval_ms": 10_000,
+}
+
+
+def safe_commit(consumer, log) -> bool:
+    """Commit offsets; if the group already rebalanced (the consumer was evicted during a stall), log it
+    and carry on instead of crashing. Those events are then delivered again: at-least-once, and the
+    duplicates are removed downstream (compaction, dbt)."""
+    from kafka.errors import CommitFailedError
+
+    try:
+        consumer.commit()
+        return True
+    except CommitFailedError as exc:
+        log.warning("offset commit failed after a group rebalance (%s); events since the last commit "
+                    "will be delivered again", exc.__class__.__name__)
+        return False
 
 # Edits and page creations only. Log entries (blocks, moves) and category changes are a different
 # kind of activity, and keeping only these two types halves the volume (~14 events/s instead of ~29).

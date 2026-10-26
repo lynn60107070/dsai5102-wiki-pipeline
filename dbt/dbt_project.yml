@@ -14,8 +14,8 @@ vars:
   data_start: "2026-10-25"
   analysis_start: "2026-10-28"
   analysis_end: "2026-11-12"
-  # Turn on once ingest/pageviews.py (S2) has written files to s3://lake/raw/pageviews/.
-  pageviews_enabled: false
+  # Pageview models (ingest/pageviews.py writes s3://lake/raw/pageviews/); on since 26 Oct.
+  pageviews_enabled: true
   pageviews_path: "s3://lake/raw/pageviews"
   # Reload this many days back on each incremental run (late or re-delivered events).
   lookback_days: 1

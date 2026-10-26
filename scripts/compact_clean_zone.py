@@ -32,7 +32,7 @@ def s3_client():
 
 
 def duckdb_session():
-    con = duckdb.connect()
+    con = duckdb.connect(config={"memory_limit": "1GB", "threads": 2})  # see dbt/profiles.yml
     con.execute("LOAD httpfs")
     con.execute(f"""CREATE SECRET lake (TYPE s3, KEY_ID '{os.environ["MINIO_ROOT_USER"]}',
         SECRET '{os.environ["MINIO_ROOT_PASSWORD"]}', ENDPOINT '{ENDPOINT}', URL_STYLE 'path', USE_SSL false)""")

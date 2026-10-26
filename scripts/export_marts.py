@@ -18,7 +18,7 @@ SERVING = (f"host={os.environ.get('POSTGRES_HOST', 'postgres')} port=5432 dbname
 def main():
     # An in-memory session that attaches the warehouse read-only and Postgres read-write, so the export
     # can never change the warehouse.
-    con = duckdb.connect()
+    con = duckdb.connect(config={"memory_limit": "1GB", "threads": 2})  # see dbt/profiles.yml
     con.execute("INSTALL postgres; LOAD postgres;")
     con.execute(f"ATTACH '{WAREHOUSE}' AS wh (READ_ONLY)")
     con.execute(f"ATTACH '{SERVING}' AS serving (TYPE postgres)")

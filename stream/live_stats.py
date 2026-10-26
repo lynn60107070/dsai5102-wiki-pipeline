@@ -18,7 +18,7 @@ import psycopg2
 from kafka import KafkaConsumer
 from kafka.errors import NoBrokersAvailable
 
-from stream.common import BOOTSTRAP, CONSUMER_SETTINGS
+from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, safe_commit
 
 TOPIC = "edits.per_minute"
 GROUP_ID = os.environ.get("LIVE_STATS_GROUP", "live-stats")
@@ -72,7 +72,7 @@ def main():
             if rows:
                 with db, db.cursor() as cur:
                     cur.executemany(UPSERT, rows)
-                consumer.commit()
+                safe_commit(consumer, log)
             if time.monotonic() - last_prune > 600:
                 with db, db.cursor() as cur:
                     cur.execute(PRUNE)

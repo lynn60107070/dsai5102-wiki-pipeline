@@ -1,6 +1,6 @@
 """Hourly batch: one Wikipedia pageview file -> two filtered Parquet files -> data lake (MinIO).
 
-One run per UTC hour since 25 Oct 2026 (the first day of edit data), so catchup backfills the history.
+One run per UTC hour since 25 Oct 2026 05:00 (the first hour of edit data), so catchup backfills the history.
 
     wait_for_file -> fetch -> upload -> cleanup
 
@@ -13,9 +13,8 @@ cleanup        removes the local copies, even if an earlier step failed
 
 Re-running an hour overwrites the same two objects, so retries and backfills are safe (idempotent).
 
-Hour alignment: the run for interval [HH:00, HH+1:00) fetches the file named ...-HH0000.gz. S2 checks in the
-Wikimedia docs whether that file holds the hour starting or ending at HH; if it is the ending hour, change
-`_file_hour` below to return start + 1 hour.
+Hour alignment: a file named ...-HH0000.gz holds the hour ENDING at HH (verified against the Pageview
+API, see ingest/pageviews.py), so the run for interval [HH:00, HH+1:00) fetches the file named HH+1.
 The DAG is paused when first created; unpause it in the UI once S2 is merged (and set
 `pageviews_enabled: true` in dbt/dbt_project.yml so the warehouse picks the files up).
 """
@@ -42,16 +41,16 @@ def _staging_dir(start: datetime) -> Path:
 
 def _file_hour(start: datetime) -> datetime:
     """Which pageview file (by the hour in its name) belongs to the run starting at `start`."""
-    return start
+    return start + timedelta(hours=1)
 
 
 @dag(
     dag_id="pageviews_hourly",
     description="Hourly pageview file -> filtered Parquet -> lake",
     schedule="@hourly",
-    start_date=datetime(2026, 10, 25, tzinfo=timezone.utc),
+    start_date=datetime(2026, 10, 25, 5, tzinfo=timezone.utc),  # first hour of edit data (05:58 UTC)
     catchup=True,
-    max_active_runs=2,
+    max_active_runs=1,  # one hour at a time: downloads dominate anyway, and it halves peak memory
     default_args={"retries": 2, "retry_delay": timedelta(minutes=5)},
     tags=["batch", "pageviews"],
 )

@@ -7,8 +7,15 @@ wiki:
       path: "{{ env_var('WAREHOUSE_PATH', '/opt/airflow/warehouse/wiki.duckdb') }}"
       threads: 4
       extensions: [httpfs]
+      # DuckDB defaults to 80% of RAM and every CPU thread. Next to 13 other containers in 8 GB that
+      # made the Docker VM swap until everything froze (26 Oct); capped, it spills to disk instead
+      # (default spill folder: wiki.duckdb.tmp next to the warehouse file). Don't set temp_directory
+      # here: dbt re-applies these settings on every connection and DuckDB can't change it once used.
       settings:
         TimeZone: UTC
+        memory_limit: 1500MB
+        threads: 4
+        preserve_insertion_order: false
       secrets:
         - type: s3
           key_id: "{{ env_var('MINIO_ROOT_USER') }}"

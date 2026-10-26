@@ -132,6 +132,23 @@ schedules batch work.
 - **Reproducible dashboard setup:** `scripts/metabase_setup.py` creates the admin account, the
   connection and the first chart through Metabase's API, and is safe to run again.
 
+## 5e. Resource limits (incident 26 Oct)
+
+Turning on the pageview models made a dbt build read much more data. DuckDB defaults to 80% of RAM
+(6 GB here) and all 20 CPU threads; on top of the 4.7 GB stack inside Docker's 8 GB it pushed the VM
+into swap (1.8 of 2 GB used). Everything froze for ~7 minutes: dbt stalled, Docker's internal DNS timed
+out, Airflow lost its database, and the 4 stream consumers missed their Kafka heartbeats, were
+evicted from their groups and crashed on `CommitFailedError`. The restart policy brought them back and
+at-least-once delivery meant **no data was lost** (no gaps in the status table). Fixes:
+- DuckDB capped: `memory_limit 1500MB`, `threads 4` in dbt (spills to disk beyond that); 1 GB / 2
+  threads in the helper scripts. A full build now takes ~55 s instead of ~7 s while the backfill runs.
+  (`temp_directory` must not be set in the dbt profile: dbt re-applies settings on every connection
+  and DuckDB refuses to change it once used; that broke one build.)
+- Consumers: 30 s Kafka session timeout (default 10 s), and `safe_commit` logs a failed commit after a
+  rebalance instead of crashing (unit-tested).
+- Memory trimmed: Kafka heap 512 MB (default 1 GB), Airflow webserver 2 workers (default 4), pageview
+  backfill one hour at a time. Stack: 4.7 GB → 3.8 GB.
+
 ## 5d. Reproducibility: one command (L10, 25 Oct)
 
 - **`.env` is optional.** Every variable in `docker-compose.yml` has a working default (the
@@ -196,6 +213,18 @@ readers, so the attention question is answered **from the attention side**: find
 flock to, then check whether their edits surge. So per hour we keep (1) article rows with **≥ 10 views**
 (~4.6M rows/day, every real spike is in there; below 10 counts as "low attention") and (2) **per-wiki
 totals of all views**, so attention by language loses nothing. Both are written by `ingest/pageviews.py`.
+
+**Which hour a file holds (verified 26 Oct):** `pageviews-20261024-120000.gz` matches the official
+Pageview API's **11:00–12:00** numbers exactly for English Wikipedia (desktop 2,077,400; desktop +
+mobile 6,708,289), so a file named HH holds the hour *ending* at HH, and `pageviews_hourly` fetches
+file H+1 for hour H. The dumps count **user traffic only** (they equal the API's `user` agent, not
+`all-agents`), and `.m` = mobile web + mobile apps. Licence: CC0 (dumps readme). One file: 6.4M rows
+read, 5.25M Wikipedia, 193k kept, 754 wiki totals, ~2.2 MB of Parquet, 17 s on a laptop.
+
+**Wiki names (S3):** `ingest/wiki_names.py` reads the sitematrix API (1,073 wikis: 949 language wikis
++ 124 special ones like Commons) into the seed `dim_wiki_names`; `dim_wiki` prefers it over the values
+parsed from server names (e.g. `zh-min-nan` → language code `nan`, "Abstract Wikipedia" → not a
+language Wikipedia).
 
 Domain codes: no suffix = desktop Wikipedia, `.m` = mobile Wikipedia. Exceptions: `commons`, `meta`,
 `species`, `incubator`, `wikidata`, `foundation` are not Wikipedias even without a suffix, and `commons.m`

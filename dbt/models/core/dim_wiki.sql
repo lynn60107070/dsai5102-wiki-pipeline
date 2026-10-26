@@ -33,25 +33,33 @@ parsed as (
         split_part(server_name, '.', -2)                 as project_domain
     from one_per_wiki
 
+),
+
+parsed_with_fallbacks as (
+
+    select
+        *,
+        case
+            when server_name = 'www.wikidata.org'   then 'wikidata'
+            when project_domain = 'wikimedia'        then subdomain        -- commons, meta, species, ...
+            else project_domain                                            -- wikipedia, wiktionary, ...
+        end                                                                as parsed_family,
+        case when project_domain in ('wikipedia', 'wiktionary', 'wikisource', 'wikibooks', 'wikinews',
+                                     'wikiquote', 'wikiversity', 'wikivoyage')
+             then subdomain end                                            as parsed_language_code
+    from parsed
+
 )
 
+-- The seed (sitematrix) wins wherever it has a value; the parsed values cover wikis it doesn't list.
 select
     p.wiki_id,
     p.server_name,
-    case
-        when p.server_name = 'www.wikidata.org'        then 'wikidata'
-        when p.project_domain = 'wikimedia'             then p.subdomain        -- commons, meta, species, ...
-        else p.project_domain                                                  -- wikipedia, wiktionary, ...
-    end                                                                        as project_family,
-    p.project_domain = 'wikipedia'                                             as is_wikipedia,
-    case when p.project_domain in ('wikipedia', 'wiktionary', 'wikisource', 'wikibooks', 'wikinews',
-                                   'wikiquote', 'wikiversity', 'wikivoyage')
-         then p.subdomain end                                                  as language_code,
-    coalesce(n.language_name,
-             case when p.project_domain in ('wikipedia', 'wiktionary', 'wikisource', 'wikibooks',
-                                            'wikinews', 'wikiquote', 'wikiversity', 'wikivoyage')
-                  then p.subdomain end)                                        as language_name,
+    coalesce(n.project_family, p.parsed_family)                            as project_family,
+    coalesce(n.project_family, p.parsed_family) = 'wikipedia'              as is_wikipedia,
+    coalesce(n.language_code, p.parsed_language_code)                      as language_code,
+    coalesce(n.language_name, p.parsed_language_code)                      as language_name,
     n.local_language_name,
-    coalesce(n.is_arabic, p.subdomain = 'ar')                                  as is_arabic
-from parsed as p
+    coalesce(n.is_arabic, p.parsed_language_code in ('ar', 'arz', 'ary'))  as is_arabic
+from parsed_with_fallbacks as p
 left join {{ ref('dim_wiki_names') }} as n using (wiki_id)

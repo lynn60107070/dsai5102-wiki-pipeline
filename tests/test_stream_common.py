@@ -32,6 +32,26 @@ class HourPrefixTest(unittest.TestCase):
         self.assertEqual(hour_prefix(when), "raw/edits/dt=2026-10-28/hour=07")
 
 
+class SafeCommitTest(unittest.TestCase):
+    def test_a_commit_after_a_rebalance_is_logged_not_raised(self):
+        import logging
+        from kafka.errors import CommitFailedError
+        from stream.common import safe_commit
+
+        class Evicted:
+            def commit(self):
+                raise CommitFailedError("evicted")
+
+        class Healthy:
+            def commit(self):
+                pass
+
+        log = logging.getLogger("test")
+        with self.assertLogs(log, level="WARNING"):
+            self.assertFalse(safe_commit(Evicted(), log))
+        self.assertTrue(safe_commit(Healthy(), log))
+
+
 class ObjectNameTest(unittest.TestCase):
     def test_event_count_round_trips_through_the_name(self):
         from stream import lake

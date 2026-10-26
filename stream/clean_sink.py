@@ -24,7 +24,7 @@ from kafka import KafkaConsumer
 from kafka.errors import NoBrokersAvailable
 
 from stream import lake
-from stream.common import BOOTSTRAP, CONSUMER_SETTINGS
+from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, safe_commit
 
 TOPICS = ("edits.bot", "edits.human")
 GROUP_ID = os.environ.get("CLEAN_SINK_GROUP", "clean-archive")
@@ -77,7 +77,7 @@ def flush(consumer, s3, buffers):
         key = f"{prefix}/{lake.part_name(len(events), suffix='.parquet')}"
         s3.put_object(Bucket=lake.BUCKET, Key=key, Body=to_parquet(events),
                       ContentType="application/vnd.apache.parquet")
-    consumer.commit()
+    safe_commit(consumer, log)
     log.info("wrote %d events into %d hour folder(s)", sum(map(len, buffers.values())), len(buffers))
     buffers.clear()
 

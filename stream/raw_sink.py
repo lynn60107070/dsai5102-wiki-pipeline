@@ -20,7 +20,7 @@ from kafka import KafkaConsumer
 from kafka.errors import NoBrokersAvailable
 
 from stream import lake
-from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, RAW_TOPIC, event_time, hour_prefix
+from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, RAW_TOPIC, event_time, hour_prefix, safe_commit
 
 FLUSH_SECONDS = int(os.environ.get("FLUSH_SECONDS", "300"))
 GROUP_ID = os.environ.get("SINK_GROUP", "raw-archive")
@@ -48,7 +48,7 @@ def flush(consumer, s3, buffers):
         return
     for prefix, lines in buffers.items():
         lake.put_lines(s3, f"{prefix}/{lake.part_name(len(lines))}", lines)
-    consumer.commit()
+    safe_commit(consumer, log)
     log.info("wrote %d events into %d hour folder(s)", sum(map(len, buffers.values())), len(buffers))
     buffers.clear()
 

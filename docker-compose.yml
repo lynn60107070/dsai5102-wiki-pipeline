@@ -26,6 +26,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__DEFAULT_TIMEZONE: utc
     AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE: UTC
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    AIRFLOW__WEBSERVER__WORKERS: 2   # default 4; one or two people use the UI (saves ~400 MB)
     # MinIO as an Airflow connection (conn id `minio_lake`), used by the DAGs through S3Hook.
     AIRFLOW_CONN_MINIO_LAKE: >-
       {"conn_type": "aws", "login": "${MINIO_ROOT_USER:-lakeadmin}", "password": "${MINIO_ROOT_PASSWORD:-change-me-lake-123}",
@@ -82,6 +83,8 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'   # topics are created explicitly by kafka-init
       # The lab used /tmp, which is wiped when the container is recreated; this path is on the volume.
       KAFKA_LOG_DIRS: '/var/lib/kafka/data'
+      # ~16 events/s needs far less than the default 1 GB heap; leaves room in an 8 GB Docker VM.
+      KAFKA_HEAP_OPTS: '-Xms512M -Xmx512M'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
     volumes:
       - kafka_data:/var/lib/kafka/data
