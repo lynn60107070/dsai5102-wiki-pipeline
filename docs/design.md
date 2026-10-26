@@ -47,7 +47,10 @@ All live since 25 Oct. Topics are created explicitly by `kafka-init` (auto-creat
 **Processor** (`stream/processor.py`, logic in `stream/clean.py`, unit-tested): validates each event
 (dead-letter with the reason if it fails), drops the user name and edit summary (keeps an MD5 key and
 the editor type), flags reverts, routes to `edits.bot` / `edits.human`, and counts edits per wiki and
-minute in event time. The watermark is the slowest partition's newest event, so a partition racing
+minute in event time. **Dead-letter in practice (26 Oct):** 32 events out of ~2 million, all edits on
+ruwiki that arrived with no `user` field at all (the user name was hidden/suppressed by Wikimedia), so
+the editor type can't be determined; they are kept in `wiki.deadletter` with the reason instead of
+entering the warehouse unclassified. The watermark is the slowest partition's newest event, so a partition racing
 ahead during catch-up can't make the others look late (first version counted 205,814 events as late
 during the backlog; fixed and tested). Minutes close 2 minutes after they end.
 
