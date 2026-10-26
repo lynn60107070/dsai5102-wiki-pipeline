@@ -58,6 +58,13 @@ and removed all of them. Stream services now get 60 s to shut down (`stop_grace_
 flush and commit. **Known limitation:** the per-minute counts live in memory, so the live tile dips
 for the 2–3 minutes around a processor restart (the warehouse is unaffected).
 
+**Real outage, 25 Oct 16:02–20:17 UTC (laptop asleep in a bag, no network): detected and fully
+recovered.** On wake the producer resumed from its saved `Last-Event-ID`, and Wikimedia replayed the
+missed ~4 hours at ~14× the normal rate (32–37k events/min for ~12 minutes); the sinks then caught up from
+Kafka. Every hour 16:00–20:00 has normal volume (83–89k edits), so no data was lost. `check_freshness`
+correctly failed in the 3 warehouse runs that executed right after waking (raw zone 258 minutes stale),
+while compaction, dbt (all tests) and the export still succeeded in those runs.
+
 ## 5. Lake layout (raw → clean, Hive-style partitions)
 
 ```
