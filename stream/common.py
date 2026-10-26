@@ -19,17 +19,21 @@ CONSUMER_SETTINGS = {
 
 
 def safe_commit(consumer, log) -> bool:
-    """Commit offsets; if the group already rebalanced (the consumer was evicted during a stall), log it
-    and carry on instead of crashing. Those events are then delivered again: at-least-once, and the
-    duplicates are removed downstream (compaction, dbt)."""
-    from kafka.errors import CommitFailedError
+    """Commit offsets; if the commit fails, log it and carry on instead of crashing.
+
+    Any Kafka error is recoverable here: the output is already written, and the next successful commit
+    covers these offsets too. At worst, events since the last commit are delivered again after a
+    restart (at-least-once; duplicates are removed downstream by compaction and dbt). Seen so far:
+    CommitFailedError after a group rebalance (26 Oct, machine stall) and a broker-side UnknownError
+    (26 Oct 10:21), each of which used to crash the service."""
+    from kafka.errors import KafkaError
 
     try:
         consumer.commit()
         return True
-    except CommitFailedError as exc:
-        log.warning("offset commit failed after a group rebalance (%s); events since the last commit "
-                    "will be delivered again", exc.__class__.__name__)
+    except KafkaError as exc:
+        log.warning("offset commit failed (%s: %s); will retry with the next commit",
+                    exc.__class__.__name__, exc)
         return False
 
 # Edits and page creations only. Log entries (blocks, moves) and category changes are a different

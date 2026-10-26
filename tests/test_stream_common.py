@@ -38,17 +38,23 @@ class SafeCommitTest(unittest.TestCase):
         from kafka.errors import CommitFailedError
         from stream.common import safe_commit
 
-        class Evicted:
+        from kafka.errors import UnknownError
+
+        class Failing:
+            def __init__(self, error):
+                self.error = error
+
             def commit(self):
-                raise CommitFailedError("evicted")
+                raise self.error
 
         class Healthy:
             def commit(self):
                 pass
 
         log = logging.getLogger("test")
-        with self.assertLogs(log, level="WARNING"):
-            self.assertFalse(safe_commit(Evicted(), log))
+        for error in (CommitFailedError("evicted"), UnknownError()):
+            with self.assertLogs(log, level="WARNING"):
+                self.assertFalse(safe_commit(Failing(error), log))
         self.assertTrue(safe_commit(Healthy(), log))
 
 
