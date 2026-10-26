@@ -56,7 +56,7 @@ def main():
     response.raise_for_status()
     records = sorted(rows(response.json()["sitematrix"]), key=lambda r: r["wiki_id"])
     with open(OUT, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=COLUMNS)
+        writer = csv.DictWriter(f, fieldnames=COLUMNS, lineterminator="\n")
         writer.writeheader()
         writer.writerows(records)
     print(f"wrote {len(records)} wikis to {OUT.relative_to(OUT.parent.parent.parent)}")
