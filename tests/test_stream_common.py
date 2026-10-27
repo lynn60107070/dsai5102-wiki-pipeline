@@ -67,6 +67,15 @@ class GapEndTest(unittest.TestCase):
         self.assertTrue(end.passed(late))    # 3 in a row: really past the end
 
 
+class LiveLagTest(unittest.TestCase):
+    def test_reconnect_only_when_clearly_behind(self):
+        from stream.producer import Streak
+
+        behind = Streak(3)
+        self.assertFalse(any(behind.update(old) for old in [True, True, False, True, True]))  # strays
+        self.assertTrue(behind.update(True))  # third old event in a row: the connection is behind
+
+
 class SafeCommitTest(unittest.TestCase):
     def test_a_commit_after_a_rebalance_is_logged_not_raised(self):
         import logging

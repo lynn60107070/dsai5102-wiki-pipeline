@@ -22,7 +22,7 @@ import signal
 import sys
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
@@ -116,17 +116,34 @@ def arrival_time(event: dict):
     return datetime.fromisoformat(event["meta"]["dt"].replace("Z", "+00:00"))
 
 
+class Streak:
+    """True once a condition has held for `needed` events in a row. The stream interleaves occasional
+    events with very different timestamps, so decisions based on a single event misfire (27 Oct)."""
+
+    def __init__(self, needed: int):
+        self.needed, self.run = needed, 0
+
+    def update(self, condition: bool) -> bool:
+        self.run = self.run + 1 if condition else 0
+        return self.run >= self.needed
+
+
 class GapEnd:
-    """Has the replay passed the end of the gap? Only after `needed` events in a row are at or after
-    `until`: a replay interleaves occasional events with much later timestamps, and stopping at the
-    first one ended a backfill 2 hours early (27 Oct)."""
+    """Has the replay passed the end of the gap? Only after 200 events in a row at or after `until`
+    (stopping at the first one ended a backfill 2 hours early, 27 Oct)."""
 
     def __init__(self, until: datetime, needed: int = 200):
-        self.until, self.needed, self.run = until, needed, 0
+        self.until, self.streak = until, Streak(needed)
 
     def passed(self, when: datetime) -> bool:
-        self.run = self.run + 1 if when >= self.until else 0
-        return self.run >= self.needed
+        return self.streak.update(when >= self.until)
+
+
+class LiveFellBehind(Exception):
+    """The live connection is serving old events (e.g. it survived the laptop sleeping): reconnect."""
+
+
+LIVE_MAX_LAG = timedelta(minutes=3)
 
 
 def backfill_worker(producer: KafkaProducer):
@@ -139,7 +156,7 @@ def backfill_worker(producer: KafkaProducer):
         gap = gaps[0]
         until = datetime.fromisoformat(gap["until"])
         log.info("backfill: replaying the gap up to %s UTC (%d gap(s) queued)", f"{until:%Y-%m-%d %H:%M}", len(gaps))
-        sent, last_log, last_save, frontier = 0, time.monotonic(), time.monotonic(), None
+        sent, last_log, frontier = 0, time.monotonic(), None
         end = GapEnd(until)
         try:
             for event_id, data in read_stream(gap["from_id"]):
@@ -158,11 +175,10 @@ def backfill_worker(producer: KafkaProducer):
                 if keep_event(event):
                     producer.send(RAW_TOPIC, key=event.get("wiki", "unknown").encode(), value=data.encode())
                     sent += 1
+                # No mid-gap progress is saved: the id of the last event read can belong to a stray late
+                # event and would make a restart skip the rest of the gap (27 Oct). After a restart the
+                # gap is replayed from its start; the duplicates are removed downstream.
                 now = time.monotonic()
-                if event_id and now - last_save >= SAVE_EVERY_S:
-                    producer.flush()
-                    update_gap(0, from_id=event_id)
-                    last_save = now
                 if now - last_log >= LOG_EVERY_S and frontier:
                     log.info("backfill: at %s UTC, %.0f min to go, %d events recovered so far",
                              f"{frontier:%H:%M}", (until - frontier).total_seconds() / 60, sent)
@@ -192,6 +208,7 @@ def main():
             if last_id:  # we had a position: everything from there to this reconnect is a gap
                 add_gap(last_id, datetime.now(timezone.utc))
                 last_id = None
+            behind = Streak(100)
             try:
                 for event_id, data in read_stream():
                     backoff = 1
@@ -206,6 +223,15 @@ def main():
                         key = event.get("wiki", "unknown").encode()
                         producer.send(RAW_TOPIC, key=key, value=data.encode())
                         kept += 1
+                    # A live connection that survived the laptop sleeping keeps serving the backlog
+                    # slowly (27 Oct). If it is clearly behind, reconnect from now; the stretch from
+                    # last_id to now is then queued for the backfill thread.
+                    try:
+                        old = datetime.now(timezone.utc) - arrival_time(event) > LIVE_MAX_LAG
+                    except (KeyError, ValueError, TypeError):
+                        old = False
+                    if behind.update(old):
+                        raise LiveFellBehind(arrival_time(event))
 
                     now = time.monotonic()
                     if now - last_save >= SAVE_EVERY_S:
@@ -217,6 +243,9 @@ def main():
                                  now - last_log, seen, kept, RAW_TOPIC)
                         seen = kept = 0
                         last_log = now
+            except LiveFellBehind as exc:
+                log.warning("live connection is serving events from %s UTC (laptop slept?); reconnecting "
+                            "from now, the missed stretch is queued for backfill", f"{exc.args[0]:%H:%M}")
             except requests.RequestException as exc:
                 log.warning("Stream dropped (%s); reconnecting in %d s", exc, backoff)
                 time.sleep(backoff)
