@@ -116,6 +116,19 @@ def arrival_time(event: dict):
     return datetime.fromisoformat(event["meta"]["dt"].replace("Z", "+00:00"))
 
 
+class GapEnd:
+    """Has the replay passed the end of the gap? Only after `needed` events in a row are at or after
+    `until`: a replay interleaves occasional events with much later timestamps, and stopping at the
+    first one ended a backfill 2 hours early (27 Oct)."""
+
+    def __init__(self, until: datetime, needed: int = 200):
+        self.until, self.needed, self.run = until, needed, 0
+
+    def passed(self, when: datetime) -> bool:
+        self.run = self.run + 1 if when >= self.until else 0
+        return self.run >= self.needed
+
+
 def backfill_worker(producer: KafkaProducer):
     """Replay queued gaps one at a time, oldest first, at whatever speed Wikimedia serves them."""
     while True:
@@ -127,14 +140,17 @@ def backfill_worker(producer: KafkaProducer):
         until = datetime.fromisoformat(gap["until"])
         log.info("backfill: replaying the gap up to %s UTC (%d gap(s) queued)", f"{until:%Y-%m-%d %H:%M}", len(gaps))
         sent, last_log, last_save, frontier = 0, time.monotonic(), time.monotonic(), None
+        end = GapEnd(until)
         try:
             for event_id, data in read_stream(gap["from_id"]):
                 try:
                     event = json.loads(data)
-                    frontier = arrival_time(event)
+                    when = arrival_time(event)
                 except (ValueError, KeyError, TypeError):
                     continue
-                if frontier >= until:
+                if when < until:
+                    frontier = when
+                if end.passed(when):
                     producer.flush()
                     update_gap(0, done=True)
                     log.info("backfill: gap up to %s UTC done, %d events recovered", f"{until:%H:%M}", sent)
@@ -147,7 +163,7 @@ def backfill_worker(producer: KafkaProducer):
                     producer.flush()
                     update_gap(0, from_id=event_id)
                     last_save = now
-                if now - last_log >= LOG_EVERY_S:
+                if now - last_log >= LOG_EVERY_S and frontier:
                     log.info("backfill: at %s UTC, %.0f min to go, %d events recovered so far",
                              f"{frontier:%H:%M}", (until - frontier).total_seconds() / 60, sent)
                     last_log = now

@@ -51,6 +51,22 @@ class BackfillGapQueueTest(unittest.TestCase):
             self.assertEqual(producer.load_gaps()[0]["until"], "2026-10-27T15:00:00+00:00")
 
 
+class GapEndTest(unittest.TestCase):
+    def test_a_stray_late_event_does_not_end_the_backfill(self):
+        from datetime import datetime, timedelta, timezone
+        from stream.producer import GapEnd
+
+        until = datetime(2026, 10, 27, 14, 57, tzinfo=timezone.utc)
+        end = GapEnd(until, needed=3)
+        old, late = until - timedelta(hours=2), until + timedelta(minutes=1)
+        self.assertFalse(end.passed(old))
+        self.assertFalse(end.passed(late))   # one stray late event (27 Oct: this ended it 2 h early)
+        self.assertFalse(end.passed(old))    # ... and the replay is still in the gap
+        self.assertFalse(end.passed(late))
+        self.assertFalse(end.passed(late))
+        self.assertTrue(end.passed(late))    # 3 in a row: really past the end
+
+
 class SafeCommitTest(unittest.TestCase):
     def test_a_commit_after_a_rebalance_is_logged_not_raised(self):
         import logging
