@@ -5,17 +5,24 @@ wiki:
     dev:
       type: duckdb
       path: "{{ env_var('WAREHOUSE_PATH', '/opt/airflow/warehouse/wiki.duckdb') }}"
-      threads: 4
+      # One model at a time: in one DuckDB process, parallel models share the memory limit below, so
+      # with 4 threads each query got a sliver, spilled gigabytes and took minutes (27 Oct); alone, each
+      # mart runs in about a second.
+      threads: 1
       extensions: [httpfs]
       # DuckDB defaults to 80% of RAM and every CPU thread. Next to 13 other containers in 8 GB that
       # made the Docker VM swap until everything froze (26 Oct); capped, it spills to disk instead
       # (default spill folder: wiki.duckdb.tmp next to the warehouse file). Don't set temp_directory
       # here: dbt re-applies these settings on every connection and DuckDB can't change it once used.
+      # max_temp_directory_size: hard cap on spilling. DuckDB's default is 90% of free disk; on 27 Oct an
+      # unoptimised model spilled ~50 GB per build and grew Docker's disk file to 421 GB. With the cap a
+      # runaway query fails (the quality gate then keeps the last good dashboard) instead of filling the disk.
       settings:
         TimeZone: UTC
         memory_limit: 1500MB
         threads: 4
         preserve_insertion_order: false
+        max_temp_directory_size: 8GB
       secrets:
         - type: s3
           key_id: "{{ env_var('MINIO_ROOT_USER') }}"

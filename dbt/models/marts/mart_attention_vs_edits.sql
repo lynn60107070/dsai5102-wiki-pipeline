@@ -6,12 +6,30 @@
 --   has_full_baseline   the pageview data covers the whole previous 24 hours (false on the first day)
 --   is_spike            full baseline, >= 1,000 views and at least 5x the previous 24-hour average
 --   edits_*             edits to the same article in the same hour and in the 2 hours after
+--
+-- Performance: the 24-hour window and the edit join only run for "candidate" articles, i.e. ones that
+-- reach >= 1,000 views in at least one hour (a few thousand, out of millions in fact_pageviews_hourly).
+-- Only candidates can produce output rows, so the result is the same as running over everything; the
+-- first version did run over everything and spilled up to ~50 GB to disk per build (27 Oct).
 
-with views as (
+with views_all as (
 
     select hour_ts, wiki_id, article_key, sum(views) as views
     from {{ ref('fact_pageviews_hourly') }}
     group by all
+
+),
+
+candidates as (
+
+    select distinct article_key from views_all where views >= 1000
+
+),
+
+views as (
+
+    select v.* from views_all as v
+    where v.article_key in (select article_key from candidates)
 
 ),
 
@@ -33,7 +51,14 @@ edits as (
            count(*)                                    as edits,
            count(*) filter (where editor_type <> 'bot') as human_edits
     from {{ ref('fact_edit') }}
+    where article_key in (select article_key from candidates)
     group by all
+
+),
+
+first_hour as (
+
+    select min(hour_ts) as hour_ts from views_all
 
 )
 
@@ -44,8 +69,8 @@ select
     a.title,
     v.views,
     round(v.prev_24h_avg_views, 1)                                              as prev_24h_avg_views,
-    v.hour_ts >= (select min(hour_ts) from views) + interval 24 hours          as has_full_baseline,
-    v.hour_ts >= (select min(hour_ts) from views) + interval 24 hours
+    v.hour_ts >= (select hour_ts from first_hour) + interval 24 hours          as has_full_baseline,
+    v.hour_ts >= (select hour_ts from first_hour) + interval 24 hours
       and v.views >= 1000 and v.views >= 5 * v.prev_24h_avg_views              as is_spike,
     coalesce(sum(e.edits) filter (where e.hour_ts = v.hour_ts), 0)              as edits_same_hour,
     coalesce(sum(e.edits) filter (where e.hour_ts > v.hour_ts), 0)              as edits_next_2h,

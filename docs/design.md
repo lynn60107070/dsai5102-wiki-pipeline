@@ -152,6 +152,24 @@ at-least-once delivery meant **no data was lost** (no gaps in the status table).
 - Memory trimmed: Kafka heap 512 MB (default 1 GB), Airflow webserver 2 workers (default 4), pageview
   backfill one hour at a time. Stack: 4.7 GB → 3.8 GB.
 
+## 5f. Disk incident (27 Oct): DuckDB spill grew Docker's disk to 421 GB
+
+With the 1.5 GB memory cap from §5e and dbt running **4 models in parallel in one DuckDB process**,
+the marts shared that budget: each query got a fraction of it and spilled to disk. Some builds wrote
+tens of GB of temp files (`wiki.duckdb.tmp` reached 47 GB, one model took 510 s). DuckDB deletes them
+afterwards, but Docker Desktop's virtual disk (`docker_data.vhdx`) never shrinks on its own, so over a
+day it grew to **421 GB** and the laptop had 15 GB free. Measured: alone, each mart runs in 0.5–1.7 s.
+Fixes:
+- **dbt `threads: 1`**: models run one at a time with the full memory budget. Full build 30 s, no spill.
+- **`max_temp_directory_size: 8GB`**: a runaway query now fails (the quality gate keeps the last good
+  dashboard) instead of filling the disk. DuckDB's default is 90% of the free disk. Tested: it fired.
+- `mart_attention_vs_edits` computes the 24 h window only for articles that ever reach 1,000 views
+  (3,340 of millions); verified identical output to the old logic on the same data (16,201 rows, 0
+  differences), 1.7 s instead of 6.4 s alone.
+- `dim_article` is incremental (adds only new articles) instead of regrouping all history every hour.
+- The warehouse DAG was paused during the fix; the stream kept collecting (no gaps). Reclaiming the
+  disk space requires compacting the vhdx with Docker stopped (README → Troubleshooting).
+
 ## 5d. Reproducibility: one command (L10, 25 Oct)
 
 - **`.env` is optional.** Every variable in `docker-compose.yml` has a working default (the
