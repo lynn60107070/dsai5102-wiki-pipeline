@@ -32,6 +32,25 @@ class HourPrefixTest(unittest.TestCase):
         self.assertEqual(hour_prefix(when), "raw/edits/dt=2026-10-28/hour=07")
 
 
+class BackfillGapQueueTest(unittest.TestCase):
+    def test_gaps_are_queued_progressed_and_removed(self):
+        import tempfile
+        from datetime import datetime, timezone
+        from pathlib import Path
+        from stream import producer
+
+        with tempfile.TemporaryDirectory() as tmp:
+            producer.GAPS_FILE = Path(tmp) / "pending_gaps.json"
+            producer.add_gap("id-1", datetime(2026, 10, 27, 12, 22, tzinfo=timezone.utc))
+            producer.add_gap("id-2", datetime(2026, 10, 27, 15, 0, tzinfo=timezone.utc))
+            self.assertEqual([g["from_id"] for g in producer.load_gaps()], ["id-1", "id-2"])
+            producer.update_gap(0, from_id="id-1b")          # progress survives a restart
+            self.assertEqual(producer.load_gaps()[0]["from_id"], "id-1b")
+            producer.update_gap(0, done=True)                # finished gaps leave the queue
+            self.assertEqual([g["from_id"] for g in producer.load_gaps()], ["id-2"])
+            self.assertEqual(producer.load_gaps()[0]["until"], "2026-10-27T15:00:00+00:00")
+
+
 class SafeCommitTest(unittest.TestCase):
     def test_a_commit_after_a_rebalance_is_logged_not_raised(self):
         import logging

@@ -152,6 +152,22 @@ at-least-once delivery meant **no data was lost** (no gaps in the status table).
 - Memory trimmed: Kafka heap 512 MB (default 1 GB), Airflow webserver 2 workers (default 4), pageview
   backfill one hour at a time. Stack: 4.7 GB → 3.8 GB.
 
+## 5g. Producer: live + background backfill (27 Oct)
+
+**Incident:** the laptop was offline 12:22–14:37 UTC. On reconnect the producer resumed from its saved
+position as before, but Wikimedia served the resumed ("historical") connection at ~5% speed (~400
+events/min instead of ~3,000), even when the saved position was only seconds old, while fresh live
+connections were fast. With one connection, a slow resume holds back live data too, so the gap kept
+growing. (On 25 Oct the same kind of resume ran at ~14× speed; it depends on Wikimedia's side.)
+
+**Fix:** two connections. The live connection always starts from *now*; when it (re)connects after
+having had a position, the stretch from that position to the reconnect time is queued as a gap
+(`/state/pending_gaps.json`, so it survives restarts), and a background thread replays gaps from the
+saved id until it reaches the reconnect time. Live data can no longer be held back; backfills run at
+whatever speed Wikimedia serves them. Overlaps only create duplicates (removed by compaction and dbt).
+Tested on deploy: live at full speed immediately, the restart gap backfilled in 6 s (4,521 events);
+the 12:20–14:57 gap was queued by hand and backfilled in the background.
+
 ## 5f. Disk incident (27 Oct): DuckDB spill grew Docker's disk to 421 GB
 
 With the 1.5 GB memory cap from §5e and dbt running **4 models in parallel in one DuckDB process**,
