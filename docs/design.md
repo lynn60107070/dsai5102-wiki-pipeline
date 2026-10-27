@@ -168,7 +168,8 @@ Fixes:
   differences), 1.7 s instead of 6.4 s alone.
 - `dim_article` is incremental (adds only new articles) instead of regrouping all history every hour.
 - The warehouse DAG was paused during the fix; the stream kept collecting (no gaps). Reclaiming the
-  disk space requires compacting the vhdx with Docker stopped (README → Troubleshooting).
+  disk space required trimming, then compacting the vhdx with Docker stopped (README → Troubleshooting):
+  424.7 GB → 31.6 GB, C: free 11.7 GB → 406.6 GB. Docker was off ~5 min; the producer replayed the gap (no gaps).
 
 ## 5d. Reproducibility: one command (L10, 25 Oct)
 

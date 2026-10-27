@@ -122,6 +122,7 @@ docker compose exec airflow-scheduler /opt/airflow/dbt-venv/bin/python /opt/airf
 | `bootstrap` exited with an error | `docker compose logs bootstrap`, then `docker compose up -d` to run it again (it is safe to re-run) |
 | Git Bash on Windows rewrites `/opt/...` paths | Run `export MSYS_NO_PATHCONV=1` first |
 | Live tile is empty | Normal for the first ~3 minutes after the stream starts |
+| Windows: Docker's disk file (`%LOCALAPPDATA%\Docker\wsl\disk\docker_data.vhdx`) is much bigger than `docker system df` | It never shrinks by itself. Trim, then compact it: (1) `docker run --rm --privileged --pid=host alpine nsenter -t 1 -m -- fstrim -av`; (2) quit Docker Desktop, then `wsl --shutdown`; (3) in an **Administrator** PowerShell: `diskpart`, then `select vdisk file="<path above>"`, `attach vdisk readonly`, `compact vdisk`, `detach vdisk`, `exit`; (4) start Docker Desktop. The stream replays what it missed. (On 27 Oct this took the file from 424.7 GB to 31.6 GB.) |
 
 ## Tests
 
