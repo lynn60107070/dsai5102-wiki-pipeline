@@ -4,7 +4,7 @@
 **Team:** Lynn Younes (lead) · Sumaiya
 
 **Submission is due Tue 24 Nov** (GitHub repo + report PDF). Presentations are in the final sessions
-(week 14 or 15, so Wed 25 Nov or Wed 2 Dec; S5 asks Dr. Bouguelia which).
+**Presentation: Wed 25 Nov** (the day after submission; confirmed by Dr. Bouguelia on 28 Oct).
 
 **Goal: 95% of the project done by Thu 19 Nov.** After 19 Nov we only polish, rehearse and submit.
 
@@ -32,7 +32,7 @@ list is in [DELIVERABLES.md](DELIVERABLES.md); how everything works is in [docs/
 | Kick-off | Sun 25 Oct | Plan shared, repo up, collector live | ✅ |
 | Pipeline built | Sun 25 – Mon 26 Oct | Stream, lake, Airflow, dbt star schema, dashboard, one-command setup, pageviews | ✅ (planned for 6–10 Nov) |
 | **CP0** | **Tue 27 Oct** | **Sumaiya set up** (S1): repo cloned, stack running, dashboard open | |
-| **CP1** | **Thu 29 Oct** | Problem statement agreed (L3, T1); presentation date + template known (S5) | |
+| **CP1** | **Thu 29 Oct** | Problem statement agreed (L3, T1); presentation date + template known (S5) | S5 ✅ 28 Oct |
 | Window opens | Wed 28 Oct 00:00 UTC | Analysis window starts (the collector just keeps running) | |
 | **CP2** | **Fri 6 Nov** | Diagram v1 (S6) + tool table (S7) in the repo; dashboard tiles drafted (S9 v1) | |
 | **CP3** | **Tue 10 Nov** | Pipeline frozen (only bug fixes); dashboard tiles reviewed together | |
@@ -43,7 +43,7 @@ list is in [DELIVERABLES.md](DELIVERABLES.md); how everything works is in [docs/
 | Polish | 20–23 Nov | Fix review comments only (Lynn's DSML presentation is Sun 22 Nov) | |
 | Rehearsal 2 | Mon 23 Nov | Second timed run; **slides locked**; backup demo video recorded | |
 | **Submit** | **Tue 24 Nov** | Repo link + report PDF submitted | |
-| **Presentation** | Wed 25 Nov or Wed 2 Dec | ~15 min + 5 min Q&A, both speak | |
+| **Presentation** | **Wed 25 Nov** | ~15 min + 5 min Q&A, both speak | |
 
 ### Lynn's other deadlines (why the checkpoints sit where they do)
 | Date | Other deadline |
@@ -80,7 +80,7 @@ Owns `docs/diagram/`, `metabase/`, `paper/sections/01`, `02`, `06`, `07`.
 | ID | Task | Effort | Due |
 |---|---|---|---|
 | S1 | **Setup.** Accept the GitHub invite, clone, Docker Desktop with **≥ 8 GB** memory, then just `docker compose up -d --build` (no `.env` needed). After ~3 min open the dashboard (http://localhost:3000, logins in the README). Post a screenshot of the dashboard + `docker compose ps` in the chat. Run it briefly only: Lynn's laptop is the one that collects; `docker compose down` when done | 30 min | **Tue 27 Oct** |
-| S5 | Ask Dr. Bouguelia: our presentation date, any report template preference, a 2-person group is fine | 10 min | **CP1** |
+| S5 | ✅ **Asked 28 Oct (Lynn)**: presentation **Wed 25 Nov**; any template, references + appendices **don't count** towards the 10 pages; repo public or invited, our choice (we make it public at submission); live demo optional; dbt, DuckDB, Metabase are fine; **one submission per group**. The idea got positive feedback. Not asked yet: whether an AI-use statement is required | | |
 | S6 | **Architecture diagram** (draw.io → `docs/diagram/architecture.svg` + `.png` + `.pdf` for the report): stream path, batch path, lake zones, warehouse, serving. Everything it needs is in [docs/design.md](docs/design.md) §3–§5 and the README's text diagram. v1 at CP2, final at CP4 [R: Documentation: "with diagram"] | 2 h | **CP2** / **CP4** |
 | S7 | **Tool justification table** for the report: per tool, its job, 1–2 alternatives, why we picked it; stress the ones not covered in class (DuckDB, dbt, Metabase) and the MinIO image problem (design.md §5). Put it in `paper/sections/04_design_choices.tex` where the `\todo` marks it (PR) [R: "explain tools not covered in the course"] | 2 h | **CP2** |
 | S8 | **Data profile** for the report, from the marts over the window: events per day, bot share, duplicates removed, gap/partial hours (`mart_data_completeness`), storage raw vs Parquet → one table in `02_dataset.tex` | 2 h | **CP4** |
@@ -108,7 +108,7 @@ Owns everything else: `docker-compose.yml`, `stream/`, `ingest/`, `airflow/`, `d
 | L12 | Report sections 03–05: ✅ drafted; add S6 diagram, S7 table, dbt lineage figure, final numbers from the window | 3 h | **CP5** |
 | L13 | Slides: template, architecture, pipeline walkthrough, design decisions + incidents (~7 min); assemble the deck | 2 h | **CP5** |
 | L14 | Demo script ✅ ([docs/demo.md](docs/demo.md)); record the backup video | 30 min | Rehearsal 2 |
-| L15 | Final package: repo access for the instructor checked, report PDF, submit | 1 h | **Tue 24 Nov** |
+| L15 | Final package: **make the repo public** (check it has no secrets: `.env` is git-ignored), report PDF, one submission for the group | 1 h | **Tue 24 Nov** |
 
 ### Both
 | ID | Task | Due |
@@ -123,7 +123,7 @@ Owns everything else: `docker-compose.yml`, `stream/`, `ingest/`, `airflow/`, `d
 ## Checkpoint checklists
 
 **CP0 · Tue 27 Oct (in the chat):** S1 (dashboard screenshot + `docker compose ps`).
-**CP1 · Thu 29 Oct:** L3 · S5 · T1
+**CP1 · Thu 29 Oct:** L3 · S5 ✅ · T1
 **CP2 · Fri 6 Nov:** S6 (v1) · S7 · S9 (v1 tiles)
 **CP3 · Tue 10 Nov:** pipeline frozen · dashboard tiles reviewed together
 **CP4 · Fri 13 Nov:** L19 · S6 (final) · S8 · S9 (final) · S10 (window frozen)

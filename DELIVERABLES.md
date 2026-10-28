@@ -16,7 +16,7 @@ Checkpoint dates are in [SCHEDULE.md](SCHEDULE.md).
       have limited time: where does editing pressure concentrate, how much of it comes from bots, and do
       spikes in reader attention cause edit surges?*
 
-## 1. Presentation: ≈15 min + 5 min Q&A · Wed 25 Nov or Wed 2 Dec (TBA, S5)
+## 1. Presentation: ≈15 min + 5 min Q&A · **Wed 25 Nov** (confirmed 28 Oct; live demo optional, our choice)
 
 | Deliverable | Rubric row | Owner | Due |
 |---|---|---|---|
@@ -42,9 +42,9 @@ Sumaiya (dashboard + insights, ~4 min) → Lynn (challenges + lessons + conclusi
 | Dashboard recreated on a fresh install: final tiles' SQL in `CARDS` in `scripts/metabase_setup.py` | Dashboard, Reproducibility | Sumaiya (SQL) + Lynn (merge) | CP4 |
 | `README.md`: architecture + diagram, what each container does, setup, run (sample + live), troubleshooting | Reproducibility, Documentation | Lynn (diagram image from S6) | ✅ v1 / CP4 |
 | Fresh-clone test passed on a second laptop (S13) | Reproducibility | Sumaiya | CP6 |
-| Instructor can access the repo (public, or invited). **Check before submitting** | — | Lynn | Submit |
+| Repo **made public** at submission (instructor's OK: public or invited, our choice). **Check before submitting** | — | Lynn | Submit |
 
-## 3. Report (PDF, 5–10 pages, LaTeX in `paper/`, compiled on Overleaf) · **Tue 24 Nov**
+## 3. Report (PDF, 5–10 pages **excluding references and appendices**, any template, LaTeX in `paper/`, compiled on Overleaf) · **Tue 24 Nov**, one submission per group
 
 Written through GitHub PRs, one file per section; workflow in [paper/README.md](paper/README.md).
 
@@ -81,7 +81,7 @@ Written through GitHub PRs, one file per section; workflow in [paper/README.md](
 - [ ] All dbt tests pass; the Airflow DAG shows green runs
 - [ ] Dashboard has ≥ 2 tiles (we have 5), each with a title and explanation
 - [ ] README has setup instructions + architecture explanation + diagram
-- [ ] Report PDF is 5–10 pages and covers all six required parts (problem, architecture, design choices, implementation, results, discussion)
+- [ ] Report PDF is 5–10 pages (references and appendices not counted) and covers all six required parts (problem, architecture, design choices, implementation, results, discussion)
 - [ ] Repo link in the report, and the instructor can open it
 - [ ] Slides final; backup demo video saved locally
 - [ ] Submitted by Tue 24 Nov

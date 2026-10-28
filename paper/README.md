@@ -4,7 +4,8 @@ Overleaf collaboration costs money, so we write the paper in GitHub, like the co
 section files in `paper/sections/` on your branch and open a PR.** Lynn compile-checks it, merges it, and
 copies it into the Overleaf project, which makes the PDF.
 
-Report requirements (from the brief): PDF, **5–10 pages**, covering problem and dataset, architecture with a
+Report requirements (from the brief + Dr. Bouguelia, 28 Oct): PDF, **5–10 pages excluding references and
+appendices**, any template (we use a plain article), covering problem and dataset, architecture with a
 diagram, design choices and justification, implementation, results and insights, discussion and conclusion.
 
 ## Who writes what
