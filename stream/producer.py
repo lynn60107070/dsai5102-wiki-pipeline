@@ -3,11 +3,13 @@
 Keeps only edits and page creations and keys each event by wiki (so one wiki always lands in the same
 partition, in order). Two connections, so a backfill can never hold back live data:
 
-  live      always connects from *now* (fast), and saves the id of the last event it forwarded
-  backfill  when the live connection (re)starts after having had a position (a restart, the laptop
-            sleeping, a network drop), the stretch from that position to the reconnect time is queued
-            as a gap. A background thread replays each gap from the saved id and stops when it reaches
-            the reconnect time. Gaps are persisted, so a restart mid-backfill carries on.
+  live      always connects from *now* (fast), and saves the id of the last event it forwarded. Any
+            jump of more than 3 s between consecutive events (laptop asleep, offline, a dropped
+            connection) and, after a restart, everything since the saved position, is queued as a gap
+  backfill  a background thread replays each gap from the id just before it and stops when it reaches
+            the time the live stream resumed. Gaps are persisted, so a restart mid-backfill carries on.
+
+Wikimedia's hourly "canary" test events carry arbitrary timestamps and are ignored by all time logic.
 
 Why: on 27 Oct Wikimedia served every resumed ("historical") connection at ~5% speed, even one only
 seconds old, while fresh live connections were fast. With a single connection a resume held back live
@@ -146,6 +148,27 @@ class LiveFellBehind(Exception):
 LIVE_MAX_LAG = timedelta(minutes=3)
 
 
+def is_canary(event: dict) -> bool:
+    """Wikimedia's hourly test events: arbitrary timestamps (a replay starts with ones stamped hours
+    ahead), so they must never drive any time logic. They were already never stored."""
+    return event.get("meta", {}).get("domain") == "canary"
+
+
+class StreamContinuity:
+    """Detects a jump in the live stream: consecutive real events are normally milliseconds apart, so a
+    jump of more than `max_jump` means events were missed in between, whatever the cause (laptop asleep,
+    offline, a dropped connection, 28 Oct). Old stray events never move the clock backwards."""
+
+    def __init__(self, max_jump: timedelta = timedelta(seconds=3)):
+        self.max_jump, self.last_time = max_jump, None
+
+    def jumped(self, when: datetime) -> bool:
+        jump = self.last_time is not None and when - self.last_time > self.max_jump
+        if self.last_time is None or when > self.last_time:
+            self.last_time = when
+        return jump
+
+
 def backfill_worker(producer: KafkaProducer):
     """Replay queued gaps one at a time, oldest first, at whatever speed Wikimedia serves them."""
     while True:
@@ -162,6 +185,8 @@ def backfill_worker(producer: KafkaProducer):
             for event_id, data in read_stream(gap["from_id"]):
                 try:
                     event = json.loads(data)
+                    if is_canary(event):
+                        continue
                     when = arrival_time(event)
                 except (ValueError, KeyError, TypeError):
                     continue
@@ -195,19 +220,18 @@ def main():
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))  # `docker compose stop` -> clean shutdown
 
     producer = connect_producer()
-    last_id = load_last_id()
+    restart_from = load_last_id()   # position saved by the previous run: the gap since then is queued
     log.info("Connected to Kafka at %s; live from now%s", BOOTSTRAP,
-             ", and backfilling since the saved position" if last_id else "")
+             ", and backfilling since the saved position" if restart_from else "")
     threading.Thread(target=backfill_worker, args=(producer,), daemon=True, name="backfill").start()
 
     seen = kept = 0
     last_save = last_log = time.monotonic()
     backoff = 1
+    last_id = None
+    continuity = StreamContinuity()   # kept across reconnects, so a reconnect's gap shows up as a jump
     try:
         while True:
-            if last_id:  # we had a position: everything from there to this reconnect is a gap
-                add_gap(last_id, datetime.now(timezone.utc))
-                last_id = None
             behind = Streak(100)
             try:
                 for event_id, data in read_stream():
@@ -217,21 +241,33 @@ def main():
                         event = json.loads(data)
                     except json.JSONDecodeError:
                         continue
+                    previous_id = last_id
                     if event_id:
                         last_id = event_id
                     if keep_event(event):
                         key = event.get("wiki", "unknown").encode()
                         producer.send(RAW_TOPIC, key=key, value=data.encode())
                         kept += 1
-                    # A live connection that survived the laptop sleeping keeps serving the backlog
-                    # slowly (27 Oct). If it is clearly behind, reconnect from now; the stretch from
-                    # last_id to now is then queued for the backfill thread.
+                    if is_canary(event):
+                        continue
                     try:
-                        old = datetime.now(timezone.utc) - arrival_time(event) > LIVE_MAX_LAG
+                        when = arrival_time(event)
                     except (KeyError, ValueError, TypeError):
-                        old = False
-                    if behind.update(old):
-                        raise LiveFellBehind(arrival_time(event))
+                        continue
+                    # Gaps: after a restart, everything since the saved position; while running, any jump
+                    # in the stream (sleep, offline, reconnect). The backfill thread replays them.
+                    if restart_from and continuity.last_time is None:
+                        add_gap(restart_from, when)
+                        restart_from = None
+                        continuity.jumped(when)
+                    elif continuity.jumped(when) and previous_id:
+                        log.warning("the live stream jumped to %s UTC (laptop asleep or offline?); the missed "
+                                    "stretch is queued for backfill", f"{when:%H:%M:%S}")
+                        add_gap(previous_id, when)
+                    # A live connection that survived the laptop sleeping can keep serving the backlog
+                    # slowly (27 Oct). If it is clearly behind, reconnect from now (the jump is then queued).
+                    if behind.update(datetime.now(timezone.utc) - when > LIVE_MAX_LAG):
+                        raise LiveFellBehind(when)
 
                     now = time.monotonic()
                     if now - last_save >= SAVE_EVERY_S:
@@ -252,7 +288,7 @@ def main():
                 backoff = min(backoff * 2, 60)
     finally:
         producer.flush()
-        save_last_id(last_id)
+        save_last_id(last_id or restart_from)
         producer.close()
 
 

@@ -76,6 +76,22 @@ class LiveLagTest(unittest.TestCase):
         self.assertTrue(behind.update(True))  # third old event in a row: the connection is behind
 
 
+class StreamContinuityTest(unittest.TestCase):
+    def test_jumps_are_detected_and_old_strays_ignored(self):
+        from datetime import datetime, timedelta, timezone
+        from stream.producer import StreamContinuity, is_canary
+
+        t0 = datetime(2026, 10, 28, 12, 11, tzinfo=timezone.utc)
+        c = StreamContinuity()
+        self.assertFalse(c.jumped(t0))
+        self.assertFalse(c.jumped(t0 + timedelta(milliseconds=40)))         # normal spacing
+        self.assertFalse(c.jumped(t0 - timedelta(hours=2)))                 # an old stray event
+        self.assertTrue(c.jumped(t0 + timedelta(minutes=29)))               # 28 Oct: 29 min asleep
+        self.assertFalse(c.jumped(t0 + timedelta(minutes=29, seconds=1)))
+        self.assertTrue(is_canary({"meta": {"domain": "canary"}}))
+        self.assertFalse(is_canary({"meta": {"domain": "en.wikipedia.org"}}))
+
+
 class SafeCommitTest(unittest.TestCase):
     def test_a_commit_after_a_rebalance_is_logged_not_raised(self):
         import logging
