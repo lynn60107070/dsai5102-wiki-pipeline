@@ -152,6 +152,20 @@ at-least-once delivery meant **no data was lost** (no gaps in the status table).
 - Memory trimmed: Kafka heap 512 MB (default 1 GB), Airflow webserver 2 workers (default 4), pageview
   backfill one hour at a time. Stack: 4.7 GB → 3.8 GB.
 
+## 5h. Backfill that actually works (28 Oct)
+
+Two laptop sleeps fell inside the analysis window (28 Oct 12:11–12:40 and 13:06–14:18 UTC). Investigating
+why they weren't recovered found the real root causes of every "backfill ended early" since 27 Oct:
+1. **Wikimedia ignored the resume position sent as a `Last-Event-ID` header** and simply started from
+   live, so a backfill immediately "reached the end" (102 events recovered for a 30-minute gap). The
+   `?since=<time>` query parameter works and is fast (34,948 events covering 18 minutes in 12 s).
+2. **Canary test events** carry arbitrary timestamps; a replay *starts* with some stamped hours ahead.
+3. A sleep that the connection survives isn't a "drop", so no gap was queued; and a gap's end was
+   recorded at the first failed reconnect, not when data resumed.
+Fix: positions and gaps are **times** (`?since=`), canaries are ignored, and a gap is any **jump of more
+than 3 s between consecutive events** in the live stream (normally milliseconds), queued with the exact
+start and end. Result: the 12:10–12:41 gap recovered 27,171 events in 16 s.
+
 ## 5g. Producer: live + background backfill (27 Oct)
 
 **Incident:** the laptop was offline 12:22–14:37 UTC. On reconnect the producer resumed from its saved

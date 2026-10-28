@@ -33,22 +33,26 @@ class HourPrefixTest(unittest.TestCase):
 
 
 class BackfillGapQueueTest(unittest.TestCase):
-    def test_gaps_are_queued_progressed_and_removed(self):
+    def test_gaps_are_time_ranges_and_old_id_entries_are_converted(self):
+        import json
         import tempfile
         from datetime import datetime, timezone
         from pathlib import Path
         from stream import producer
 
+        U = lambda h, m: datetime(2026, 10, 28, h, m, tzinfo=timezone.utc)
         with tempfile.TemporaryDirectory() as tmp:
             producer.GAPS_FILE = Path(tmp) / "pending_gaps.json"
-            producer.add_gap("id-1", datetime(2026, 10, 27, 12, 22, tzinfo=timezone.utc))
-            producer.add_gap("id-2", datetime(2026, 10, 27, 15, 0, tzinfo=timezone.utc))
-            self.assertEqual([g["from_id"] for g in producer.load_gaps()], ["id-1", "id-2"])
-            producer.update_gap(0, from_id="id-1b")          # progress survives a restart
-            self.assertEqual(producer.load_gaps()[0]["from_id"], "id-1b")
-            producer.update_gap(0, done=True)                # finished gaps leave the queue
-            self.assertEqual([g["from_id"] for g in producer.load_gaps()], ["id-2"])
-            self.assertEqual(producer.load_gaps()[0]["until"], "2026-10-27T15:00:00+00:00")
+            old_id = json.dumps([{"topic": "eqiad.mediawiki.recentchange", "partition": 0,
+                                  "timestamp": int(U(12, 10).timestamp() * 1000)},
+                                 {"topic": "codfw.mediawiki.recentchange", "partition": 0, "offset": -1}])
+            producer.GAPS_FILE.write_text(json.dumps([{"from_id": old_id, "until": U(12, 41).isoformat()}]))
+            producer.add_gap(U(13, 5), U(14, 19))
+            gaps = producer.load_gaps()
+            self.assertEqual([g["since"] for g in gaps], [U(12, 10).isoformat(), U(13, 5).isoformat()])
+            producer.finish_gap(0)
+            self.assertEqual(producer.load_gaps()[0]["until"], U(14, 19).isoformat())
+        self.assertEqual(producer.since_param(U(12, 10)), "2026-10-28T12:10:00Z")
 
 
 class GapEndTest(unittest.TestCase):
