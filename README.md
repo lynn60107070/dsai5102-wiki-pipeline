@@ -84,8 +84,10 @@ Design decisions, measurements and trade-offs: **[docs/design.md](docs/design.md
 | `metabase` | Dashboard; reads `serving` as the read-only user `metabase_ro` |
 | `bootstrap` | One-off setup at the end of every `up`: sample data (empty lake only), first warehouse run, Metabase setup |
 
-**DAGs:** `warehouse_hourly` (on by default) and `pageviews_hourly` (paused until the pageview ingestion
-is finished; then unpause it in the Airflow UI and set `pageviews_enabled: true` in `dbt/dbt_project.yml`).
+**DAGs:** `warehouse_hourly` (on by default) and `pageviews_hourly` (paused on a fresh install: once
+unpaused in the Airflow UI it backfills every hour since 25 Oct, ~57 MB download per hour). While the lake
+has no pageview files, `warehouse_hourly` builds without the pageview models, so the edit tiles work
+straight away; the attention-spike tile needs at least 24 hours of pageviews before it can flag a spike.
 
 ## Repository layout
 

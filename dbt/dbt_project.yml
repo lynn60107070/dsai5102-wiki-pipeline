@@ -15,6 +15,7 @@ vars:
   analysis_start: "2026-10-28"
   analysis_end: "2026-11-12"
   # Pageview models (ingest/pageviews.py writes s3://lake/raw/pageviews/); on since 26 Oct.
+  # warehouse_hourly passes false while the lake has no pageview files yet (fresh clone).
   pageviews_enabled: true
   pageviews_path: "s3://lake/raw/pageviews"
   # Reload this many days back on each incremental run (late or re-delivered events).
