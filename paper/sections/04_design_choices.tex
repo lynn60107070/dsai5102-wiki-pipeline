@@ -1,7 +1,77 @@
 % Owner: Lynn. Brief: "Design choices and justification"; explain especially tools not covered in the course.
 \section{Design Choices}\label{sec:design}
 
-\todo{Tool table from S7 (Sumaiya): layer, tool, job, alternatives considered, why chosen.}
+\Cref{tab:tools} lists every tool in the pipeline with its job, the alternatives we considered and why
+we chose it. The brief asks us to justify especially the tools not covered in the course; those are
+marked with~$^\dagger$ and explained in the next paragraph.
+
+\begin{table}[!htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}
+    >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{3.1cm} >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Layer: tool} & \textbf{Job in the pipeline} & \textbf{Alternatives considered} & \textbf{Why we chose it} \\
+\midrule
+Containers: Docker Compose
+  & Starts all services with one command, on macOS, Windows or Linux
+  & Kubernetes
+  & One machine needs no cluster; reproducible from a fresh clone; taught in the course \\
+Streaming: Apache Kafka 4.0 (KRaft)
+  & Durable, replayable log between the producer and every consumer; 5 topics, 4 consumer groups
+  & RabbitMQ
+  & Several consumers read the same events independently and can replay them; consumer groups scale
+    the sinks; taught in the course; KRaft needs no ZooKeeper \\
+Stream processing: Python consumers (kafka-python)
+  & Validate events, drop user names, split bots from humans, count edits per minute
+  & Apache Flink
+  & About 16 events/s needs no cluster; plain Python is unit-tested and light on memory \\
+Data lake: MinIO
+  & S3-compatible object store for the raw and clean zones
+  & SeaweedFS
+  & Matches the course demo; the best-tested S3 target for DuckDB; runs locally at no cost \\
+Orchestration: Apache Airflow 2.11
+  & Hourly pageview ingestion; hourly warehouse refresh with a quality gate
+  & Cron
+  & Taught in the course (same major version as the lab); unlike cron, it adds retries, backfill
+    (catchup) and data-aware scheduling (Datasets) \\
+Warehouse: DuckDB$^\dagger$
+  & Columnar engine for the star schema and marts
+  & ClickHouse; BigQuery; PostgreSQL as the warehouse
+  & In-process (no server to run); reads Parquet on S3 directly; fast analytical scans on a laptop \\
+Transformations: dbt$^\dagger$
+  & Staging $\rightarrow$ facts and dimensions $\rightarrow$ marts, with data tests
+  & Spark; hand-written SQL or Python scripts
+  & Version-controlled SQL with lineage between models; incremental models; tests act as a quality
+    gate; no Spark cluster needed at this data volume \\
+Serving: PostgreSQL 16
+  & Holds copies of the marts for the dashboard; also Airflow's and Metabase's own databases
+  & Metabase reading DuckDB directly
+  & DuckDB allows a single writer, so the dashboard reads copies; a read-only role; one server for
+    three jobs \\
+Dashboard: Metabase$^\dagger$
+  & Tiles on the marts, including a near-real-time tile
+  & Apache Superset; Looker Studio
+  & Free and self-hosted in one container; set up by a script through its API, so a fresh install
+    recreates the dashboard \\
+\bottomrule
+\end{tabularx}
+\caption{Tools by layer: their job, the alternatives we considered and why we chose them.
+  $^\dagger$~Not covered in the course.}
+\label{tab:tools}
+\end{table}
+
+\paragraph{Tools not covered in the course.} \emph{DuckDB} is an embedded, columnar SQL engine: it runs
+inside the process that queries it, like SQLite, but is built for analytical scans rather than
+transactions, so the warehouse is a single file on a laptop instead of a server to operate (its
+one-writer limit is discussed below). \emph{dbt} turns the
+transformations into SQL files under version control: each model declares the models it depends on, so
+dbt builds them in the right order and can draw the lineage graph, and the same project defines the data
+tests that block a bad build from reaching the dashboard. \emph{Metabase} is an open-source BI tool that
+runs as one container; we chose it over Superset (more services to run) and Looker Studio (cloud only,
+cannot reach a database on a laptop), and because its API lets a script recreate every tile on a fresh
+install.
 
 \paragraph{Stream and batch.} Edits are a genuine event stream: they arrive continuously and cannot be
 re-downloaded later, so they go through Kafka, which buffers them durably and lets several consumers
