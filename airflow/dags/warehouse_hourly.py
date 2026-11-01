@@ -6,7 +6,8 @@
 
 compact_clean_zone  merges each finished hour of the clean zone into one Parquet file, without duplicates
 dbt_build           seeds, models and all data tests. It is the quality gate: if a test fails, the task
-                    fails and export_marts does not run, so the dashboard keeps the last good data
+                    fails and export_marts does not run, so the dashboard keeps the last good data.
+                    The pageview models are skipped while the lake has no pageview files (fresh clone)
 export_marts        copies every marts.* table into Postgres `serving` (read by Metabase)
 
 Schedule: every hour at :20 (after the sinks' flushes), AND whenever pageviews_hourly lands new files
@@ -56,9 +57,17 @@ def warehouse_hourly():
         task_id="compact_clean_zone",
         bash_command=f"{PYTHON} {SCRIPTS}/compact_clean_zone.py --min-age-hours 2",
     )
+    # Without pageview files in the lake (fresh clone: edit sample only, pageviews_hourly paused) the
+    # pageview models are switched off for this run instead of failing it; see scripts/pageviews_in_lake.py.
     dbt_build = BashOperator(
         task_id="dbt_build",
-        bash_command="cd $DBT_PROJECT_DIR && /opt/airflow/dbt-venv/bin/dbt build --no-use-colors",
+        bash_command=(
+            "set -euo pipefail; cd $DBT_PROJECT_DIR; "
+            f"pageviews=$({PYTHON} {SCRIPTS}/pageviews_in_lake.py); "
+            'if [ "$pageviews" = yes ]; then /opt/airflow/dbt-venv/bin/dbt build --no-use-colors; '
+            'else echo "no pageview files in the lake yet: building without the pageview models"; '
+            "/opt/airflow/dbt-venv/bin/dbt build --no-use-colors --vars '{pageviews_enabled: false}'; fi"
+        ),
         append_env=True,
     )
     export = BashOperator(
