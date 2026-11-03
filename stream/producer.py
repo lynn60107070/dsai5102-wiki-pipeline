@@ -16,6 +16,8 @@ Lessons from 27-28 Oct, all handled here:
     stamped hours ahead); they are ignored by all time logic and never stored.
   - A connection that survives the laptop sleeping can serve old events slowly: if 100 events in a row
     are more than 3 minutes old, reconnect from now (the jump is then queued).
+  - (3 Nov) Wikimedia drops connections every few minutes, so a long replay saves how far it got and a
+    dropped replay resumes there instead of starting the gap over.
 Overlaps between live and backfill only create duplicates, which compaction and dbt remove.
 
 Run inside Docker: `python -m stream.producer`
@@ -27,6 +29,7 @@ import signal
 import sys
 import threading
 import time
+from collections import deque
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -96,6 +99,20 @@ class GapEnd:
         return self.streak.update(when >= self.until)
 
 
+class ReplayProgress:
+    """How far a replay has safely got: the oldest of the last `window` event times. A stray event from
+    later in the gap moves the newest time but never this one, so saving it can never skip events."""
+
+    def __init__(self, window: int = 500):
+        self.recent = deque(maxlen=window)
+
+    def add(self, when: datetime):
+        self.recent.append(when)
+
+    def safe_point(self):
+        return min(self.recent) if len(self.recent) == self.recent.maxlen else None
+
+
 class StreamContinuity:
     """Detects a jump in the live stream: consecutive real events are normally milliseconds apart, so a
     jump of more than `max_jump` means events were missed. Old stray events never move the clock back."""
@@ -156,6 +173,15 @@ def add_gap(since: datetime, until: datetime):
         _write_atomic(GAPS_FILE, json.dumps(gaps))
 
 
+def advance_gap(since: datetime, index: int = 0):
+    """Move a gap's start forward to where its replay has safely got (never backwards)."""
+    with _gaps_lock:
+        gaps = _read_gaps()
+        if index < len(gaps) and since > datetime.fromisoformat(gaps[index]["since"]):
+            gaps[index]["since"] = since.isoformat()
+            _write_atomic(GAPS_FILE, json.dumps(gaps))
+
+
 def finish_gap(index: int = 0):
     with _gaps_lock:
         gaps = _read_gaps()
@@ -189,6 +215,16 @@ def send(producer: KafkaProducer, event: dict, data: str):
     producer.send(RAW_TOPIC, key=event.get("wiki", "unknown").encode(), value=data.encode())
 
 
+def save_replay_progress(producer: KafkaProducer, progress: ReplayProgress):
+    """Remember how far the current replay got, so a dropped connection resumes there (3 Nov: a 16 h gap
+    takes ~12 min to replay, Wikimedia drops connections every few minutes, and restarting from the
+    beginning each time looped for 2 hours, re-sending the same events)."""
+    point = progress.safe_point()
+    if point:
+        producer.flush()  # only remember positions of events that are safely in Kafka
+        advance_gap(point)
+
+
 def backfill_worker(producer: KafkaProducer):
     """Replay queued gaps one at a time, oldest first, at whatever speed Wikimedia serves them."""
     while True:
@@ -201,6 +237,7 @@ def backfill_worker(producer: KafkaProducer):
         log.info("backfill: replaying %s → %s UTC (%d gap(s) queued)",
                  f"{since:%Y-%m-%d %H:%M:%S}", f"{until:%H:%M:%S}", len(gaps))
         sent, last_log, frontier, end = 0, time.monotonic(), since, GapEnd(until)
+        progress = ReplayProgress()
         try:
             for _, data in read_stream(since):
                 try:
@@ -210,6 +247,7 @@ def backfill_worker(producer: KafkaProducer):
                     when = arrival_time(event)
                 except (ValueError, KeyError, TypeError):
                     continue
+                progress.add(when)
                 if end.passed(when):
                     producer.flush()
                     finish_gap(0)
@@ -222,11 +260,13 @@ def backfill_worker(producer: KafkaProducer):
                         send(producer, event, data)
                         sent += 1
                 if time.monotonic() - last_log >= LOG_EVERY_S:
+                    save_replay_progress(producer, progress)
                     log.info("backfill: at %s UTC, %.0f min to go, %d events recovered so far",
                              f"{frontier:%H:%M}", (until - frontier).total_seconds() / 60, sent)
                     last_log = time.monotonic()
         except requests.RequestException as exc:
-            log.warning("backfill: stream dropped (%s); retrying in 30 s", exc)
+            save_replay_progress(producer, progress)
+            log.warning("backfill: stream dropped (%s); resuming from where it got to in 30 s", exc)
             time.sleep(30)
 
 

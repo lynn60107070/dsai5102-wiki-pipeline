@@ -55,6 +55,32 @@ class BackfillGapQueueTest(unittest.TestCase):
         self.assertEqual(producer.since_param(U(12, 10)), "2026-10-28T12:10:00Z")
 
 
+class ReplayProgressTest(unittest.TestCase):
+    def test_a_dropped_replay_resumes_where_it_got_to_but_never_past_a_stray(self):
+        import tempfile
+        from datetime import datetime, timedelta, timezone
+        from pathlib import Path
+        from stream import producer
+
+        U = lambda h, m: datetime(2026, 11, 2, h, m, tzinfo=timezone.utc)
+        progress = producer.ReplayProgress(window=3)
+        progress.add(U(16, 0))
+        self.assertIsNone(progress.safe_point())          # too few events to judge yet
+        progress.add(U(23, 0))                            # a stray from later in the gap
+        progress.add(U(16, 1))
+        self.assertEqual(progress.safe_point(), U(16, 0))  # the stray does not move it
+        progress.add(U(16, 2))
+        progress.add(U(16, 3))
+        self.assertEqual(progress.safe_point(), U(16, 1))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            producer.GAPS_FILE = Path(tmp) / "pending_gaps.json"
+            producer.add_gap(U(15, 26), U(7, 27) + timedelta(days=1))
+            producer.advance_gap(U(16, 1))
+            producer.advance_gap(U(15, 50))                # never backwards
+            self.assertEqual(producer.load_gaps()[0]["since"], U(16, 1).isoformat())
+
+
 class GapEndTest(unittest.TestCase):
     def test_a_stray_late_event_does_not_end_the_backfill(self):
         from datetime import datetime, timedelta, timezone
