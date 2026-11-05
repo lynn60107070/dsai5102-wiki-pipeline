@@ -29,6 +29,7 @@ from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, safe_commit
 TOPICS = ("edits.bot", "edits.human")
 GROUP_ID = os.environ.get("CLEAN_SINK_GROUP", "clean-archive")
 FLUSH_SECONDS = int(os.environ.get("FLUSH_SECONDS", "300"))
+FLUSH_EVENTS = int(os.environ.get("FLUSH_EVENTS", "50000"))  # or sooner (see raw_sink.py)
 
 SCHEMA = pa.schema([
     ("event_id", pa.string()),
@@ -91,16 +92,17 @@ def main():
     log.info("Reading %s as group %s; writing Parquet to s3://%s/clean/edits every %d s",
              ", ".join(TOPICS), GROUP_ID, lake.BUCKET, FLUSH_SECONDS)
     buffers = defaultdict(list)
-    last_flush = time.monotonic()
+    last_flush, buffered = time.monotonic(), 0
     try:
         while True:
             for records in consumer.poll(timeout_ms=1000, max_records=2000).values():
                 for record in records:
                     when = datetime.fromtimestamp(record.value["event_ts"], tz=timezone.utc)
                     buffers[f"clean/edits/dt={when:%Y-%m-%d}/hour={when:%H}"].append(record.value)
-            if time.monotonic() - last_flush >= FLUSH_SECONDS:
+                    buffered += 1
+            if buffered >= FLUSH_EVENTS or time.monotonic() - last_flush >= FLUSH_SECONDS:
                 flush(consumer, s3, buffers)
-                last_flush = time.monotonic()
+                last_flush, buffered = time.monotonic(), 0
     finally:
         flush(consumer, s3, buffers)
         consumer.close()

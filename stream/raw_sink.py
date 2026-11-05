@@ -23,6 +23,9 @@ from stream import lake
 from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, RAW_TOPIC, event_time, hour_prefix, safe_commit
 
 FLUSH_SECONDS = int(os.environ.get("FLUSH_SECONDS", "300"))
+# ... or sooner once this many events are buffered: a backfill after a long sleep delivers ~100k events a
+# minute, and 5 minutes of that (~1 GB) got dbt killed for lack of memory on 5 Nov
+FLUSH_EVENTS = int(os.environ.get("FLUSH_EVENTS", "50000"))
 GROUP_ID = os.environ.get("SINK_GROUP", "raw-archive")
 
 log = logging.getLogger("raw_sink")
@@ -61,7 +64,7 @@ def main():
     consumer = connect_consumer()
     log.info("Reading %s as group %s; writing to s3://%s every %d s", RAW_TOPIC, GROUP_ID, lake.BUCKET, FLUSH_SECONDS)
     buffers = defaultdict(list)
-    last_flush = time.monotonic()
+    last_flush, buffered = time.monotonic(), 0
     try:
         while True:
             for records in consumer.poll(timeout_ms=1000, max_records=2000).values():
@@ -71,9 +74,10 @@ def main():
                     except (ValueError, KeyError, TypeError):
                         when = datetime.fromtimestamp(record.timestamp / 1000, tz=timezone.utc)
                     buffers[hour_prefix(when)].append(record.value)
-            if time.monotonic() - last_flush >= FLUSH_SECONDS:
+                    buffered += 1
+            if buffered >= FLUSH_EVENTS or time.monotonic() - last_flush >= FLUSH_SECONDS:
                 flush(consumer, s3, buffers)
-                last_flush = time.monotonic()
+                last_flush, buffered = time.monotonic(), 0
     finally:
         flush(consumer, s3, buffers)
         consumer.close()
