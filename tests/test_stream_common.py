@@ -63,15 +63,17 @@ class ReplayProgressTest(unittest.TestCase):
         from stream import producer
 
         U = lambda h, m: datetime(2026, 11, 2, h, m, tzinfo=timezone.utc)
-        progress = producer.ReplayProgress(window=3)
-        progress.add(U(16, 0))
-        self.assertIsNone(progress.safe_point())          # too few events to judge yet
-        progress.add(U(23, 0))                            # a stray from later in the gap
-        progress.add(U(16, 1))
-        self.assertEqual(progress.safe_point(), U(16, 0))  # the stray does not move it
-        progress.add(U(16, 2))
-        progress.add(U(16, 3))
-        self.assertEqual(progress.safe_point(), U(16, 1))
+        progress = producer.ReplayProgress(window=2, topics=("quiet", "busy"))
+        progress.add(U(16, 0), "quiet")
+        progress.add(U(23, 0), "quiet")                    # the first topic races ahead to now
+        self.assertIsNone(progress.safe_point())           # the other has not started: nothing is safe
+        progress.add(U(16, 1), "busy")
+        self.assertEqual(progress.safe_point(), U(16, 0))
+        progress.add(U(23, 30), "quiet")
+        self.assertEqual(progress.safe_point(), U(16, 1))  # held back by the topic furthest behind
+        progress.add(U(16, 2), "busy")
+        progress.add(U(16, 3), "busy")
+        self.assertEqual(progress.safe_point(), U(16, 2))
 
         with tempfile.TemporaryDirectory() as tmp:
             producer.GAPS_FILE = Path(tmp) / "pending_gaps.json"
@@ -82,19 +84,30 @@ class ReplayProgressTest(unittest.TestCase):
 
 
 class GapEndTest(unittest.TestCase):
-    def test_a_stray_late_event_does_not_end_the_backfill(self):
+    def test_every_topic_must_pass_the_end_of_the_gap(self):
         from datetime import datetime, timedelta, timezone
         from stream.producer import GapEnd
 
-        until = datetime(2026, 10, 27, 14, 57, tzinfo=timezone.utc)
-        end = GapEnd(until, needed=3)
-        old, late = until - timedelta(hours=2), until + timedelta(minutes=1)
-        self.assertFalse(end.passed(old))
-        self.assertFalse(end.passed(late))   # one stray late event (27 Oct: this ended it 2 h early)
-        self.assertFalse(end.passed(old))    # ... and the replay is still in the gap
-        self.assertFalse(end.passed(late))
-        self.assertFalse(end.passed(late))
-        self.assertTrue(end.passed(late))    # 3 in a row: really past the end
+        until = datetime(2026, 11, 6, 0, 40, tzinfo=timezone.utc)
+        end = GapEnd(until, needed=3, topics=("quiet", "busy"))
+        old, late = until - timedelta(minutes=30), until + timedelta(hours=9)
+        for _ in range(50):
+            self.assertFalse(end.passed(late, "quiet"))  # 7 Nov: this alone ended gaps with nothing recovered
+        self.assertFalse(end.passed(old, "busy"))
+        self.assertFalse(end.passed(late, "busy"))       # one late event is not enough
+        self.assertFalse(end.passed(old, "busy"))
+        self.assertFalse(end.passed(late, "busy"))
+        self.assertFalse(end.passed(late, "busy"))
+        self.assertTrue(end.passed(late, "busy"))
+
+    def test_a_silent_topic_does_not_hold_the_replay_forever(self):
+        from datetime import datetime, timedelta, timezone
+        from stream.producer import GapEnd
+
+        until = datetime(2026, 11, 6, 0, 40, tzinfo=timezone.utc)
+        end = GapEnd(until, needed=3, topics=("quiet", "busy"), give_up=10)
+        self.assertFalse(any(end.passed(until + timedelta(minutes=1), "busy") for _ in range(9)))
+        self.assertTrue(end.passed(until + timedelta(minutes=1), "busy"))
 
 
 class LiveLagTest(unittest.TestCase):

@@ -18,6 +18,9 @@ Lessons from 27-28 Oct, all handled here:
     are more than 3 minutes old, reconnect from now (the jump is then queued).
   - (3 Nov) Wikimedia drops connections every few minutes, so a long replay saves how far it got and a
     dropped replay resumes there instead of starting the gap over.
+  - (7 Nov) A replay sends all of one datacentre's topic up to now, then the other's. Judging the end of
+    a gap or the progress across both at once ended gaps with almost nothing recovered, so both are
+    tracked per topic.
 Overlaps between live and backfill only create duplicates, which compaction and dbt remove.
 
 Run inside Docker: `python -m stream.producer`
@@ -48,6 +51,7 @@ GAPS_FILE = STATE_DIR / "pending_gaps.json"
 SAVE_EVERY_S = 10
 LOG_EVERY_S = 60
 LIVE_MAX_LAG = timedelta(minutes=3)
+TOPICS = ("eqiad.mediawiki.recentchange", "codfw.mediawiki.recentchange")  # Wikimedia's two datacentres
 
 log = logging.getLogger("producer")
 _gaps_lock = threading.Lock()
@@ -90,27 +94,35 @@ class Streak:
 
 
 class GapEnd:
-    """Has the replay passed the end of the gap? After 200 events in a row at or after `until`."""
+    """Has the replay passed the end of the gap? Only once every topic has: a replay sends one topic right
+    up to now before starting the other, so one topic being past `until` says nothing about the other.
+    Each topic is in time order, so a few events past `until` are enough, which also lets the quiet topic
+    finish. `give_up` events in a row outside the gap end it anyway, in case a topic has gone silent."""
 
-    def __init__(self, until: datetime, needed: int = 200):
-        self.until, self.streak = until, Streak(needed)
+    def __init__(self, until: datetime, needed: int = 5, topics=TOPICS, give_up: int = 20000):
+        self.until, self.needed, self.topics, self.give_up = until, needed, set(topics), give_up
+        self.streaks, self.finished, self.outside = {}, set(), 0
 
-    def passed(self, when: datetime) -> bool:
-        return self.streak.update(when >= self.until)
+    def passed(self, when: datetime, topic: str) -> bool:
+        self.outside = self.outside + 1 if when >= self.until else 0
+        if self.streaks.setdefault(topic, Streak(self.needed)).update(when >= self.until):
+            self.finished.add(topic)
+        return self.topics <= self.finished or self.outside >= self.give_up
 
 
 class ReplayProgress:
-    """How far a replay has safely got: the oldest of the last `window` event times. A stray event from
-    later in the gap moves the newest time but never this one, so saving it can never skip events."""
+    """How far a replay has safely got: the oldest recent event time of the topic that is furthest behind.
+    Nothing is known until every topic has been seen, because the first one races ahead to now."""
 
-    def __init__(self, window: int = 500):
-        self.recent = deque(maxlen=window)
+    def __init__(self, window: int = 500, topics=TOPICS):
+        self.recent = {topic: deque(maxlen=window) for topic in topics}
 
-    def add(self, when: datetime):
-        self.recent.append(when)
+    def add(self, when: datetime, topic: str):
+        if topic in self.recent:
+            self.recent[topic].append(when)
 
     def safe_point(self):
-        return min(self.recent) if len(self.recent) == self.recent.maxlen else None
+        return min(map(min, self.recent.values())) if all(self.recent.values()) else None
 
 
 class StreamContinuity:
@@ -244,11 +256,11 @@ def backfill_worker(producer: KafkaProducer):
                     event = json.loads(data)
                     if is_canary(event):
                         continue
-                    when = arrival_time(event)
+                    when, topic = arrival_time(event), event["meta"].get("topic", "")
                 except (ValueError, KeyError, TypeError):
                     continue
-                progress.add(when)
-                if end.passed(when):
+                progress.add(when, topic)
+                if end.passed(when, topic):
                     producer.flush()
                     finish_gap(0)
                     log.info("backfill: %s → %s UTC done, %d events recovered",
