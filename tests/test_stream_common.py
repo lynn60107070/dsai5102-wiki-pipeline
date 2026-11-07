@@ -161,6 +161,30 @@ class SafeCommitTest(unittest.TestCase):
         self.assertTrue(safe_commit(Healthy(), log))
 
 
+class StatusHolesTest(unittest.TestCase):
+    def test_empty_and_half_empty_hours_are_found_but_not_the_running_hour(self):
+        from datetime import datetime, timedelta, timezone
+        from stream.status import find_holes
+
+        start = datetime(2026, 11, 3, 0, tzinfo=timezone.utc)
+        hours = [start + timedelta(hours=i) for i in range(12)]
+        events = {h: 70000 for h in hours}
+        events[hours[1]] = 0
+        events[hours[2]] = 22000                          # 3 Nov: a third of an hour, not a zero
+        events[hours[3]] = 40000                          # a quiet hour is not a hole
+        del events[hours[4]]                              # no file at all
+        events[hours[11]] = 100                           # the running hour is still filling
+        self.assertEqual(find_holes(events, start, hours[11]), ([hours[1], hours[4]], [hours[2]]))
+
+    def test_counts_are_read_from_the_object_names(self):
+        from datetime import datetime, timezone
+        from stream.status import hourly_counts
+
+        objects = [{"Key": "clean/edits/dt=2026-11-03/hour=19/part-1-a-n10.parquet", "Size": 5},
+                   {"Key": "clean/edits/dt=2026-11-03/hour=19/part-2-b-n7.parquet", "Size": 3}]
+        self.assertEqual(hourly_counts(objects), {datetime(2026, 11, 3, 19, tzinfo=timezone.utc): (17, 8)})
+
+
 class ObjectNameTest(unittest.TestCase):
     def test_event_count_round_trips_through_the_name(self):
         from stream import lake
