@@ -19,7 +19,7 @@ vars:
   pageviews_enabled: true
   pageviews_path: "s3://lake/raw/pageviews"
   # Reload this many days back on each incremental run (late or re-delivered events).
-  lookback_days: 1
+  lookback_days: 3
 
 models:
   wiki_pipeline:
