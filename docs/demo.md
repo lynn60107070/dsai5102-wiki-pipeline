@@ -26,8 +26,8 @@ docker compose exec raw-sink python -m stream.status   # "collector: running", n
 | 1 | Terminal: producer + processor logs scrolling | "This is every edit on every Wikipedia, live: about 950 a minute, coming through Kafka right now." |
 | 2 | Point at `last 60 s: N bot, M human, 0 dead-letter` | "The processor validates each event, drops user names, and splits bots from humans into separate topics." |
 | 3 | MinIO: `lake/raw/edits/dt=…/hour=…` then `lake/clean/edits/…` | "Two zones in the lake: raw, exactly as received, and clean Parquet, partitioned by date and hour." |
-| 4 | Airflow: `warehouse_hourly` graph, a green run | "Every hour, and whenever new pageviews land, Airflow compacts the lake, runs dbt with 38 data tests, and only if they pass, exports to Postgres." |
-| 5 | (Optional) click a task → Logs → dbt `PASS=38` | "If a test fails, the export never runs, so the dashboard can't show bad numbers." |
+| 4 | Airflow: `warehouse_hourly` graph, a green run | "Every hour, and whenever new pageviews land, Airflow compacts the lake, runs dbt with 34 data tests, and only if they pass, exports to Postgres." |
+| 5 | (Optional) click a task → Logs → dbt `PASS=49` | "If a test fails, the export never runs, so the dashboard can't show bad numbers." |
 | 6 | Metabase: live tile | "This tile is fed straight from the stream: this minute's edits appear about three minutes after it ends." |
 | 7 | Metabase: the other tiles | Hand over to Sumaiya for the findings. |
 

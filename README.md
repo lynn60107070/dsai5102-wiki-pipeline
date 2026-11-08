@@ -49,7 +49,7 @@ Wikimedia EventStreams ─► producer ─► [wiki.raw] ─┬─► raw-sink �
                        ┌──────────────────────────── batch (Airflow) ───────────────────────────────────────────────────┐  │
 pageview dumps (hourly) ─► pageviews_hourly: wait → fetch → upload ─► lake: raw/pageviews ── Dataset ─┐                  │  │
                           warehouse_hourly (hourly + on new pageviews):                               ▼                  │  │
-                            compact clean zone → dbt build (DuckDB star schema + 38 tests) → export ─► Postgres serving ─┼──┤
+                            compact clean zone → dbt build (DuckDB star schema + 34 tests) → export ─► Postgres serving ─┼──┤
                                                                                                                           ▼  ▼
                                                                                               Metabase (read-only user)
 ```
@@ -131,9 +131,9 @@ docker compose exec airflow-scheduler /opt/airflow/dbt-venv/bin/python /opt/airf
 ```bash
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python -m unittest -v                                  # 14 unit tests, no Docker needed
+python -m unittest -v                                  # 27 unit tests, no Docker needed
 ```
-Data tests (38) run inside every `dbt build`.
+Data tests (34) run inside every `dbt build`.
 
 ## Data sources
 

@@ -50,7 +50,7 @@ fifteen minutes.
 
 dbt organises the SQL in three layers (\cref{tab:schema}): \emph{staging} views over the lake,
 \emph{core} facts and dimensions, and \emph{marts}, one per dashboard tile. The fact tables are
-incremental: each run reloads only the last three days and replaces rows by key. Thirty-eight data tests check
+incremental: each run reloads only the last three days and replaces rows by key. Thirty-four data tests check
 unique and non-null keys, accepted values, and a relationship from every fact key to its dimension.
 \todo{dbt lineage graph as a figure (dbt docs generate).}
 

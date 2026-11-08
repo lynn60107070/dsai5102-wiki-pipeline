@@ -242,7 +242,7 @@ long and only unique within a wiki.
 | `mart_data_completeness` | finished hour | gaps (`is_gap`) and partial hours (< 50% of median) |
 | `mart_attention_vs_edits` | article-hour with ≥ 1,000 views | attention spikes (≥ 5× previous-24 h average, full baseline only) vs edits in the same + next 2 hours |
 
-**Tests: 38** with pageviews off, **49** with them on (unique and not-null keys, accepted values, and a
+**Tests: 34** data tests, 28 with pageviews off (`dbt build` reports PASS=49 and 38, counting models and seeds; unique and not-null keys, accepted values, and a
 relationship test from every fact key to its dimension). Measured 25 Oct: full build 19 s, incremental
 `fact_edit` 1.3 s instead of 6.5 s; 630,405 edits, 0 duplicates; 396 wikis, 482,975 articles.
 The pageview models were tested on a fixture following the S2 contract (throwaway warehouse, deleted
