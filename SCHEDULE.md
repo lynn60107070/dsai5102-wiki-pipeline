@@ -105,7 +105,7 @@ Owns everything else: `docker-compose.yml`, `stream/`, `ingest/`, `airflow/`, `d
 | L17 | Collector check every evening; keep the laptop plugged in until 11 Nov | 2 min/day | until 11 Nov |
 | L18 | Review and merge Sumaiya's PRs (diagram, tool table, report sections); add her final tiles to `metabase_setup.py` if she sends the SQL. #1 (macOS fresh clone) and #2 (tool table) merged 1 Nov | as they come | |
 | L19 | After the window closes: regenerate the sample from a window day (`scripts/make_sample.py`), add the diagram to the README | 30 min | **CP4** |
-| L12 | Report sections 03–05: ✅ drafted; add S6 diagram, S7 table, dbt lineage figure, final numbers from the window | 3 h | **CP5** |
+| L12 | Report sections 03–05: ✅ drafted; S7 table ✅, dbt lineage figure + incidents table ✅ 10 Nov; add S6 diagram, final numbers from the window | 3 h | **CP5** |
 | L13 | Slides: template, architecture, pipeline walkthrough, design decisions + incidents (~7 min); assemble the deck | 2 h | **CP5** |
 | L14 | Demo script ✅ ([docs/demo.md](docs/demo.md)); record the backup video | 30 min | Rehearsal 2 |
 | L15 | Final package: **make the repo public** (check it has no secrets: `.env` is git-ignored), report PDF, one submission for the group | 1 h | **Tue 24 Nov** |
