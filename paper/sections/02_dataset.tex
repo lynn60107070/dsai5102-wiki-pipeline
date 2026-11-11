@@ -1,10 +1,44 @@
 % Owner: Sumaiya. Brief: "Problem statement and dataset".
 \section{Data Sources}\label{sec:data}
 
-\todo{One paragraph per source: EventStreams~\cite{wikimedia2026eventstreams} (stream), hourly pageview
-dumps~\cite{wikimedia2026pageviews} (batch files), sitematrix (reference). For each: what it contains, how often it updates, how we access it, licence.}
+We combine three public Wikimedia sources (\cref{tab:sources}). They differ in how they arrive, which
+is why the pipeline has both a stream path and a batch path. All times are UTC.
 
-\todo{Table: source, type, update frequency, volume, join keys (see docs/design.md \S2).}
+\paragraph{Edits (stream).} Wikimedia EventStreams~\cite{wikimedia2026eventstreams} publishes every change
+on every Wikimedia wiki as a server-sent event, within seconds. We read the \emph{recentchange} feed
+over HTTPS and keep edits and page creations; logs and category changes are dropped, which halves the
+volume to about 20 events per second. Each event names the wiki, the page, the time, whether the account
+has the bot flag, and the user name, which we drop before storage. Unlike the pageview files, there is no
+archive to download later, so the collector runs all the time and replays short outages from the feed. Licence: \todo{EventStreams licence}.
+
+\paragraph{Reader attention (batch).} Wikimedia publishes the number of views of every page as one
+compressed file per hour~\cite{wikimedia2026pageviews}, about 57~MB. A file has about 6.4 million rows, 5.25 million of them for Wikipedias. We keep the articles with
+at least 10 views in the hour (about 193{,}000 rows), which still contains every attention spike, plus the
+total views per wiki over all articles. The files stay online, so missed hours can be loaded later.
+Licence: CC0.
+
+\paragraph{Wiki names (reference).} The Sitematrix API lists every Wikimedia wiki (1{,}073 of them) with
+its project and language. It changes rarely, so it is read once and stored as a small reference table that
+turns ids like \texttt{arzwiki} into ``Egyptian Arabic Wikipedia''. Licence: \todo{Sitematrix licence}.
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}p{2.2cm}
+    >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{2.3cm}@{}}
+\toprule
+\textbf{Source} & \textbf{Type} & \textbf{Updates} & \textbf{Volume} & \textbf{Joins on} \\
+\midrule
+EventStreams \emph{recentchange} & Stream (server-sent events) & Continuously & About 20 kept events/s,
+  1.8 million a day & wiki, article, hour \\
+Pageview dumps & Batch files & Hourly, about 57~MB each & 6.4 million rows an hour; we keep about
+  193{,}000 + per-wiki totals & wiki, article, hour \\
+Sitematrix API & Reference table & Rarely & 1{,}073 wikis & wiki \\
+\bottomrule
+\end{tabularx}
+\caption{Data sources.}
+\label{tab:sources}
+\end{table}
 
 \paragraph{Data profile.} \Cref{tab:profile} summarises the data collected in the analysis window, 28 Oct
 to 11 Nov 2026 (UTC; 15 days, 360 hours). The pipeline kept \todo{total} edits and page creations, about
