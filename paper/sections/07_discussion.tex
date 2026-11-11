@@ -1,9 +1,32 @@
 % Owner: Sumaiya. Brief: "Discussion and conclusion (limitations, possible extensions)".
 \section{Discussion and Conclusion}\label{sec:discussion}
 
-\todo{Answer the question from \cref{sec:intro} in a few sentences.}
+\todo{Answer the question from \cref{sec:intro} in a few sentences, from the findings in \cref{sec:results}.}
 
-\todo{Limitations: collector gaps (single laptop), two-week window, single Kafka broker, the bot flag is
-self-reported.}
+\paragraph{Limitations.} The results come with five limits.
+\begin{itemize}
+  \item \textbf{One laptop collects.} The stream is read by a single laptop, so sleep, standby and network
+    drops opened gaps. Most were replayed from the feed (\cref{tab:incidents}), and the hours that stayed
+    empty or partial are flagged and left out of the findings, but a collector on a server would avoid them.
+  \item \textbf{Two weeks of data.} The window is 28 Oct -- 11 Nov 2026. It shows daily and weekly
+    patterns, but not seasons, holidays or rare events such as elections, so the shares may differ in
+    another fortnight.
+  \item \textbf{The bot flag is self-declared.} An edit counts as a bot edit only if its account has the
+    bot flag. Bots that run without the flag are counted as humans, so the bot share is a lower bound.
+    Reverts are detected from edit summaries, which some editors leave empty.
+  \item \textbf{Attention and edits are linked in time, not by cause.} An attention spike followed by an
+    edit surge does not show that readers caused the edits: a news event can drive both. Pageviews below
+    10 an hour are not kept, so small articles cannot show a spike.
+  \item \textbf{A single Kafka broker.} Every topic has one copy, which is enough for a laptop but would
+    lose buffered events if the broker's disk failed. The lake, not Kafka, is the long-term archive.
+\end{itemize}
 
-\todo{Possible extensions: article topics via Wikidata, cloud deployment, alerting on edit surges.}
+\paragraph{Possible extensions.}
+\begin{itemize}
+  \item \textbf{Topics from Wikidata:} link each article to its Wikidata item to ask \emph{which kinds} of
+    articles attract bursts of edits, such as people, events or places.
+  \item \textbf{Alerting on edit surges:} the per-minute counts already flow through Kafka, so a small
+    consumer could warn patrollers when an article's edits jump, instead of them finding it on a dashboard.
+  \item \textbf{Cloud deployment:} run the same containers on a server, with object storage instead of
+    MinIO and more Kafka brokers, so collection no longer depends on a laptop staying awake.
+\end{itemize}
