@@ -1,12 +1,37 @@
 % Owner: Sumaiya. Rubric: Problem Description ("well described, clear motivation, what it aims to solve").
 \section{Introduction}\label{sec:intro}
 
-\todo{Motivation: Wikipedia is edited around the clock by volunteers and bots; patrollers have limited
-time to review changes.}
+Wikipedia is edited around the clock. Every edit on every Wikimedia wiki appears within seconds in a
+public live feed~\cite{wikimedia2026eventstreams}, and after keeping only edits and page creations that is
+about 20 events per second, or roughly 1.8 million a day. Some come from volunteers, some from logged-out
+readers, and many from bots: automated accounts that fix links, import data or revert vandalism. Every
+human edit can need checking, and that work falls on volunteer \emph{patrollers}, who review recent
+changes for vandalism and mistakes. Their time is limited, and the stream does not say where it is best
+spent.
 
-\todo{The question as one sentence (from docs/design.md): where does editing pressure concentrate, how
-much of it comes from bots, and do spikes in reader attention cause edit surges?}
+We ask one question: \emph{where does editing pressure concentrate across Wikipedia's language editions,
+how much of it comes from bots, and are spikes in reader attention followed by edit surges?} By editing
+pressure we mean the number of edits per wiki over time that may need review. The question has three
+parts because patrollers decide on three levels: which wikis need the most attention, how much of the
+volume they can leave to the bot flag, and whether a sudden rise in readers is a warning of a rush of
+edits to come.
 
-\todo{Who it is for (patrollers, wiki administrators) and what decision it supports.}
+The audience is patrollers and wiki administrators deciding where to focus review effort. A bot flag is
+granted by each wiki's community, so separating bots from humans shows how much of the volume is left
+for human reviewers. Reader
+attention matters because an article in the news gets many readers at once, and some of them start
+editing it.
 
-\todo{What we built, in 2--3 sentences, and a short list of contributions.}
+To answer the question we built an end-to-end data pipeline that runs on one laptop with one command:
+\begin{itemize}
+  \item a \textbf{stream path} that reads every edit live through Kafka, validates it, removes user names
+    and splits bots from humans, with a near-real-time dashboard tile;
+  \item a \textbf{batch path} that loads Wikipedia's hourly pageview files with Airflow~\cite{wikimedia2026pageviews};
+  \item a \textbf{data lake} in MinIO and a \textbf{star schema} in DuckDB, built and tested with dbt;
+  \item a \textbf{Metabase dashboard} that answers each part of the question, over a two-week analysis
+    window (28 Oct -- 11 Nov 2026, UTC).
+\end{itemize}
+
+\Cref{sec:data} describes the data, \cref{sec:architecture,sec:design,sec:implementation} the pipeline
+and why it is built this way, \cref{sec:results} the findings, and \cref{sec:discussion} the answer, the
+limitations and possible extensions.
