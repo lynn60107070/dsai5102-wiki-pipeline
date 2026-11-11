@@ -6,5 +6,37 @@ dumps~\cite{wikimedia2026pageviews} (batch files), sitematrix (reference). For e
 
 \todo{Table: source, type, update frequency, volume, join keys (see docs/design.md \S2).}
 
-\todo{Data profile from S8: events per day, bot share, duplicates removed, gap hours, raw vs Parquet size.
-The analysis window is 28 Oct -- 11 Nov 2026 (UTC).}
+\paragraph{Data profile.} \Cref{tab:profile} summarises the data collected in the analysis window, 28 Oct
+to 11 Nov 2026 (UTC; 15 days, 360 hours). The pipeline kept \todo{total} edits and page creations, about
+\todo{per day} a day, on \todo{wikis} wikis. Bot accounts made \todo{\%} of all edits and \todo{\%} of
+edits on the Wikipedias. At-least-once
+delivery repeated \todo{duplicates} events, all of which were removed before the warehouse. \todo{gap hours}
+hours had no data and \todo{partial hours} were partial; findings in \cref{sec:results} leave them out.
+Stored as Parquet, the clean zone is \todo{ratio} times smaller than the raw zone.
+
+% Values: final numbers from the warehouse after the window closed (Lynn's collector). Sources per row:
+% edits, per day, wikis, bot shares -> mart_wiki_activity; gaps, partial, pageview hours -> mart_data_completeness;
+% duplicates -> raw zone event count minus fact_edit rows; dead letters -> wiki.deadletter; sizes -> MinIO.
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Measure (28 Oct -- 11 Nov 2026, UTC)} & \textbf{Value} \\
+\midrule
+Edits and page creations kept               & \todo{total} \\
+Per day: mean (lowest -- highest)            & \todo{mean (min -- max)} \\
+Wikis with at least one edit                 & \todo{n} \\
+Share of edits by bot accounts, all wikis    & \todo{\%} \\
+Share of edits by bot accounts, Wikipedias   & \todo{\%} \\
+Duplicate events removed                     & \todo{n} \\
+Events rejected to the dead-letter topic     & \todo{n} \\
+Hours with no data / partial hours           & \todo{n} / \todo{n} of 360 \\
+Hours with pageview data                     & \todo{n} of 360 \\
+Raw zone (JSON lines, gzip)                  & \todo{GB} \\
+Clean zone (Parquet)                         & \todo{GB} \\
+\bottomrule
+\end{tabular}
+\caption{Data profile of the analysis window. A partial hour has under half the edits of a typical hour.}
+\label{tab:profile}
+\end{table}
