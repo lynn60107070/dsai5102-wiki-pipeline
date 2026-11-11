@@ -1,9 +1,10 @@
 """Set up Metabase through its API: admin account, the `serving` database connection, the charts in
 CARDS, and the dashboard that holds them.
 
-Safe to run again: each step checks whether its object already exists (by name) and skips it, and any
-chart in CARDS that is missing from the dashboard is added below the existing tiles.
-Sumaiya's dashboard (S9) is built on top of the "Wiki serving" connection this creates.
+Safe to run again. CARDS and FILTERS are the source of truth: charts are created or overwritten by name,
+placed per their `layout` with a one-line note above each, and wired to the filters. Edit them here, not in
+the Metabase UI, because the next run (every `docker compose up`) puts them back. Anything else on the
+dashboard (tiles, notes or filters added by hand) is kept; hand-added tiles move below the managed ones.
 
 Runs automatically in the `bootstrap` service on `docker compose up`. To run it by hand on your laptop:
   python scripts/metabase_setup.py
@@ -20,6 +21,30 @@ SETTINGS = ("METABASE_ADMIN_EMAIL", "METABASE_ADMIN_PASSWORD", "METABASE_DB_PASS
 DATABASE_NAME = "Wiki serving"
 DASHBOARD_NAME = "Wikipedia edits"
 
+# Dashboard filters. A card opts in by using the filter's tag in its SQL, always inside [[ ... ]] so the
+# card still works when the filter is empty. Dates are inclusive and in UTC; From must not be after To.
+FILTERS = [
+    {"id": "f_from", "name": "From", "slug": "from", "type": "date/single", "sectionId": "date",
+     "tag": "date_from", "tag_type": "date"},
+    {"id": "f_to", "name": "To", "slug": "to", "type": "date/single", "sectionId": "date",
+     "tag": "date_to", "tag_type": "date"},
+    # one value only: the tag is pasted into `= {{project}}`, so a list would be a SQL error
+    {"id": "f_project", "name": "Project", "slug": "project", "type": "string/=", "sectionId": "string",
+     "tag": "project", "tag_type": "text", "isMultiSelect": False,
+     "values_source_type": "static-list", "values_query_type": "list",
+     "values_source_config": {"values": ["wikipedia", "wikidata", "commons", "wikisource", "wiktionary",
+                                         "meta", "mediawiki", "wikivoyage", "species", "wikiquote", "wikibooks",
+                                         "incubator", "wikiversity", "wikifunctions"]}},
+]
+DATE_FILTER = "[[AND date >= {{date_from}}]] [[AND date <= {{date_to}}]]"
+# for tables without a `date` column; pinned to UTC so a report time zone set in Metabase can't shift days
+HOUR_FILTER = ("[[AND hour_ts >= {{date_from}}::timestamp AT TIME ZONE 'UTC']] "
+               "[[AND hour_ts < ({{date_to}} + 1)::timestamp AT TIME ZONE 'UTC']]")
+PROJECT_FILTER = "[[AND project_family = {{project}}]]"
+DATES = {"date_from": "date", "date_to": "date"}
+
+# layout: (row, col, width, height) on Metabase's 24-column grid, including the one-row `note` on top.
+# `note` is the visible one-line explanation; `description` is the longer text behind the (i) icon.
 CARDS = [
     {
         "name": "Live: edits per minute, last 3 hours",
@@ -34,22 +59,171 @@ WHERE minute_ts > now() - interval '3 hours'
 GROUP BY 1
 ORDER BY 1""",
         "viz": {"graph.dimensions": ["Minute (UTC)"], "graph.metrics": ["Bots", "Humans"]},
+        "note": "Edits per minute straight from the stream, about 3 minutes behind real time.",
+        "layout": (0, 0, 12, 8),
     },
     {
         "name": "Edits per hour: bots vs humans",
-        "description": "Edits per UTC hour on all Wikimedia wikis, split into bot accounts and humans "
-                       "(registered + logged-out). Source: the warehouse (mart_edits_hourly).",
+        "description": "Edits per UTC hour, split into bot accounts and humans (registered + logged-out), "
+                       "on all Wikimedia wikis or the chosen project. Source: the warehouse (mart_edits_hourly).",
         "display": "line",
-        "sql": """\
+        "sql": f"""\
 SELECT hour_ts AS "Hour (UTC)",
        CASE WHEN editor_type = 'bot' THEN 'Bots' ELSE 'Humans' END AS "Editor",
        SUM(edits) AS "Edits"
 FROM mart_edits_hourly
+WHERE TRUE {DATE_FILTER} {PROJECT_FILTER}
 GROUP BY 1, 2
 ORDER BY 1""",
-        "viz": {"graph.dimensions": ["Hour (UTC)", "Editor"], "graph.metrics": ["Edits"]},
+        # line.missing: leave collector gaps empty instead of drawing a straight line across them
+        "viz": {"graph.dimensions": ["Hour (UTC)", "Editor"], "graph.metrics": ["Edits"], "line.missing": "none"},
+        "tags": {**DATES, "project": "text"},
+        "note": "Bots vs humans per hour; empty stretches are collector gaps.",
+        "layout": (0, 12, 12, 8),
+    },
+    {
+        "name": "Bot share of edits: the 15 busiest wikis",
+        "description": "Share of edits made by bot accounts on the 15 wikis with the most edits in the chosen "
+                       "dates. Bots are accounts with Wikimedia's self-declared bot flag. Source: mart_wiki_activity.",
+        "display": "row",
+        "sql": f"""\
+SELECT CASE WHEN language_name IS NULL THEN initcap(project_family)
+            ELSE language_name || ' ' || initcap(project_family) END AS "Wiki",
+       ROUND(100.0 * SUM(bot_edits) / SUM(edits), 1) AS "Bot share (%)",
+       SUM(edits) AS "Edits"
+FROM mart_wiki_activity
+WHERE TRUE {DATE_FILTER} {PROJECT_FILTER}
+GROUP BY wiki_id, 1
+ORDER BY SUM(edits) DESC
+LIMIT 15""",
+        "viz": {"graph.dimensions": ["Wiki"], "graph.metrics": ["Bot share (%)"],
+                "graph.show_values": True, "graph.y_axis.max": 100},
+        "tags": {**DATES, "project": "text"},
+        "note": "Share of edits made by flagged bot accounts on the 15 busiest wikis.",
+        "layout": (8, 0, 12, 11),
+    },
+    {
+        "name": "Top languages on Wikipedia: bots vs humans",
+        "description": "The 15 language editions of Wikipedia with the most edits in the chosen dates, split "
+                       "into bot and human edits. Source: mart_wiki_activity (Wikipedias only).",
+        "display": "row",
+        "sql": f"""\
+SELECT language_name AS "Language",
+       SUM(edits - bot_edits) AS "Humans",
+       SUM(bot_edits) AS "Bots"
+FROM mart_wiki_activity
+WHERE is_wikipedia {DATE_FILTER}
+GROUP BY 1
+ORDER BY SUM(edits) DESC
+LIMIT 15""",
+        "viz": {"graph.dimensions": ["Language"], "graph.metrics": ["Humans", "Bots"],
+                "stackable.stack_type": "stacked"},
+        "tags": DATES,
+        "note": "The Wikipedia languages with the most edits, split into bots and humans.",
+        "layout": (8, 12, 12, 11),
+    },
+    {
+        "name": "Reader attention spikes and the edits that follow",
+        "description": "Wikipedia articles whose views in an hour jumped to at least 5 times their average of "
+                       "the previous 24 hours (and at least 1,000 views), with the edits in that hour and the "
+                       "2 hours after. Source: mart_attention_vs_edits. Empty until 24 hours of pageviews exist.",
+        "display": "table",
+        "sql": f"""\
+SELECT hour_ts AS "Hour (UTC)",
+       COALESCE((SELECT max(w.language_name) FROM mart_wiki_activity w WHERE w.wiki_id = a.wiki_id),
+                a.wiki_id) || ' Wikipedia' AS "Wiki",
+       replace(title, '_', ' ') AS "Article",
+       views AS "Views",
+       -- no views in the previous 24 hours: a jump from nothing, so there is no ratio to show
+       COALESCE(ROUND(views / NULLIF(prev_24h_avg_views, 0))::int || '×', 'new') AS "Times usual",
+       edits_same_hour AS "Edits, same hour",
+       edits_next_2h AS "Edits, next 2 hours"
+FROM mart_attention_vs_edits a
+WHERE is_spike {HOUR_FILTER}
+ORDER BY views DESC
+LIMIT 25""",
+        "viz": {},
+        "tags": DATES,
+        "note": "Articles whose hourly views jumped to at least 5× their usual level, and the edits that followed.",
+        "layout": (19, 0, 24, 10),
+    },
+    {
+        "name": "Data completeness: edits collected per hour",
+        "description": "Edits stored per UTC hour. Hours with no bar are gaps, when the collector was offline; "
+                       "partial hours (orange) have under half the usual volume. Findings should avoid both. "
+                       "Source: mart_data_completeness.",
+        "display": "bar",
+        "sql": f"""\
+SELECT hour_ts AS "Hour (UTC)",
+       CASE WHEN is_partial THEN 'Partial' ELSE 'Complete' END AS "Status",
+       edits AS "Edits"
+FROM mart_data_completeness
+WHERE NOT is_gap {DATE_FILTER}
+ORDER BY 1""",
+        "viz": {"graph.dimensions": ["Hour (UTC)", "Status"], "graph.metrics": ["Edits"],
+                "stackable.stack_type": "stacked",
+                "series_settings": {"Complete": {"color": "#509EE3"}, "Partial": {"color": "#F2A86F"}}},
+        "tags": DATES,
+        "note": "Edits stored per hour. Hours with no bar are collector gaps: findings avoid them.",
+        "layout": (29, 0, 24, 8),
     },
 ]
+
+
+def template_tags(card: dict) -> dict:
+    """The card's filter variables, in the shape Metabase's native queries expect."""
+    names = {f["tag"]: f["name"] for f in FILTERS}
+    return {tag: {"id": tag, "name": tag, "display-name": names[tag], "type": kind, "required": False}
+            for tag, kind in card.get("tags", {}).items()}
+
+
+def parameter_mappings(card: dict, card_id: int) -> list:
+    """Wires each dashboard filter to the card's variable of the same tag (only the ones the card uses)."""
+    return [{"parameter_id": f["id"], "card_id": card_id, "target": ["variable", ["template-tag", f["tag"]]]}
+            for f in FILTERS if f["tag"] in card.get("tags", {})]
+
+
+NOTE_KEY = "metabase_setup_note"   # marks the note tiles this script owns, so a re-run finds them again
+KEEP = ("id", "card_id", "row", "col", "size_x", "size_y", "parameter_mappings", "visualization_settings",
+        "series", "dashboard_tab_id")
+
+
+def dashboard_body(dashcards: list, card_ids: list, parameters: list) -> dict:
+    """The PUT body for the dashboard: each CARDS chart (card_ids, in the same order) with its note above it,
+    then every other tile unchanged except moved, as a block, below them; FILTERS plus any other filters.
+    Metabase deletes any tile missing from the body, so nothing else may be left out."""
+    new_id = iter(range(-1, -1000, -1))
+    charts = {}                                      # card_id -> the first tile showing it
+    notes = {}
+    for d in dashcards:
+        note = (d.get("visualization_settings") or {}).get(NOTE_KEY)
+        if note:
+            notes.setdefault(note, d)
+        elif d.get("card_id") is not None:
+            charts.setdefault(d["card_id"], d)
+    managed = []
+    for card, card_id in zip(CARDS, card_ids):
+        row, col, size_x, size_y = card["layout"]
+        managed.append({"id": notes[card["name"]]["id"] if card["name"] in notes else next(new_id),
+                        "card_id": None, "row": row, "col": col, "size_x": size_x, "size_y": 1,
+                        "parameter_mappings": [],
+                        "visualization_settings": {"virtual_card": {"name": None, "display": "text",
+                                                                    "visualization_settings": {},
+                                                                    "dataset_query": {}, "archived": False},
+                                                   "text": card["note"], "dashcard.background": False,
+                                                   "text.align_vertical": "bottom", NOTE_KEY: card["name"]}})
+        managed.append({"id": charts[card_id]["id"] if card_id in charts else next(new_id),
+                        "card_id": card_id, "row": row + 1, "col": col, "size_x": size_x, "size_y": size_y - 1,
+                        "parameter_mappings": parameter_mappings(card, card_id)})
+    reused = {d["id"] for d in managed}
+    others = [{k: d[k] for k in KEEP if k in d} for d in dashcards if d["id"] not in reused]
+    bottom = max(c["layout"][0] + c["layout"][3] for c in CARDS)
+    shift = max(0, bottom - min((d["row"] for d in others), default=bottom))
+    for d in others:
+        d["row"] += shift
+    ours = [{k: v for k, v in f.items() if k not in ("tag", "tag_type")} for f in FILTERS]
+    theirs = [p for p in parameters if p["id"] not in {f["id"] for f in FILTERS}]
+    return {"parameters": ours + theirs, "dashcards": managed + others}
 
 
 def load_env() -> dict:
@@ -121,15 +295,19 @@ def main():
     existing_cards = {c["name"]: c["id"] for c in as_list(session.get(f"{BASE}/api/card", timeout=30))}
     card_ids = []
     for card in CARDS:
+        body = {
+            "name": card["name"], "description": card["description"], "display": card["display"],
+            "dataset_query": {"type": "native", "database": database_id,
+                              "native": {"query": card["sql"], "template-tags": template_tags(card)}},
+            "visualization_settings": card["viz"],
+        }
         if card["name"] not in existing_cards:
-            response = session.post(f"{BASE}/api/card", timeout=60, json={
-                "name": card["name"], "description": card["description"], "display": card["display"],
-                "dataset_query": {"type": "native", "database": database_id, "native": {"query": card["sql"]}},
-                "visualization_settings": card["viz"],
-            })
+            response = session.post(f"{BASE}/api/card", timeout=60, json=body)
             response.raise_for_status()
             existing_cards[card["name"]] = response.json()["id"]
             print(f"created the chart '{card['name']}'")
+        else:  # keep existing charts in step with CARDS (SQL, filters, chart settings)
+            session.put(f"{BASE}/api/card/{existing_cards[card['name']]}", timeout=60, json=body).raise_for_status()
         card_ids.append(existing_cards[card["name"]])
 
     dashboard_id = next((d["id"] for d in as_list(session.get(f"{BASE}/api/dashboard", timeout=30))
@@ -142,20 +320,13 @@ def main():
         dashboard_id = response.json()["id"]
         print(f"created the dashboard '{DASHBOARD_NAME}'")
 
-    dashcards = session.get(f"{BASE}/api/dashboard/{dashboard_id}", timeout=30).json()["dashcards"]
-    on_dashboard = {d["card_id"] for d in dashcards}
-    next_row = max((d["row"] + d["size_y"] for d in dashcards), default=0)
-    keep = [{k: d[k] for k in ("id", "card_id", "row", "col", "size_x", "size_y")} for d in dashcards]
-    new = []
-    for card_id in card_ids:
-        if card_id not in on_dashboard:
-            new.append({"id": -(len(new) + 1), "card_id": card_id, "row": next_row, "col": 0,
-                        "size_x": 24, "size_y": 8})
-            next_row += 8
-    if new:
-        session.put(f"{BASE}/api/dashboard/{dashboard_id}", timeout=30,
-                    json={"dashcards": keep + new}).raise_for_status()
-        print(f"added {len(new)} chart(s) to the dashboard")
+    # Charts from CARDS go where their layout says, wired to the filters; any other chart someone added
+    # by hand stays where it is, below them.
+    dashboard = session.get(f"{BASE}/api/dashboard/{dashboard_id}", timeout=30).json()
+    session.put(f"{BASE}/api/dashboard/{dashboard_id}", timeout=30,
+                json=dashboard_body(dashboard["dashcards"], card_ids, dashboard.get("parameters") or [])
+                ).raise_for_status()
+    print(f"dashboard has {len(CARDS)} chart(s) from CARDS, each with a note, and {len(FILTERS)} filters")
 
     print(f"done: Metabase dashboard id {dashboard_id} ({DASHBOARD_NAME})")
 
