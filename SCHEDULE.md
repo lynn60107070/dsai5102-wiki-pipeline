@@ -34,9 +34,9 @@ list is in [DELIVERABLES.md](DELIVERABLES.md); how everything works is in [docs/
 | **CP0** | **Tue 27 Oct** | **Sumaiya set up** (S1): repo cloned, stack running, dashboard open | ✅ 28 Oct (fresh clone on macOS, fixes merged in #1) |
 | **CP1** | **Thu 29 Oct** | Problem statement agreed (L3, T1); presentation date + template known (S5) | ✅ S5 28 Oct, L3/T1 1 Nov |
 | Window opens | Wed 28 Oct 00:00 UTC | Analysis window starts (the collector just keeps running) | |
-| **CP2** | **Fri 6 Nov** | Diagram v1 (S6) + tool table (S7) in the repo; dashboard tiles drafted (S9 v1) | S7 ✅ 1 Nov (#2) |
-| **CP3** | **Tue 10 Nov** | Pipeline frozen (only bug fixes); dashboard tiles reviewed together | |
-| Window closes | Wed 11 Nov 23:59 UTC | Collector can stop running 24/7 | |
+| **CP2** | **Fri 6 Nov** | Diagram v1 (S6) + tool table (S7) in the repo; dashboard tiles drafted (S9 v1) | S7 ✅ 1 Nov (#2) · S6 v1 + S9 v1 ✅ merged 12 Nov (#3, #4) |
+| **CP3** | **Tue 10 Nov** | Pipeline frozen (only bug fixes); dashboard tiles reviewed together | ✅ tiles checked on the full window 12 Nov |
+| Window closes | Wed 11 Nov 23:59 UTC | Collector can stop running 24/7 | ✅ final audit 12 Nov: 360/360 hours, 25,093,717 edits |
 | **CP4** | **Fri 13 Nov** | **Window frozen**: dashboard final (S9), data profile (S8), insights with numbers (S10), diagram final (S6), sample regenerated from a window day | |
 | **CP5** | **Mon 16 Nov** | **Full report draft** (every section) + **slide draft** | |
 | **CP6** | **Thu 19 Nov** | **95% done**: report + slides reviewed by both, rubric self-check, Sumaiya's fresh-clone test, **rehearsal 1** (timed 15 min + mock Q&A) | |
@@ -67,8 +67,8 @@ stays plugged in, locked (never signed out) and online; sleep, hibernate and lid
 plugged in, Docker starts on sign-in, Windows Update is paused until 25 Nov. Unplugged trips are fine:
 the producer replays what it missed after waking (a 4-hour outage on 25 Oct healed completely).
 
-**Checkpoint call (15 min):** each person shows the tasks due, and we agree on the focus until the next
-checkpoint. Done means finished, not started.
+**Checkpoints happen in the group chat, no calls:** each person posts the tasks due, and we agree on the
+focus until the next checkpoint. Done means finished, not started.
 
 ---
 
@@ -81,15 +81,15 @@ Owns `docs/diagram/`, `metabase/`, `paper/sections/01`, `02`, `06`, `07`.
 |---|---|---|---|
 | S1 | ✅ **Done 28 Oct** (her fresh clone on macOS found two setup bugs, fixed in PR #1). **Setup.** Accept the GitHub invite, clone, Docker Desktop with **≥ 8 GB** memory, then just `docker compose up -d --build` (no `.env` needed). After ~3 min open the dashboard (http://localhost:3000, logins in the README). Post a screenshot of the dashboard + `docker compose ps` in the chat. Run it briefly only: Lynn's laptop is the one that collects; `docker compose down` when done | 30 min | **Tue 27 Oct** |
 | S5 | ✅ **Asked 28 Oct (Lynn)**: presentation **Wed 25 Nov**; any template, references + appendices **don't count** towards the 10 pages; repo public or invited, our choice (we make it public at submission); live demo optional; dbt, DuckDB, Metabase are fine; **one submission per group**. The idea got positive feedback | | |
-| S6 | **Architecture diagram** (draw.io → `docs/diagram/architecture.svg` + `.png` + `.pdf` for the report): stream path, batch path, lake zones, warehouse, serving. Everything it needs is in [docs/design.md](docs/design.md) §3–§5 and the README's text diagram. v1 at CP2, final at CP4 [R: Documentation: "with diagram"] | 2 h | **CP2** / **CP4** |
+| S6 | ✅ **v1 merged 12 Nov (PR #3)**; in the README and report §3. **Architecture diagram** (draw.io → `docs/diagram/architecture.svg` + `.png` + `.pdf` for the report): stream path, batch path, lake zones, warehouse, serving. Everything it needs is in [docs/design.md](docs/design.md) §3–§5 and the README's text diagram. v1 at CP2, final at CP4 [R: Documentation: "with diagram"] | 2 h | **CP2** / **CP4** |
 | S7 | ✅ **Done, merged 1 Nov (PR #2).** **Tool justification table** for the report: per tool, its job, 1–2 alternatives, why we picked it; stress the ones not covered in class (DuckDB, dbt, Metabase) and the MinIO image problem (design.md §5). Put it in `paper/sections/04_design_choices.tex` where the `\todo` marks it (PR) [R: "explain tools not covered in the course"] | 2 h | **CP2** |
 | S8 | **Data profile** for the report, from the marts over the window: events per day, bot share, duplicates removed, gap/partial hours (`mart_data_completeness`), storage raw vs Parquet → one table in `02_dataset.tex` | 2 h | **CP4** |
-| S9 | **Metabase dashboard** "Wikipedia edits". Two tiles exist (live per-minute, edits per hour bots vs humans). Add: (1) bot share by wiki, top 15 (`mart_wiki_activity`); (2) top languages by edits, Wikipedias only; (3) attention vs edits: biggest spikes and their edits (`mart_attention_vs_edits`, `is_spike`); (4) data completeness by hour. Each tile: title + one-line explanation; filters: date range, project. v1 at CP2, final at CP4. When final, add each tile's SQL to `CARDS` in [scripts/metabase_setup.py](scripts/metabase_setup.py) (or send it to Lynn) so a fresh install recreates it [R: Dashboard] | 4 h | **CP2** / **CP4** |
+| S9 | ✅ **v1 merged 12 Nov (PR #4)**: 6 tiles + From/To/Project filters, checked on the window data. **Metabase dashboard** "Wikipedia edits". Two tiles exist (live per-minute, edits per hour bots vs humans). Add: (1) bot share by wiki, top 15 (`mart_wiki_activity`); (2) top languages by edits, Wikipedias only; (3) attention vs edits: biggest spikes and their edits (`mart_attention_vs_edits`, `is_spike`); (4) data completeness by hour. Each tile: title + one-line explanation; filters: date range, project. v1 at CP2, final at CP4. When final, add each tile's SQL to `CARDS` in [scripts/metabase_setup.py](scripts/metabase_setup.py) (or send it to Lynn) so a fresh install recreates it [R: Dashboard] | 4 h | **CP2** / **CP4** |
 | S10 | **Insights:** 3–5 findings with numbers from the window (e.g. "X% of edits are bots, but only Y% on arwiki"; "Chechen Wikipedia is #2 by edits: who makes them?"; "articles with an attention spike get N× more edits within 2 hours") | 2 h | **CP4** |
-| S11 | **Report:** `01_introduction`, `02_dataset` (+ S8 table), `06_results` (dashboard screenshots + S10), `07_discussion` (limitations + extensions). Each file has `\todo` notes on what goes there | 5 h | **CP5** |
+| S11 | 01, 02, 07 drafted, merged 12 Nov (PR #5); `06_results` and the `\todo` numbers remain. **Report:** `01_introduction`, `02_dataset` (+ S8 table), `06_results` (dashboard screenshots + S10), `07_discussion` (limitations + extensions). Each file has `\todo` notes on what goes there | 5 h | **CP5** |
 | S12 | Slides: problem + dataset (~2 min), dashboard + insights (~4 min) | 1.5 h | **CP5** |
 | S13 | **Fresh-clone test** on her Mac following only the README; log every step that was unclear | 1 h | **CP6** |
-| S14 | Q&A prep sheet: ~15 likely questions with short answers (start from the list in [docs/demo.md](docs/demo.md)) | 1.5 h | **CP6** |
+| S14 | Draft on branch `sumaiya/qa-sheet` (no PR yet). Q&A prep sheet: ~15 likely questions with short answers (start from the list in [docs/demo.md](docs/demo.md)) | 1.5 h | **CP6** |
 
 ### Lynn (lead): architecture, all pipeline code, integration, report assembly
 Owns everything else: `docker-compose.yml`, `stream/`, `ingest/`, `airflow/`, `dbt/`, `scripts/`, `postgres/`, `sample/`, `tests/`, `README.md`, `docs/design.md`, `paper/main.tex` + `paper/sections/03`–`05` (+ the Overleaf project).
@@ -102,10 +102,10 @@ Owns everything else: `docker-compose.yml`, `stream/`, `ingest/`, `airflow/`, `d
 | S2, S3 | Pageview ingestion (verified against the Pageview API) + wiki names seed; pageviews switched on and backfilled | ✅ 26 Oct | |
 | L16 | Paper skeleton + Overleaf project | ✅ 25 Oct | |
 | L3 | ✅ Design note written; problem statement agreed with Sumaiya 1 Nov (T1) | | |
-| L17 | Collector check every evening; keep the laptop plugged in until 11 Nov | 2 min/day | until 11 Nov |
-| L18 | Review and merge Sumaiya's PRs (diagram, tool table, report sections); add her final tiles to `metabase_setup.py` if she sends the SQL. #1 (macOS fresh clone) and #2 (tool table) merged 1 Nov | as they come | |
-| L19 | After the window closes: regenerate the sample from a window day (`scripts/make_sample.py`), add the diagram to the README | 30 min | **CP4** |
-| L12 | Report sections 03–05: ✅ drafted; S7 table ✅, dbt lineage figure + incidents table ✅ 10 Nov; add S6 diagram, final numbers from the window | 3 h | **CP5** |
+| L17 | ✅ Collector ran the whole window; final audit 12 Nov (every lake file read back, warehouse rebuilt from the lake) | | |
+| L18 | Review and merge Sumaiya's PRs (diagram, tool table, report sections); add her final tiles to `metabase_setup.py` if she sends the SQL. #1 (macOS fresh clone) and #2 (tool table) merged 1 Nov; #3 (diagram), #4 (tiles), #5 (sections 01, 02, 07) merged 12 Nov | as they come | |
+| L19 | ✅ 12 Nov: sample = 4 Nov 06–11 UTC; diagram in the README. After the window closes: regenerate the sample from a window day (`scripts/make_sample.py`), add the diagram to the README | 30 min | **CP4** |
+| L12 | Report sections 03–05: ✅ drafted; S7 table ✅, dbt lineage figure + incidents table ✅ 10 Nov; S6 diagram ✅ 12 Nov; final numbers from the window | 3 h | **CP5** |
 | L13 | Slides: template, architecture, pipeline walkthrough, design decisions + incidents (~7 min); assemble the deck | 2 h | **CP5** |
 | L14 | Demo script ✅ ([docs/demo.md](docs/demo.md)); record the backup video | 30 min | Rehearsal 2 |
 | L15 | Final package: **make the repo public** (check it has no secrets: `.env` is git-ignored), report PDF, one submission for the group | 1 h | **Tue 24 Nov** |
