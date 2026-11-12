@@ -3,28 +3,12 @@
 
 \subsection{Stream ingestion and processing}\label{sec:impl-stream}
 
-\Cref{tab:topics} lists the Kafka topics. The producer keeps two connections to Wikimedia. The live one
+\Cref{tab:topics} in the appendix lists the Kafka topics. The producer keeps two connections to Wikimedia. The live one
 always reads from now; whenever two consecutive events are more than three seconds apart (the laptop
 slept, the network dropped, Wikimedia closed the connection) or the producer restarts, the missing
 interval is queued on disk. The backfill one replays each queued interval with Wikimedia's
 \texttt{since} parameter, so outages fill themselves in without holding back live data. The
 processor's validation, privacy and windowing logic is separated from Kafka and covered by unit tests.
-
-\begin{table}[h]
-  \centering\small
-  \begin{tabular}{lcll}
-    \toprule
-    Topic & Partitions & Written by & Read by (consumer group) \\
-    \midrule
-    \texttt{wiki.raw}          & 3 & producer  & raw sink, processor \\
-    \texttt{edits.bot}, \texttt{edits.human} & 3 each & processor & clean sinks $\times$2 \\
-    \texttt{edits.per\_minute} & 1 & processor & live-stats \\
-    \texttt{wiki.deadletter}   & 1 & processor & inspected by hand \\
-    \bottomrule
-  \end{tabular}
-  \caption{Kafka topics and consumer groups.}
-  \label{tab:topics}
-\end{table}
 
 \paragraph{Per-minute counts.} The processor counts edits in one-minute windows by event time and emits
 a minute two minutes after it ends, so slightly late events are still counted. Its first version used
@@ -40,39 +24,11 @@ rows and no missing events. A compaction job removed every duplicate, and the st
 60 seconds to shut down cleanly.
 
 \paragraph{Outages and recovery.} The collector ran on one laptop for the whole window, so outages were
-routine; \cref{tab:incidents} lists the ones that changed the design. To check the replays, we replayed
+routine; \cref{tab:incidents} in the appendix lists the ones that changed the design. To check the replays, we replayed
 3~Nov 15:00 to 6~Nov 00:00 a second time and compared the deduplicated hourly counts: only 4,491 edits
 (0.1\%) were new, and no hour of the window is empty. The only low hours, 02:00--06:00 UTC on 28~Oct,
-are a real pause in bot activity.
-
-\begin{table}[h]
-  \centering\small
-  \begin{tabularx}{\linewidth}{l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
-    \toprule
-    Date & What happened & Fix \\
-    \midrule
-    27 Oct & Resuming with a \texttt{Last-Event-ID} header was silently ignored; replays ended with
-      almost nothing & Replay by time with \texttt{?since=} \\
-    3 Nov & Wikimedia drops long connections every few minutes; a 16-hour replay restarted from its
-      beginning each time and looped for two hours & Save how far a replay got and resume there \\
-    5 Nov & After 9 hours asleep, the replay filled the sinks' buffers ($\approx$1\,GB) and dbt was
-      killed for lack of memory & Sinks also flush every 50,000 events \\
-    7 Nov & A replay sends one data centre's topic up to now, then the other's. Judging the end of a gap
-      across both ended three replays with 0--202 events, leaving holes on 3 and 6 Nov & Track each
-      topic separately; the holes were replayed (1,459,669 events) \\
-    7 Nov & Events recovered more than a day late never reached the warehouse, and the status check
-      still reported no gaps & Reload the last three days; count gaps on the deduplicated clean zone and
-      flag half-empty hours \\
-    8--10 Nov & Windows put the laptop into standby with the screen off although sleep was disabled
-      (longest: 5\,h 47\,min) & Replayed after waking (511,225 events for the longest) \\
-    8--10 Nov & Four warehouse runs failed a relationship test (fact rows whose article was missing
-      from \texttt{dim\_article}) & None needed: the quality gate skipped the export, and the next run
-      passed \\
-    \bottomrule
-  \end{tabularx}
-  \caption{Collector and warehouse incidents during the window.}
-  \label{tab:incidents}
-\end{table}
+are a real pause in bot activity. After the window closed, every lake file was read back and matched
+the event count in its name, and the warehouse holds exactly the clean zone's 25,093,717 edits.
 
 \subsection{Batch ingestion and orchestration}\label{sec:impl-batch}
 
@@ -90,15 +46,7 @@ dbt organises the SQL in three layers (\cref{tab:schema}): \emph{staging} views 
 \emph{core} facts and dimensions, and \emph{marts}, one per dashboard tile. The fact tables are
 incremental: each run reloads only the last three days and replaces rows by key. Thirty-four data tests check
 unique and non-null keys, accepted values, and a relationship from every fact key to its dimension.
-\Cref{fig:lineage} shows how the models depend on each other.
-
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=\linewidth]{lineage.pdf}
-  \caption{dbt lineage, generated from dbt's manifest (\texttt{scripts/lineage\_figure.py}). Dashed:
-    views; bold: incremental tables; plain: tables (and the \texttt{dim\_wiki\_names} seed).}
-  \label{fig:lineage}
-\end{figure}
+\Cref{fig:lineage} in the appendix shows how the models depend on each other.
 
 \begin{table}[h]
   \centering\small
