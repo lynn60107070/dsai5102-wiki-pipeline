@@ -133,7 +133,8 @@ schedules batch work.
 - **Least privilege:** Metabase reads `serving` as `metabase_ro`, which can only SELECT (tested: DELETE
   is denied). Metabase's own settings live in the Postgres database `metabase`, not in a local file.
 - **Reproducible dashboard setup:** `scripts/metabase_setup.py` creates the admin account, the
-  connection and the first chart through Metabase's API, and is safe to run again.
+  connection, the dashboard charts and its filters through Metabase's API, and is safe to run again
+  (charts and filters defined in its CARDS and FILTERS are put back on every run).
 
 ## 5e. Resource limits (incident 26 Oct)
 

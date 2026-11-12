@@ -131,7 +131,7 @@ docker compose exec airflow-scheduler /opt/airflow/dbt-venv/bin/python /opt/airf
 ```bash
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python -m unittest -v                                  # 27 unit tests, no Docker needed
+python -m unittest -v                                  # 40 unit tests, no Docker needed
 ```
 Data tests (34) run inside every `dbt build`.
 
