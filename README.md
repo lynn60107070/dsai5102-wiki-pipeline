@@ -3,7 +3,7 @@
 DSAI5102 Data Architecture & Engineering, final project · Lynn Younes & Sumaiya
 
 **Question:** Wikipedia's volunteer patrollers have limited time: where does editing pressure
-concentrate, how much of it comes from bots, and do spikes in reader attention cause edit surges?
+concentrate, how much of it comes from bots, and are spikes in reader attention followed by edit surges?
 
 An end-to-end data pipeline that streams every edit on every Wikimedia wiki live through Kafka, loads
 hourly pageview files in batch with Airflow, keeps both in a MinIO data lake, models them as a star
@@ -39,10 +39,17 @@ Add `#refresh=60` to the dashboard URL to auto-refresh the live tile.
 
 ## Architecture
 
+![Architecture: stream, batch and reference paths into the MinIO lake, the dbt/DuckDB warehouse, and Postgres + Metabase](docs/diagram/wikipedia_pipeline_architecture_v1.png)
+
+Arrow colour shows the path (blue stream, green batch, brown reference, black shared); solid arrows move
+data, dashed arrows are schedules or task order; numbers in brackets are Kafka partitions. Source and
+exports: [docs/diagram/](docs/diagram/), explained box by box in
+[architecture_explanation.md](docs/diagram/architecture_explanation.md). The same in text:
+
 ```
                        ┌──────────────────────────── stream (always on, Docker Compose services) ─────────────────────────┐
 Wikimedia EventStreams ─► producer ─► [wiki.raw] ─┬─► raw-sink ──────────────────────────────► lake: raw/edits  (as received)
-  (~16 edits/s kept)                              └─► processor ─┬─► [edits.bot]  ┐
+  (~20 edits/s kept)                              └─► processor ─┬─► [edits.bot]  ┐
                                                                  ├─► [edits.human] ┴─► clean-sink ×2 ─► lake: clean/edits (Parquet)
                                                                  ├─► [edits.per_minute] ─► live-stats ─► Postgres serving ─┐
                                                                  └─► [wiki.deadletter]                                     │

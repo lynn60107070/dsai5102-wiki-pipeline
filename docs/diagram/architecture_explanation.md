@@ -107,8 +107,9 @@ fails and `export_marts` does not run, so the dashboard keeps the last good data
   PostgreSQL attached through DuckDB's `postgres` extension. It replaces each mart in the `serving` database inside
   one transaction, so Metabase never sees a half-copied table.
 - **Live table:** `live-stats` adds rows to `live_edits_per_minute` in the same database and keeps the last 48 hours.
-- **Metabase** reads `serving` as `metabase_ro`, which can only SELECT. Its dashboard, *Wikipedia edits*, currently
-  has two tiles: the live tile (`live_edits_per_minute`) and edits per hour, bots vs humans (`mart_edits_hourly`).
+- **Metabase** reads `serving` as `metabase_ro`, which can only SELECT. Its dashboard, *Wikipedia edits*, has six
+  tiles (the live tile, edits per hour, bot share by wiki, top Wikipedia languages, attention spikes and data
+  completeness) and three filters, all defined in `CARDS` and `FILTERS` in `scripts/metabase_setup.py`.
 
 DuckDB is the warehouse; PostgreSQL only serves copies. The same PostgreSQL server also holds the `airflow` and
 `metabase` application databases, which contain no pipeline data, so the diagram draws no data flow to them.

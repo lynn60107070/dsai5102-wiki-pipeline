@@ -5,7 +5,7 @@ Sumaiya draws the architecture diagram (S6) from this file. Anything marked **(o
 ## 1. Problem statement
 
 Wikipedia's volunteer patrollers have limited time: **where does editing pressure concentrate, how much
-of it comes from bots, and do spikes in reader attention (pageviews) cause edit surges?**
+of it comes from bots, and are spikes in reader attention (pageviews) followed by edit surges?**
 
 Audience: patrollers and wiki administrators deciding where to focus review effort.
 
