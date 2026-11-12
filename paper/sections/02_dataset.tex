@@ -6,20 +6,25 @@ is why the pipeline has both a stream path and a batch path. All times are UTC.
 
 \paragraph{Edits (stream).} Wikimedia EventStreams~\cite{wikimedia2026eventstreams} publishes every change
 on every Wikimedia wiki as a server-sent event, within seconds. We read the \emph{recentchange} feed
-over HTTPS and keep edits and page creations; logs and category changes are dropped, which halves the
-volume to about 20 events per second. Each event names the wiki, the page, the time, whether the account
-has the bot flag, and the user name, which we drop before storage. Unlike the pageview files, there is no
-archive to download later, so the collector runs all the time and replays short outages from the feed. Licence: \todo{EventStreams licence}.
+over HTTPS and keep edits and page creations, about half of all events; logs and category changes are
+dropped. Each event names the wiki, the page, the time, whether the account has the bot flag, and the
+user name. The raw archive keeps events as received; the clean zone, which the warehouse reads, keeps
+only a hash of the user name. The feed covers every Wikimedia project, so the volumes in
+\cref{tab:sources,tab:profile} are for all of them, and the bot share is also given for the Wikipedias
+alone. There is no archive to download later, so the collector runs all the time and replays outages
+from the feed. Licence: \todo{EventStreams licence}.
 
-\paragraph{Reader attention (batch).} Wikimedia publishes the number of views of every page as one
-compressed file per hour~\cite{wikimedia2026pageviews}, about 57~MB. A file has about 6.4 million rows, 5.25 million of them for Wikipedias. We keep the articles with
-at least 10 views in the hour (about 193{,}000 rows), which still contains every attention spike, plus the
-total views per wiki over all articles. The files stay online, so missed hours can be loaded later.
-Licence: CC0.
+\paragraph{Reader attention (batch).} Wikimedia publishes the views of every page as one compressed file
+per hour~\cite{wikimedia2026pageviews}, counting human readers only. We keep the articles with at least
+10 views in the hour, plus the total views per wiki over all articles. We call an article-hour an
+\emph{attention spike} when it has at least 1{,}000 views and at least five times the article's average
+over the previous 24 hours, so the 10-view cut-off keeps every spike. The files stay online, so missed
+hours can be loaded later. Licence: CC0.
 
-\paragraph{Wiki names (reference).} The Sitematrix API lists every Wikimedia wiki (1{,}073 of them) with
-its project and language. It changes rarely, so it is read once and stored as a small reference table that
-turns ids like \texttt{arzwiki} into ``Egyptian Arabic Wikipedia''. Licence: \todo{Sitematrix licence}.
+\paragraph{Wiki names (reference).} The Sitematrix API~\cite{wikimedia2026sitematrix} lists every
+Wikimedia wiki with its project and language. It changes rarely, so it is read once and stored as a small
+reference table that turns ids like \texttt{arzwiki} into ``Egyptian Arabic Wikipedia''.
+Licence: \todo{Sitematrix licence}.
 
 \begin{table}[!htbp]
 \centering
@@ -30,28 +35,30 @@ turns ids like \texttt{arzwiki} into ``Egyptian Arabic Wikipedia''. Licence: \to
 \textbf{Source} & \textbf{Type} & \textbf{Updates} & \textbf{Volume} & \textbf{Joins on} \\
 \midrule
 EventStreams \emph{recentchange} & Stream (server-sent events) & Continuously & About 20 kept events/s,
-  1.8 million a day & wiki, article, hour \\
-Pageview dumps & Batch files & Hourly, about 57~MB each & 6.4 million rows an hour; we keep about
-  193{,}000 + per-wiki totals & wiki, article, hour \\
+  1.7 million a day & wiki, article, hour \\
+Pageview dumps & Batch files & Hourly & One file of about 57~MB and 6.4 million rows (5.25 million
+  for Wikipedias); we keep about 193{,}000 + per-wiki totals & wiki, article, hour \\
 Sitematrix API & Reference table & Rarely & 1{,}073 wikis & wiki \\
 \bottomrule
 \end{tabularx}
-\caption{Data sources.}
+\caption{Data sources. Pageview figures are from one file, 24 Oct 2026 12:00 UTC.}
 \label{tab:sources}
 \end{table}
 
 \paragraph{Data profile.} \Cref{tab:profile} summarises the data collected in the analysis window, 28 Oct
 to 11 Nov 2026 (UTC; 15 days, 360 hours). The pipeline kept \todo{total} edits and page creations, about
-\todo{per day} a day, on \todo{wikis} wikis. Bot accounts made \todo{\%} of all edits and \todo{\%} of
-edits on the Wikipedias. At-least-once
-delivery repeated \todo{duplicates} events, all of which were removed before the warehouse. \todo{gap hours}
-hours had no data and \todo{partial hours} were partial; findings in \cref{sec:results} leave them out.
-Stored as Parquet, the clean zone is \todo{ratio} times smaller than the raw zone.
+\todo{per day} a day, on \todo{wikis} wikis. Edits by flagged bot accounts made up \todo{\%} of all edits
+and \todo{\%} of edits on the Wikipedias. Because the feed is delivered at least once and outages were
+replayed, \todo{duplicates} events arrived more than once; they are removed by compaction in the lake and
+then by event id in dbt, before the warehouse tables. Outages were replayed (\cref{sec:implementation}),
+so no hour of the window is empty; the \todo{n} hours below half the median hour are real low activity.
+The clean zone, Parquet with only the fields we need and no duplicates, is \todo{ratio} times smaller
+than the raw zone.
 
 % Values: final numbers from the warehouse after the window closed (Lynn's collector). Sources per row:
 % edits, per day, wikis, bot shares -> mart_wiki_activity; gaps, partial, pageview hours -> mart_data_completeness;
-% duplicates -> raw zone event count minus fact_edit rows; dead letters -> wiki.deadletter; sizes -> MinIO.
-\begin{table}[!htbp]
+% duplicates -> raw zone events minus distinct event ids (dead letters not counted); dead letters -> wiki.deadletter; sizes -> MinIO.
+\begin{table}[h]
 \centering
 \small
 \begin{tabular}{@{}lr@{}}
@@ -61,16 +68,16 @@ Stored as Parquet, the clean zone is \todo{ratio} times smaller than the raw zon
 Edits and page creations kept               & \todo{total} \\
 Per day: mean (lowest -- highest)            & \todo{mean (min -- max)} \\
 Wikis with at least one edit                 & \todo{n} \\
-Share of edits by bot accounts, all wikis    & \todo{\%} \\
-Share of edits by bot accounts, Wikipedias   & \todo{\%} \\
+Share of edits by flagged bots, all wikis    & \todo{\%} \\
+Share of edits by flagged bots, Wikipedias   & \todo{\%} \\
 Duplicate events removed                     & \todo{n} \\
 Events rejected to the dead-letter topic     & \todo{n} \\
-Hours with no data / partial hours           & \todo{n} / \todo{n} of 360 \\
+Hours with no data / low hours               & \todo{n} / \todo{n} of 360 \\
 Hours with pageview data                     & \todo{n} of 360 \\
 Raw zone (JSON lines, gzip)                  & \todo{GB} \\
 Clean zone (Parquet)                         & \todo{GB} \\
 \bottomrule
 \end{tabular}
-\caption{Data profile of the analysis window. A partial hour has under half the edits of a typical hour.}
+\caption{Data profile of the analysis window. A low hour has under half the edits of the median hour.}
 \label{tab:profile}
 \end{table}
