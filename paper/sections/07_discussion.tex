@@ -6,17 +6,19 @@
 \paragraph{Limitations.} The results come with five limits.
 \begin{itemize}
   \item \textbf{One laptop collects.} The stream is read by a single laptop, so sleep, standby and network
-    drops opened gaps. Most were replayed from the feed (\cref{tab:incidents}), and the hours that stayed
-    empty or partial are flagged and left out of the findings, but a collector on a server would avoid them.
-  \item \textbf{Two weeks of data.} The window is 28 Oct -- 11 Nov 2026. It shows daily and weekly
-    patterns, but not seasons, holidays or rare events such as elections, so the shares may differ in
-    another fortnight.
-  \item \textbf{The bot flag is self-declared.} An edit counts as a bot edit only if its account has the
-    bot flag. Bots that run without the flag are counted as humans, so the bot share is a lower bound.
-    Reverts are detected from edit summaries, which some editors leave empty.
+    drops opened gaps of up to 16 hours. All were replayed from the feed (\cref{tab:incidents}) and no
+    hour of the window is empty, but a collector on a server would not need the replays.
+  \item \textbf{15 days of data.} The window, 28 Oct -- 11 Nov 2026, covers two weekly cycles. It shows
+    daily and weekly patterns, but not seasons, holidays or rare events such as elections, so the shares
+    may differ in another period.
+  \item \textbf{Bots are found by their flag.} An edit counts as a bot edit only if its account has the
+    bot flag, which each wiki's community grants to approved bots. Bots that run without the flag count as
+    humans, and edits a flagged account makes by hand count as bot edits, so the bot share is an estimate.
+    Reverts are detected by matching English words such as ``revert'' or ``undo'' in edit summaries, so
+    reverts with an empty summary or one in another language are missed.
   \item \textbf{Attention and edits are linked in time, not by cause.} An attention spike followed by an
-    edit surge does not show that readers caused the edits: a news event can drive both. Pageviews below
-    10 an hour are not kept, so small articles cannot show a spike.
+    edit surge does not show that readers caused the edits: a news event can drive both. A spike also
+    needs at least 1{,}000 views in the hour, so smaller articles cannot register one.
   \item \textbf{A single Kafka broker.} Every topic has one copy, which is enough for a laptop but would
     lose buffered events if the broker's disk failed. The lake, not Kafka, is the long-term archive.
 \end{itemize}
@@ -25,8 +27,14 @@
 \begin{itemize}
   \item \textbf{Topics from Wikidata:} link each article to its Wikidata item to ask \emph{which kinds} of
     articles attract bursts of edits, such as people, events or places.
-  \item \textbf{Alerting on edit surges:} the per-minute counts already flow through Kafka, so a small
-    consumer could warn patrollers when an article's edits jump, instead of them finding it on a dashboard.
+  \item \textbf{Alerting on edit surges:} the per-minute counts per wiki already flow through Kafka, so a
+    small consumer could warn patrollers when a wiki's edits jump; alerts per article would need a new
+    count by article.
   \item \textbf{Cloud deployment:} run the same containers on a server, with object storage instead of
     MinIO and more Kafka brokers, so collection no longer depends on a laptop staying awake.
 \end{itemize}
+
+\paragraph{Conclusion.} \todo{Two or three sentences once the findings are in: what the pipeline showed
+about where editing pressure concentrates, the bot share, and attention spikes.} The pipeline itself
+collected the whole window on one laptop, combined a live stream with hourly batch files in one tested
+star schema, and serves the answer on a dashboard that anyone can rebuild with one command.
