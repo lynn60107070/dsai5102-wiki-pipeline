@@ -45,20 +45,10 @@ Sitematrix API & Reference table & Rarely & 1{,}073 wikis & wiki \\
 \label{tab:sources}
 \end{table}
 
-\paragraph{Data profile.} \Cref{tab:profile} summarises the data collected in the analysis window, 28 Oct
-to 11 Nov 2026 (UTC; 15 days, 360 hours). The pipeline kept \todo{total} edits and page creations, about
-\todo{per day} a day, on \todo{wikis} wikis. Edits by flagged bot accounts made up \todo{\%} of all edits
-and \todo{\%} of edits on the Wikipedias. Because the feed is delivered at least once and outages were
-replayed, \todo{duplicates} events arrived more than once; they are removed by compaction in the lake and
-then by event id in dbt, before the warehouse tables. Outages were replayed (\cref{sec:implementation}),
-so no hour of the window is empty; the \todo{n} hours below half the median hour are real low activity.
-The clean zone, Parquet with only the fields we need and no duplicates, is \todo{ratio} times smaller
-than the raw zone.
-
 % Values: final numbers from the warehouse after the window closed (Lynn's collector). Sources per row:
 % edits, per day, wikis, bot shares -> mart_wiki_activity; gaps, partial, pageview hours -> mart_data_completeness;
 % duplicates -> raw zone events minus distinct event ids (dead letters not counted); dead letters -> wiki.deadletter; sizes -> MinIO.
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
 \small
 \begin{tabular}{@{}lr@{}}
@@ -81,3 +71,13 @@ Clean zone (Parquet)                         & \todo{GB} \\
 \caption{Data profile of the analysis window. A low hour has under half the edits of the median hour.}
 \label{tab:profile}
 \end{table}
+
+\paragraph{Data profile.} \Cref{tab:profile} summarises the data collected in the analysis window, 28 Oct
+to 11 Nov 2026 (UTC; 15 days, 360 hours). The pipeline kept \todo{total} edits and page creations, about
+\todo{per day} a day, on \todo{wikis} wikis. Edits by flagged bot accounts made up \todo{\%} of all edits
+and \todo{\%} of edits on the Wikipedias. Because the feed is delivered at least once and outages were
+replayed, \todo{duplicates} events arrived more than once; they are removed by compaction in the lake and
+then by event id in dbt, before the warehouse tables. Outages were replayed (\cref{sec:implementation}),
+so no hour of the window is empty; the \todo{n} hours below half the median hour are real low activity.
+The clean zone, Parquet with only the fields we need and no duplicates, is \todo{ratio} times smaller
+than the raw zone.
