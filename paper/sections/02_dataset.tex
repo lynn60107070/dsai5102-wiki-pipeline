@@ -55,15 +55,15 @@ Sitematrix API & Reference table & Rarely & 1{,}073 wikis & wiki \\
 \toprule
 \textbf{Measure (28 Oct -- 11 Nov 2026, UTC)} & \textbf{Value} \\
 \midrule
-Edits and page creations kept               & \todo{total} \\
-Per day: mean (lowest -- highest)            & \todo{mean (min -- max)} \\
-Wikis with at least one edit                 & \todo{n} \\
-Share of edits by flagged bots, all wikis    & \todo{\%} \\
-Share of edits by flagged bots, Wikipedias   & \todo{\%} \\
+Edits and page creations kept               & 25{,}093{,}717 \\
+Per day: mean (lowest -- highest)            & 1{,}672{,}914 (1{,}302{,}581 -- 2{,}160{,}571) \\
+Wikis with at least one edit                 & 771 \\
+Share of edits by flagged bots, all wikis    & 48.6\% \\
+Share of edits by flagged bots, Wikipedias   & 45.3\% \\
 Duplicate events removed                     & \todo{n} \\
 Events rejected to the dead-letter topic     & \todo{n} \\
-Hours with no data / low hours               & \todo{n} / \todo{n} of 360 \\
-Hours with pageview data                     & \todo{n} of 360 \\
+Hours with no data / low hours               & 0 / 4 of 360 \\
+Hours with pageview data                     & 347 of 360 \\
 Raw zone (JSON lines, gzip)                  & \todo{GB} \\
 Clean zone (Parquet)                         & \todo{GB} \\
 \bottomrule
@@ -73,11 +73,14 @@ Clean zone (Parquet)                         & \todo{GB} \\
 \end{table}
 
 \paragraph{Data profile.} \Cref{tab:profile} summarises the data collected in the analysis window, 28 Oct
-to 11 Nov 2026 (UTC; 15 days, 360 hours). The pipeline kept \todo{total} edits and page creations, about
-\todo{per day} a day, on \todo{wikis} wikis. Edits by flagged bot accounts made up \todo{\%} of all edits
-and \todo{\%} of edits on the Wikipedias. Because the feed is delivered at least once and outages were
+to 11 Nov 2026 (UTC; 15 days, 360 hours). The pipeline kept 25{,}093{,}717 edits and page creations, about
+1.67 million a day, on 771 wikis. Edits by flagged bot accounts made up 48.6\% of all edits
+and 45.3\% of edits on the Wikipedias. Because the feed is delivered at least once and outages were
 replayed, \todo{duplicates} events arrived more than once; they are removed by compaction in the lake and
 then by event id in dbt, before the warehouse tables. Outages were replayed (\cref{sec:implementation}),
-so no hour of the window is empty; the \todo{n} hours below half the median hour are real low activity.
+so no hour of the window is empty. Four hours, 02:00--06:00 UTC on 28 Oct, have under half the median
+hour's edits; bot and human edits both fell to about a quarter of their usual level for those hours.
+They are kept and marked on the dashboard's completeness tile. Pageview files are missing for 13 hours,
+so no attention spike can be found in those hours.
 The clean zone, Parquet with only the fields we need and no duplicates, is \todo{ratio} times smaller
 than the raw zone.
