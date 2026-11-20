@@ -89,7 +89,7 @@ Owns `docs/diagram/`, `metabase/`, `paper/sections/01`, `02`, `06`, `07`.
 | S11 | ✅ 01, 02, 07 merged 12 Nov (PR #5); 06, the 02 numbers and the 07 answer merged 20 Nov (PR #6); dashboard screenshot in the appendix. Only the two licence `\todo`s in 02 remain. **Report:** `01_introduction`, `02_dataset` (+ S8 table), `06_results` (dashboard screenshots + S10), `07_discussion` (limitations + extensions). Each file has `\todo` notes on what goes there | 5 h | **CP5** |
 | S12 | Slides: problem + dataset (~2 min), dashboard + insights (~4 min) | 1.5 h | **CP5** |
 | S13 | ✅ **Done 20 Nov by Lynn** (Windows, project name `wpfresh`, README only): found and fixed the spike tile failing on a fresh install, a red first Airflow run, and the dead MinIO console link (commit 2c66219). **Fresh-clone test** on her Mac following only the README; log every step that was unclear | 1 h | **CP6** |
-| S14 | Draft on branch `sumaiya/qa-sheet` (no PR yet). Q&A prep sheet: ~15 likely questions with short answers (start from the list in [docs/demo.md](docs/demo.md)) | 1.5 h | **CP6** |
+| S14 | ✅ **On main 20 Nov** ([docs/qa.md](docs/qa.md)): Sumaiya's 18 questions + 2 added by Lynn (data checks, no MinIO console), numbers filled in. Q&A prep sheet: ~15 likely questions with short answers (start from the list in [docs/demo.md](docs/demo.md)) | 1.5 h | **CP6** |
 
 ### Lynn (lead): architecture, all pipeline code, integration, report assembly
 Owns everything else: `docker-compose.yml`, `stream/`, `ingest/`, `airflow/`, `dbt/`, `scripts/`, `postgres/`, `sample/`, `tests/`, `README.md`, `docs/design.md`, `paper/main.tex` + `paper/sections/03`–`05` (+ the Overleaf project).
