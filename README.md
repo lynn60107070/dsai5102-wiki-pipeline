@@ -1,6 +1,6 @@
 # Wikipedia live edits pipeline
 
-DSAI5102 Data Architecture & Engineering, final project · Lynn Younes & Sumaiya
+DSAI5102 Data Architecture & Engineering, final project · Lynn Younes & Sumaiya Rizwan
 
 **Question:** Wikipedia's volunteer patrollers have limited time: where does editing pressure
 concentrate, how much of it comes from bots, and are spikes in reader attention followed by edit surges?
@@ -25,15 +25,19 @@ No configuration is needed: every setting has a working default (`.env.example`)
 copy `.env.example` to `.env` and edit it before the first `up`.
 
 **What you'll see:** a fresh install has no history yet, so the one-off `bootstrap` service loads
-**6 bundled hours of real data** (`sample/`, about 390k edits, no user names) into the empty lake, builds
-the warehouse once and sets up the dashboard. At the same time the live stream starts collecting, and
+**6 bundled hours of real data** (`sample/`: 4 Nov 06:00–12:00 UTC, about 380k edits, no user names, plus
+the pageviews for those hours and the 24 before them, so the attention-spike tile has spikes to show)
+into the empty lake, builds the warehouse once and sets up the dashboard. At the same time the live stream starts collecting, and
 the live tile fills within minutes. The sample is only ever loaded into an empty lake.
 
 | Open | Address | Login (defaults) |
 |---|---|---|
 | **Dashboard** (Metabase) | http://localhost:3000 → *Wikipedia edits* | `admin@example.com` / `change-me-Metabase-123` |
 | Orchestration (Airflow) | http://localhost:8080 | `admin` / `change-me-airflow-123` |
-| Data lake (MinIO) | http://localhost:9001 | `lakeadmin` / `change-me-lake-123` |
+| Data lake (MinIO) | S3 API on http://localhost:9000; no web console (see below) | `lakeadmin` / `change-me-lake-123` |
+
+To browse the lake, use MinIO's command-line client inside its container (the last free MinIO build has
+no web console): `docker compose exec minio mc ls --recursive local/lake/clean/edits/ | head`.
 
 Add `#refresh=60` to the dashboard URL to auto-refresh the live tile.
 
@@ -65,7 +69,7 @@ pageview dumps (hourly) ─► pageviews_hourly: wait → fetch → upload ─�
 |---|---|---|---|
 | Containers | Docker Compose | Starts all 14 services with one command | Reproducible on any laptop; taught in lab 5 |
 | Streaming | Apache Kafka 8 (KRaft) | 5 topics, 4 consumer groups | Durable, replayable event log; taught in lab 10 |
-| Stream processing | Python services | Validate, remove user names, split bot/human, per-minute counts | Simple, unit-tested; enough for ~16 events/s |
+| Stream processing | Python services | Validate, remove user names, split bot/human, per-minute counts | Simple, unit-tested; enough for ~20 events/s |
 | Data lake | MinIO (S3 API) | Raw + clean zones, partitioned `dt=/hour=` | S3-compatible locally; as in the course demo |
 | Orchestration | Apache Airflow 2.11 | Pageview ingestion, warehouse refresh | Taught in lab 8; Datasets for data-aware scheduling |
 | Warehouse | DuckDB | Star schema, columnar analytics | Fast on a laptop, reads Parquet on S3 directly |
@@ -85,16 +89,16 @@ Design decisions, measurements and trade-offs: **[docs/design.md](docs/design.md
 | `processor` | `wiki.raw` → validates, removes user names, splits into `edits.bot` / `edits.human`, counts edits per minute (`edits.per_minute`); failures → `wiki.deadletter` |
 | `clean-sink` (×2) | Consumer group on `edits.bot` + `edits.human` → Parquet in `s3://lake/clean/edits/dt=/hour=/`. Scale: `docker compose up -d --scale clean-sink=3` |
 | `live-stats` | `edits.per_minute` → Postgres `serving.live_edits_per_minute` (the live tile) |
-| `minio` | Data lake (S3 API on `:9000`, console on `:9001`) |
+| `minio` | Data lake (S3 API on `:9000`; browse with `mc`, see Quick start) |
 | `postgres` | Databases `airflow` (metadata), `serving` (dashboard tables), `metabase` (Metabase settings). Host port `5433` |
 | `airflow-init`, `airflow-webserver`, `airflow-scheduler` | Airflow (LocalExecutor). The image also contains dbt + DuckDB |
 | `metabase` | Dashboard; reads `serving` as the read-only user `metabase_ro` |
 | `bootstrap` | One-off setup at the end of every `up`: sample data (empty lake only), first warehouse run, Metabase setup |
 
 **DAGs:** `warehouse_hourly` (on by default) and `pageviews_hourly` (paused on a fresh install: once
-unpaused in the Airflow UI it backfills every hour since 25 Oct, ~57 MB download per hour). While the lake
-has no pageview files, `warehouse_hourly` builds without the pageview models, so the edit tiles work
-straight away; the attention-spike tile needs at least 24 hours of pageviews before it can flag a spike.
+unpaused in the Airflow UI it backfills every hour since 25 Oct, ~57 MB download per hour). The sample
+includes 30 hours of pageviews, so every tile has data on a fresh install. If the lake has no pageview
+files at all, `warehouse_hourly` builds without the pageview models, so the edit tiles still work.
 
 ## Repository layout
 
@@ -126,7 +130,7 @@ docker compose exec airflow-scheduler /opt/airflow/dbt-venv/bin/python /opt/airf
 
 | Problem | Fix |
 |---|---|
-| A port is already in use (5433, 8080, 3000, 9000, 9001, 9092) | Stop whatever uses it, or change the left side of that service's `ports:` in `docker-compose.yml` |
+| A port is already in use (5433, 8080, 3000, 9000, 9092) | Stop whatever uses it, or change the left side of that service's `ports:` in `docker-compose.yml` |
 | Containers restart or Docker is very slow | Give Docker Desktop at least 8 GB of memory; the stack uses about 4.5 GB |
 | `bootstrap` exited with an error | `docker compose logs bootstrap`, then `docker compose up -d` to run it again (it is safe to re-run) |
 | Git Bash on Windows rewrites `/opt/...` paths | Run `export MSYS_NO_PATHCONV=1` first |

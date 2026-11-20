@@ -14,7 +14,7 @@ docker compose exec raw-sink python -m stream.status   # "collector: running", n
 - Airflow: `warehouse_hourly` last run green (trigger it once if the last run is older than an hour).
 - Open these tabs in this order, logged in, zoomed so text is readable from the back of the room:
   1. Terminal with `docker compose logs -f --tail 5 producer processor` (font ≥ 18 pt)
-  2. MinIO console http://localhost:9001 → bucket `lake`
+  2. Terminal with `docker compose exec minio mc ls --recursive local/lake/clean/edits/dt=2026-11-04/` (MinIO has no web console)
   3. Airflow http://localhost:8080 → `warehouse_hourly` → Graph
   4. Metabase http://localhost:3000/dashboard/2#refresh=60
 - Turn off notifications; laptop plugged in; Wi-Fi checked (the live tile needs it).
@@ -25,7 +25,7 @@ docker compose exec raw-sink python -m stream.status   # "collector: running", n
 |---|---|---|
 | 1 | Terminal: producer + processor logs scrolling | "This is every edit on every Wikipedia, live: about 950 a minute, coming through Kafka right now." |
 | 2 | Point at `last 60 s: N bot, M human, 0 dead-letter` | "The processor validates each event, drops user names, and splits bots from humans into separate topics." |
-| 3 | MinIO: `lake/raw/edits/dt=…/hour=…` then `lake/clean/edits/…` | "Two zones in the lake: raw, exactly as received, and clean Parquet, partitioned by date and hour." |
+| 3 | Lake (`mc ls`): `lake/raw/edits/dt=…/hour=…` then `lake/clean/edits/…` | "Two zones in the lake: raw, exactly as received, and clean Parquet, partitioned by date and hour." |
 | 4 | Airflow: `warehouse_hourly` graph, a green run | "Every hour, and whenever new pageviews land, Airflow compacts the lake, runs dbt with 34 data tests, and only if they pass, exports to Postgres." |
 | 5 | (Optional) click a task → Logs → dbt `PASS=49` | "If a test fails, the export never runs, so the dashboard can't show bad numbers." |
 | 6 | Metabase: live tile | "This tile is fed straight from the stream: this minute's edits appear about three minutes after it ends." |

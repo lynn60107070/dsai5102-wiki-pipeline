@@ -50,7 +50,9 @@ def warehouse_hourly():
     BashOperator(
         task_id="check_freshness",
         bash_command=f"{PYTHON} {SCRIPTS}/check_freshness.py --max-age-minutes 15",
-        retries=0,
+        # Retries give a fresh install time for the sinks' first flush (every 5 min); without them the
+        # first run after `docker compose up` was always red. A real outage is still red 10 min later.
+        retries=2,
     )
 
     compact = BashOperator(

@@ -207,13 +207,12 @@ services:
 
   # Data lake (S3 API). MinIO stopped publishing free official images in 2025; this is the last
   # free MinIO build, archived by Bitnami, pinned so it never changes under us.
-  # API on :9000, web console on http://localhost:9001 (log in with the .env credentials).
+  # API on :9000. This build has no web console: browse with `docker compose exec minio mc ls local/lake/`.
   minio:
     image: bitnamilegacy/minio:2025.7.23-debian-12-r5
     restart: unless-stopped
     ports:
       - "9000:9000"
-      - "9001:9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lakeadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-lake-123}

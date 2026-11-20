@@ -38,4 +38,4 @@ done
 [ "${state:-}" = "success" ] || { echo "warehouse build still running after 10 min: check the Airflow UI"; exit 1; }
 
 python "$SCRIPTS/metabase_setup.py"
-echo "ready: dashboard http://localhost:3000 · Airflow http://localhost:8080 · MinIO http://localhost:9001"
+echo "ready: dashboard http://localhost:3000 · Airflow http://localhost:8080 · lake: docker compose exec minio mc ls local/lake/"
