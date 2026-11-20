@@ -12,19 +12,20 @@ user name. The raw archive keeps events as received; the clean zone, which the w
 only a hash of the user name. The feed covers every Wikimedia project, so the volumes in
 \cref{tab:sources,tab:profile} are for all of them, and the bot share is also given for the Wikipedias
 alone. There is no archive to download later, so the collector runs all the time and replays outages
-from the feed. Licence: \todo{EventStreams licence}.
+from the feed. Licence: none is stated for the event data itself; its use falls under the Wikimedia
+Terms of Use~\cite{wikimedia2026terms}.
 
 \paragraph{Reader attention (batch).} Wikimedia publishes the views of every page as one compressed file
 per hour~\cite{wikimedia2026pageviews}, counting human readers only. We keep the articles with at least
 10 views in the hour, plus the total views per wiki over all articles. We call an article-hour an
 \emph{attention spike} when it has at least 1{,}000 views and at least five times the article's average
 over the previous 24 hours, so the 10-view cut-off keeps every spike. The files stay online, so missed
-hours can be loaded later. Licence: CC0.
+hours can be loaded later. Licence: CC0~\cite{wikimedia2026dumpslegal}.
 
 \paragraph{Wiki names (reference).} The Sitematrix API~\cite{wikimedia2026sitematrix} lists every
 Wikimedia wiki with its project and language. It changes rarely, so it is read once and stored as a small
 reference table that turns ids like \texttt{arzwiki} into ``Egyptian Arabic Wikipedia''.
-Licence: \todo{Sitematrix licence}.
+Licence: none is stated for the API output; as for the stream, the Terms of Use apply.
 
 \begin{table}[!htbp]
 \centering
