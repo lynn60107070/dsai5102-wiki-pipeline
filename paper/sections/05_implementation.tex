@@ -27,7 +27,7 @@ rows and no missing events. A compaction job removed every duplicate, and the st
 routine; \cref{tab:incidents} in the appendix lists the ones that changed the design. To check the replays, we replayed
 3~Nov 15:00 to 6~Nov 00:00 a second time and compared the deduplicated hourly counts: only 4,491 edits
 (0.1\%) were new, and no hour of the window is empty. The only low hours, 02:00--06:00 UTC on 28~Oct,
-are a real pause in bot activity. After the window closed, every lake file was read back and matched
+are just as low in the raw zone, for bots and humans alike, so the drop is in the feed, not in the pipeline. After the window closed, every lake file was read back and matched
 the event count in its name, and the warehouse holds exactly the clean zone's 25,093,717 edits.
 
 \subsection{Batch ingestion and orchestration}\label{sec:impl-batch}

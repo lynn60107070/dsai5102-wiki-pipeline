@@ -4,20 +4,12 @@
 \section{Results and Insights}\label{sec:results}
 
 The Metabase dashboard \emph{Wikipedia edits} answers the question with six tiles
-(\cref{fig:dashboard}): live edits per minute, edits per hour by bots and humans, the bot share of the 15
+(\cref{fig:dashboard} in the appendix): live edits per minute, edits per hour by bots and humans, the bot share of the 15
 busiest wikis, the top Wikipedia languages split into bots and humans, reader attention spikes and the
 edits that follow them, and data completeness per hour. Each tile has a title and a one-line explanation,
 and the \emph{From}, \emph{To} and \emph{Project} filters apply to all of them. Over the analysis window
 (28 Oct -- 11 Nov 2026, UTC) the pipeline kept 25{,}093{,}717 edits on 771 wikis, 8{,}479{,}562 of them on
 347 Wikipedias (\cref{tab:profile}). We report five findings.
-
-\begin{figure}[!htbp]
-\centering
-\todo{Dashboard screenshot over the analysis window: \texttt{figures/06\_dashboard.png}}
-% \includegraphics[width=\textwidth]{06_dashboard}
-\caption{The \emph{Wikipedia edits} dashboard over the analysis window, 28 Oct -- 11 Nov 2026 (UTC).}
-\label{fig:dashboard}
-\end{figure}
 
 \paragraph{1. About half of all edits come from bots.} Flagged bot accounts made 48.6\% of all edits in
 the window and 45.3\% of the edits on Wikipedias. The share moves from day to day, from 40.4\% (6 Nov)
@@ -70,7 +62,7 @@ European afternoon and evening.
 spiking articles get about as many edits in the next two hours as other articles with at least 1{,}000
 views in the hour (0.63 against 0.60 on average). The difference appears only for the largest spikes:
 above 20{,}000 views, the 355 spikes got 5.4 edits in the next two hours against 1.7 for steady articles
-of the same size, 3.2 times as many, and 56\% of them got at least one edit, against 20\%. The largest
+of the same size, 3.2 times as many, and 55\% of them got at least one edit, against 20\%. The largest
 surge followed breaking news: \emph{2026 Kraków shooting} on English Wikipedia went from about 45 views an
 hour to thousands on 7 Nov and got 203 edits in the two hours after 16:00 UTC (tile \emph{Reader attention
 spikes and the edits that follow}).

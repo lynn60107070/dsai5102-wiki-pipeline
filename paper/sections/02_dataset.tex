@@ -60,12 +60,12 @@ Per day: mean (lowest -- highest)            & 1{,}672{,}914 (1{,}302{,}581 -- 2
 Wikis with at least one edit                 & 771 \\
 Share of edits by flagged bots, all wikis    & 48.6\% \\
 Share of edits by flagged bots, Wikipedias   & 45.3\% \\
-Duplicate events removed                     & \todo{n} \\
-Events rejected to the dead-letter topic     & \todo{n} \\
+Duplicate events removed                     & 10.8 million (30\% of the raw zone) \\
+Events rejected to the dead-letter topic     & 492 (whole run, 25 Oct -- 15 Nov) \\
 Hours with no data / low hours               & 0 / 4 of 360 \\
 Hours with pageview data                     & 347 of 360 \\
-Raw zone (JSON lines, gzip)                  & \todo{GB} \\
-Clean zone (Parquet)                         & \todo{GB} \\
+Raw zone (JSON lines, gzip)                  & 7.52 GB \\
+Clean zone (Parquet)                         & 1.08 GB \\
 \bottomrule
 \end{tabular}
 \caption{Data profile of the analysis window. A low hour has under half the edits of the median hour.}
@@ -76,11 +76,13 @@ Clean zone (Parquet)                         & \todo{GB} \\
 to 11 Nov 2026 (UTC; 15 days, 360 hours). The pipeline kept 25{,}093{,}717 edits and page creations, about
 1.67 million a day, on 771 wikis. Edits by flagged bot accounts made up 48.6\% of all edits
 and 45.3\% of edits on the Wikipedias. Because the feed is delivered at least once and outages were
-replayed, \todo{duplicates} events arrived more than once; they are removed by compaction in the lake and
+replayed, 10.8 million events, 30\% of the raw zone, arrived more than once; they are removed by compaction in the lake and
 then by event id in dbt, before the warehouse tables. Outages were replayed (\cref{sec:implementation}),
 so no hour of the window is empty. Four hours, 02:00--06:00 UTC on 28 Oct, have under half the median
-hour's edits; bot and human edits both fell to about a quarter of their usual level for those hours.
+hour's edits; bot and human edits both fell, at 03:00 UTC to 6\% and 16\% of the median hour. The raw
+zone has no more events for those hours, so the drop is in what the feed delivered, not a loss in the
+pipeline.
 They are kept and marked on the dashboard's completeness tile. Pageview files are missing for 13 hours,
 so no attention spike can be found in those hours.
-The clean zone, Parquet with only the fields we need and no duplicates, is \todo{ratio} times smaller
+The clean zone, Parquet with only the fields we need and no duplicates, is about seven times smaller
 than the raw zone.
