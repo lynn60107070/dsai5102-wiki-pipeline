@@ -12,9 +12,9 @@ Checkpoint dates are in [SCHEDULE.md](SCHEDULE.md).
 - [x] Pipeline built and running end to end (25–26 Oct): see SCHEDULE.md "Where we are"
 - [x] Topic: Wikipedia live edits (stream) + hourly pageview files (batch) + sitematrix (reference data)
 - [x] Stack: Docker Compose · Kafka · MinIO · Airflow · DuckDB + dbt · Postgres (dashboard tables only) · Metabase
-- [ ] Problem statement agreed as one sentence (L3, CP1). Working version: *Wikipedia's volunteer patrollers
+- [x] Problem statement agreed as one sentence (L3, CP1, 1 Nov). Final version (README): *Wikipedia's volunteer patrollers
       have limited time: where does editing pressure concentrate, how much of it comes from bots, and do
-      spikes in reader attention cause edit surges?*
+      spikes in reader attention followed by edit surges?*
 
 ## 1. Presentation: ≈15 min + 5 min Q&A · **Wed 25 Nov** (confirmed 28 Oct; live demo optional, our choice)
 
@@ -41,7 +41,7 @@ Sumaiya (dashboard + insights, ~4 min) → Lynn (challenges + lessons + conclusi
 | Sample-data mode (6 bundled hours) so the dashboard works without waiting for the stream; regenerate from a window day | Reproducibility | Lynn | ✅ / CP4 |
 | Dashboard recreated on a fresh install: final tiles' SQL in `CARDS` in `scripts/metabase_setup.py` | Dashboard, Reproducibility | Sumaiya (SQL) + Lynn (merge) | CP4 |
 | `README.md`: architecture + diagram, what each container does, setup, run (sample + live), troubleshooting | Reproducibility, Documentation | Lynn (diagram image from S6) | ✅ v1 / CP4 |
-| Fresh-clone test passed on a second laptop (S13) | Reproducibility | Sumaiya | CP6 |
+| Fresh-clone test passed (S13) | Reproducibility | Lynn (took over) | ✅ 20 Nov |
 | Repo **made public** at submission (instructor's OK: public or invited, our choice). **Check before submitting** | — | Lynn | Submit |
 
 ## 3. Report (PDF, 5–10 pages **excluding references and appendices**, any template, LaTeX in `paper/`, compiled on Overleaf) · **Tue 24 Nov**, one submission per group
@@ -71,16 +71,16 @@ Written through GitHub PRs, one file per section; workflow in [paper/README.md](
 | Ingestion (stream) | Producers/consumers + streaming technologies, not just 1 → 1 | Producer → processor → 3 topics → sink consumer group (2 replicas) + dead-letter topic |
 | Warehouse | Well-designed schema optimised for queries, justified | Star schema (2 facts, 4 dims), partitioned Parquet, marts per dashboard tile, explained in the report |
 | Transformations | dbt/Spark, clean analytics-ready data | dbt staging → facts/dims → marts, incremental models, tests |
-| Dashboard | 2+ meaningful tiles with labels, titles, explanations | 5 tiles, each with a title + one-line explanation, date/wiki filters |
+| Dashboard | 2+ meaningful tiles with labels, titles, explanations | 6 tiles, each with a title + one-line explanation; From/To/Project filters |
 | Reproducibility | Clear instructions, easy to run, it works | One `docker compose up`, sample-data mode, fresh-clone tested |
 | Documentation | Clear report + README with diagrams and examples | Diagram, tool table, schema table, dbt lineage graph, screenshots |
 | Presentation | Clear, well-prepared, answers questions confidently | 2 rehearsals, demo + backup video, Q&A sheet |
 
 ## 5. Final pre-submission checklist
 - [ ] `docker compose up` on a fresh clone brings up every service (sample mode + live mode)
-- [ ] All dbt tests pass; the Airflow DAG shows green runs
-- [ ] Dashboard has ≥ 2 tiles (we have 5), each with a title and explanation
-- [ ] README has setup instructions + architecture explanation + diagram
+- [x] All dbt tests pass; the Airflow DAG shows green runs (fresh clone, 20 Nov)
+- [x] Dashboard has ≥ 2 tiles (we have 6), each with a title and explanation
+- [x] README has setup instructions + architecture explanation + diagram
 - [ ] Report PDF is 5–10 pages (references and appendices not counted) and covers all six required parts (problem, architecture, design choices, implementation, results, discussion)
 - [ ] Repo link in the report, and the instructor can open it
 - [ ] Slides final; backup demo video saved locally
