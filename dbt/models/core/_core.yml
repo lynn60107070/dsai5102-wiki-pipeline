@@ -3,8 +3,8 @@ version: 2
 models:
   - name: fact_edit
     description: >
-      Fact table, one row per edit or page creation (grain: event_id). Incremental: reloads the last
-      day of partitions each run and replaces rows by event_id. No user names, only editor_key (MD5).
+      Fact table, one row per edit or page creation (grain: event_id). Incremental: reloads the last 3
+      days of partitions each run and replaces rows by event_id. No user names, only editor_key (MD5).
     columns:
       - name: event_id
         description: Wikimedia event id (meta.id).

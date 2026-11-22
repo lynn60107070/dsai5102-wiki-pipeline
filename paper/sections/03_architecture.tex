@@ -1,8 +1,8 @@
 % Owner: Lynn. Brief: "Architecture overview (with diagram)".
 \section{Architecture}\label{sec:architecture}
 
-\Cref{fig:architecture} shows the pipeline. It has two ingestion paths, plus a small reference table,
-that meet in a shared data lake, one warehouse that models both, and a serving layer for the dashboard. All fourteen services run
+\Cref{fig:architecture} shows the pipeline. It has two ingestion paths that meet in a shared data lake, a small
+reference table loaded as a dbt seed, one warehouse that models both, and a serving layer for the dashboard. All fourteen services run
 in Docker Compose and start with one command.
 
 % A sideways A4 page: the diagram is too wide to read at text width (rotating package, main.tex).

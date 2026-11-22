@@ -2,12 +2,16 @@
 \appendix
 \section{Implementation details}\label{app:implementation}
 
+\paragraph{Version constraints.} MinIO stopped publishing free official container images in 2025, so we
+pin the last free build archived by Bitnami. Airflow follows the course lab's major version (2.x) with
+the lighter LocalExecutor, which needs no Redis or Celery workers on a single machine.
+
 % The dashboard is a page tall, so it sits here; section 6 refers to it.
 \begin{figure}[p]
   \centering
   \includegraphics[height=0.9\textheight]{06_dashboard.png}
   \caption{The \emph{Wikipedia edits} dashboard over the analysis window, 28 Oct -- 11 Nov 2026 (UTC),
-    taken on 20 Nov. The live tile is empty because the collector was stopped after the window closed.}
+    taken on 23 Nov. The live tile is empty because the collector was stopped after the window closed.}
   \label{fig:dashboard}
 \end{figure}
 
@@ -56,8 +60,10 @@
     8--10 Nov & Windows put the laptop into standby with the screen off although sleep was disabled
       (longest: 5\,h 47\,min) & Replayed after waking (511,225 events for the longest) \\
     8--10 Nov & Four warehouse runs failed a relationship test (fact rows whose article was missing
-      from \texttt{dim\_article}) & None needed: the quality gate skipped the export, and the next run
-      passed \\
+      from \texttt{dim\_article}) & The gate kept the last good data and the next run passed. Most likely
+      cause: both models read the live clean zone, so files written between them reach
+      \texttt{fact\_edit} but not \texttt{dim\_article}; reading only hours before the run's start would
+      remove it \\
     9--12 Nov & Hourly rebuilds grew Docker's disk file to 351\,GB (46\,GB in use), and its file system
       recorded errors; some writes to the warehouse file were lost & Checked every lake file against its
       event count (all intact), repaired and shrank the disk, rebuilt the warehouse from the lake \\

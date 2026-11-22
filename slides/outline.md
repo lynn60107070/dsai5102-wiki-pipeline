@@ -1,0 +1,279 @@
+# Presentation outline (skeleton)
+
+**Wed 25 Nov · 15 min talk + 5 min Q&A · 2 speakers, one handover**
+
+This is the skeleton we each build our HTML slides from. Every slide lists what goes on it, what to
+say, the numbers, and **what the instructor is listening for** (the rubric's "Good" column, read
+strictly). Numbers come from the report (analysis window 28 Oct – 11 Nov 2026, UTC); don't put a number
+on a slide that isn't in the report. Q&A answers are in [docs/qa.md](../docs/qa.md).
+
+---
+
+## How the instructor will grade the talk
+
+The brief says the talk must: (1) describe the problem and dataset, (2) explain the architecture and
+tools, (3) demonstrate the pipeline, (4) show the dashboard, (5) discuss challenges, design decisions and
+lessons, (6) answer questions. Grading is holistic over 9 rubric rows. A harsh but fair grader will mark
+us down for:
+
+- **A vague problem.** Who is it for, what decision does it support? (Problem Description)
+- **Tools without reasons.** Every tool needs a job *and* why it beat an alternative, especially the
+  ones not taught: DuckDB, dbt, Metabase. (Documentation, Presentation)
+- **A 1 producer → 1 consumer stream.** We must *show* several topics, a consumer group and the
+  dead-letter topic. (Stream ingestion)
+- **Partial orchestration.** Show that every batch step runs in the DAG, nothing by hand. (Batch)
+- **Tables that aren't modelled.** Name the grain, the star, and why marts exist. (Warehouse)
+- **"Basic SQL".** Show dbt layers, incremental models and tests as a gate. (Transformations)
+- **Charts without a message.** Each finding = one number + what it means for patrollers. (Dashboard)
+- **"It works on my machine".** Show one command on a fresh clone. (Reproducibility)
+- **Reading slides, no ownership, shaky answers.** Both of us must be able to answer anything.
+  (Presentation)
+
+**Rubric coverage map**
+
+| Rubric row | Slides |
+|---|---|
+| Problem Description | 2, 3 |
+| Ingestion: stream | 9, 10 |
+| Ingestion: batch / orchestration | 11 |
+| Warehouse | 12 |
+| Transformations | 12 |
+| Dashboard / Visualization | 5, 6, 7, 13 (demo) |
+| Reproducibility | 13+14 (end of demo) |
+| Documentation (diagram, tool reasons) | 8, 9 |
+| Presentation & Communication | all; 15, 16 (challenges, lessons) |
+
+---
+
+## The split: one handover
+
+**Block A, Sumaiya (~6 min): the question and the answer.** Problem → data → dashboard → findings.
+These are her report sections (01, 02, 06), so the content is already hers.
+
+**Block B, Lynn (~9 min): how we built it and why you can trust it.** Architecture → tools → stream →
+batch → warehouse and dbt → live demo → reproducibility → challenges → lessons → conclusion.
+
+Why this order: the instructor hears the answer in the first 6 minutes, then sees the engineering behind
+it, and the demo ends on the live dashboard that Sumaiya just explained. The conclusion goes back to the
+question, so the talk closes on the problem it opened with.
+
+**Handover line** (end of slide 7, Sumaiya): *"Those are the answers. Lynn will show you how the
+pipeline produces them, live."*
+
+**Target 13:30 spoken, leaving 1:30 of buffer** for the demo and nerves. Slides 3 + 4 share one slide
+(the profile is a strip under the sources table), and slide 14 is said at the end of the demo, not
+shown separately, so the deck has 15 slides.
+
+| # | Slide | Speaker | Time | Cumulative |
+|---|---|---|---|---|
+| 1 | Title | Sumaiya | 0:15 | 0:15 |
+| 2 | The problem: patrollers' limited time | Sumaiya | 1:00 | 1:15 |
+| 3+4 | Data: three sources + what we collected | Sumaiya | 1:15 | 2:30 |
+| 5 | Dashboard overview | Sumaiya | 0:40 | 3:10 |
+| 6 | Findings 1–3: bots and where pressure goes | Sumaiya | 1:10 | 4:20 |
+| 7 | Findings 4–5: the clock and attention spikes | Sumaiya | 1:00 | 5:20 |
+| 8 | Architecture (built up in 3 steps) | Lynn | 1:00 | 6:20 |
+| 9 | Tools and why | Lynn | 1:00 | 7:20 |
+| 10 | Stream path: Kafka | Lynn | 0:50 | 8:10 |
+| 11 | Batch path: Airflow | Lynn | 0:40 | 8:50 |
+| 12 | Warehouse and dbt | Lynn | 0:50 | 9:40 |
+| 13+14 | Live demo, ending on "one command to reproduce" | Lynn | 2:30 | 12:10 |
+| 15 | Challenges and design decisions | Lynn | 0:50 | 13:00 |
+| 16 | Lessons, limits and conclusion | Lynn | 0:30 | 13:30 |
+| 17 | Questions | both | – | – |
+
+Rehearse with a timer; if a run goes over 14:00, cut words, not slides.
+
+Slide 13 is a demo, not a slide: switch to the terminal and browser. If it fails for more than ~20 s,
+play the backup video (L14) without apologising.
+
+---
+
+## Block A · Sumaiya
+
+### 1. Title (0:15)
+- **On slide:** *Where does Wikipedia's editing pressure go? An end-to-end pipeline for live edits.*
+  Both names + student IDs, DSAI5102, 25 Nov 2026, repo link (or QR code).
+- **Say:** names, one-line hook: "Every edit on Wikipedia, live, for two weeks."
+
+### 2. The problem: patrollers' limited time (1:00)
+- **On slide:** the one-sentence question in large type: *Where does editing pressure concentrate across
+  Wikipedia's language editions, how much of it comes from bots, and are spikes in reader attention
+  followed by edit surges?* Below it, the three decisions it supports:
+  1. Which wikis need review most?
+  2. How much of the volume is flagged bot work, hidden from the default review list?
+  3. Does a jump in readers warn of a rush of edits?
+- **Say:** ~20 events/s, ~1.7 million edits a day; volunteer patrollers review recent changes for
+  vandalism; their time is limited and the raw stream doesn't say where to spend it. Audience: patrollers
+  and wiki admins.
+- **Instructor listens for:** a named audience, a decision it supports, why it's non-trivial. Define
+  "editing pressure" (edits per wiki over time that may need review).
+- **Trap:** "Does attention *cause* edits?" → we show timing, not cause (Q&A 2).
+
+### 3+4. Data: three Wikimedia sources + what we collected (1:15, one slide)
+- **On slide:** a 3-row table: source · type · update rate · volume · joins on.
+  - EventStreams *recentchange*: stream (SSE), continuous, ~20 kept events/s, 1.7 M/day.
+  - Pageview dumps: batch files, hourly, ~57 MB and 6.4 M rows per file → we keep ~193,000 + per-wiki
+    totals.
+  - Sitematrix API: reference table, rarely changes, 1,073 wikis.
+- **Say:** the sources arrive differently, **which is why the pipeline has a stream path and a batch
+  path**. The stream can't be re-downloaded later, so the collector runs all the time; the pageview files
+  stay online, so missed hours can be backfilled. Licences: pageviews CC0; stream and Sitematrix under the
+  Wikimedia Terms of Use.
+- **Instructor listens for:** volume, velocity, why both stream and batch (this sets up Block B).
+- **Trap:** "Why drop pageviews under 10 views?" → a spike needs ≥ 1,000, so every spike is kept (Q&A 16).
+
+#### Data profile strip (same slide)
+- **On slide:** big numbers: **25,093,717 edits · 771 wikis · 15 days (360 hours) · 0 empty hours**.
+  Smaller: 10.8 M duplicates removed (30% of the raw zone), 492 dead-letter events, raw 7.52 GB → clean
+  1.08 GB (~7× smaller), pageviews for 347 of 360 hours.
+- **Say:** window 28 Oct – 11 Nov, UTC. The only low hours (28 Oct, 02:00–06:00) are just as low in the
+  raw zone, so the drop is in the feed, not a loss in our pipeline.
+- **Instructor listens for:** that we checked our data, not just collected it.
+
+### 5. Dashboard overview (0:40)
+- **On slide:** the dashboard screenshot (`paper/figures/06_dashboard.png`), the 6 tiles labelled:
+  live edits per minute · edits per hour (bots vs humans) · bot share of the 15 busiest wikis · top
+  Wikipedia languages (bots vs humans) · attention spikes and the edits that follow · data completeness.
+  Callout: From / To filter every warehouse tile; Project filters the two all-wiki tiles.
+- **Say:** each tile maps to one part of the question; each has a title and a one-line explanation.
+- **Instructor listens for:** ≥ 2 tiles (we have 6), one categorical and one over time, titles, labels,
+  explanations.
+
+### 6. Findings 1–3: bots and where pressure goes (1:10)
+- **On slide:** three findings, each = one big number + one line of meaning.
+  1. **About half is bots:** 48.6% of all edits, 45.3% on Wikipedias → raw counts overstate what
+     patrollers see by ~1.8×.
+  2. **Rankings by total edits mislead:** Chechen Wikipedia is #2 by edits, #65 by human edits (99.5%
+     bots); Arabic #5 → #17. Small table: the 7 busiest Wikipedias, rank by edits vs rank by human edits.
+  3. **Human pressure is concentrated:** English alone has 40.9% of human Wikipedia edits; the top 10 of
+     347 have 74.2%.
+- **Instructor listens for:** numbers tied to the decision ("rank by human edits, not total").
+
+### 7. Findings 4–5: the clock and attention spikes (1:00)
+- **On slide:**
+  4. **Humans follow the clock, bots don't:** human peak 17:00 UTC is 2.1× the 04:00 low; 13:00–18:00
+     carries 30.8% of the day → the European afternoon and American morning.
+  5. **Most attention spikes bring no edits; very large ones do:** 77.6% of 24,325 spikes get no edit in
+     the spike hour or the two hours after; above 20,000 views, spikes get **3.1×** the edits of
+     non-spike article-hours above 20,000 views. Example: *2026 Kraków shooting*, 203 edits in two hours.
+- **Finding 5 as a chart, not text:** two bars, "spikes above 20k views: 57% got ≥ 1 edit in the next
+  2 h (n = 346)" against "non-spike article-hours above 20k views: 22%". The dashboard tile lists the
+  top spikes but doesn't show this comparison, so the slide has to.
+- **Say:** so an alert should watch only the biggest spikes. **Handover line.**
+- **Trap:** "Is 3.1× significant?" → descriptive over the whole window (346 spikes); no significance test,
+  and consecutive hours of one story aren't independent. The comparison group is article-hours above
+  20,000 views that are not spikes (Q&A 34). Queries: `analysis/findings.sql`.
+
+---
+
+## Block B · Lynn
+
+### 8. Architecture (1:00)
+- **On slide:** the architecture diagram (`paper/figures/architecture.pdf`), built up in **3 steps**
+  (stream path → batch path → warehouse and serving) or with the other paths dimmed: the full diagram is
+  too dense to read projected at once. Colour key: blue stream, green batch, brown reference.
+- **Say:** two ingestion paths meet in one lake (MinIO, raw + clean zones), one warehouse models both
+  (DuckDB + dbt star schema), served through Postgres to Metabase. 14 services, Docker Compose, one
+  command.
+- **Instructor listens for:** a clear end-to-end flow, lake → warehouse → dashboard, as the brief's
+  steps describe.
+
+### 9. Tools and why (1:00)
+- **On slide:** a table: layer · tool · alternative considered · why. Mark the tools not covered in the
+  course (DuckDB, dbt, Metabase).
+  - Kafka vs RabbitMQ: replayable log, several independent consumers, consumer groups.
+  - Python consumers vs Flink: ~20 events/s needs no cluster; unit-tested.
+  - MinIO: S3-compatible, local, free.
+  - Airflow vs cron: retries, backfill, data-aware scheduling.
+  - DuckDB vs ClickHouse/BigQuery/Postgres: in-process, columnar, reads Parquet on S3.
+  - dbt vs Spark/scripts: lineage, incremental models, tests as a gate.
+  - Postgres for serving: DuckDB allows one writer.
+  - Metabase vs Superset/Looker Studio: one container, rebuilt by script through its API.
+- **Instructor listens for:** a *reason* for each tool, not a list. "The goal is not to use as many
+  technologies as possible."
+- **Trap:** "Why both DuckDB and Postgres?" (Q&A 13). "Why not Spark?" (Q&A 15).
+
+### 10. Stream path: Kafka (0:50)
+- **On slide:** topic diagram: producer → `wiki.raw` (3 partitions, keyed by wiki) → raw sink + processor
+  → `edits.bot` / `edits.human` → **consumer group of 2 clean sinks**; `edits.per_minute` → live-stats;
+  `wiki.deadletter`. 5 topics, 4 consumer groups.
+- **Say:** at-least-once delivery (commit after write), duplicates removed by event id; event-time
+  per-minute windows with a per-partition watermark; outages replayed with `?since=`.
+- **Instructor listens for:** not 1 → 1: several producers/consumers, a consumer group, a dead-letter
+  topic, a reason for partitions and keys.
+- **Trap:** exactly-once? (Q&A 5). Late events? (Q&A 6). Laptop sleeps? (Q&A 7).
+
+### 11. Batch path: Airflow (0:40)
+- **On slide:** the two DAGs as boxes.
+  - `pageviews_hourly`: sensor (file published) → filter → upload 2 Parquet files → clean-up; catchup
+    backfills from 25 Oct; re-runs overwrite (idempotent).
+  - `warehouse_hourly`: hourly **or** on the pageviews Dataset → compact lake → `dbt build` (with tests)
+    → export to Postgres.
+- **Instructor listens for:** end-to-end, multiple steps, upload to storage, nothing run by hand.
+- **Trap:** "Why not cron?" (Q&A 10).
+
+### 12. Warehouse and dbt (0:50)
+- **On slide:** star schema: `fact_edit` (one row per edit), `fact_pageviews_hourly`,
+  `fact_wiki_views_hourly`; dims time, wiki, article, editor type; 4 marts (one per tile). Next to it,
+  the dbt lineage (`paper/figures/lineage.png`): staging → core → marts.
+- **Say:** grain stated per table; incremental facts reload only the last 3 days; marts store counts,
+  not shares, so any date range sums correctly; **34 data tests gate the export**: if one fails, the
+  dashboard keeps the last good data (happened 4 times on 8–10 Nov).
+- **Instructor listens for:** schema *justified* and optimised for the queries, transformations that
+  scale and produce clean data.
+
+### 13. Live demo (2:30), follow [docs/demo.md](../docs/demo.md)
+1. Producer/processor logs scrolling: "every edit, live, through Kafka."
+2. Lake via `mc ls`: raw zone and clean Parquet, `dt=` / `hour=` partitions.
+3. Airflow: `warehouse_hourly` graph, a green run (optionally the dbt log `PASS`).
+4. Metabase: the live tile, then the other tiles with **From = 28 Oct, To = 11 Nov** set beforehand,
+   so the numbers match Sumaiya's slides.
+5. End on the reproduce line below (slide 14's content, said over the dashboard or a one-line slide).
+- **Instructor listens for:** the pipeline actually running, end to end.
+- **Risk:** stack up 1–2 hours early, check the producer says "live from now" (not "backfilling"),
+  hotspot ready. Details in docs/demo.md.
+
+### 14. One command to reproduce (said at the end of the demo, ~0:20)
+- **On slide:** `docker compose up -d --build` in large type. Underneath: a bootstrap service loads
+  6 bundled hours of real edits (~380k) + 30 hours of pageviews, runs the warehouse DAG, builds the
+  Metabase dashboard through its API, in ~5 min. Tested on fresh clones (macOS, Windows).
+- **Instructor listens for:** clear, easy to run, it works.
+
+### 15. Challenges and design decisions (0:50)
+- **On slide:** 3–4 incidents, each = problem → fix (from the report's incident table):
+  - laptop standby / dropped connections → automatic replay by time (`?since=`), resuming where it stopped
+  - one partition raced ahead, 205,814 events wrongly dropped as late → per-partition watermark
+  - sinks killed mid-backlog → 381,066 duplicates → compaction + 60 s graceful shutdown
+  - Docker disk grew to 351 GB, warehouse writes lost → every lake file checked, warehouse rebuilt from
+    the lake (why the raw zone exists)
+- **Instructor listens for:** honest problems and *design decisions that came from them*.
+
+### 16. Lessons, limits and conclusion (0:30)
+- **On slide:** two columns.
+  - **Limits / next:** one laptop collects (→ a server), one Kafka broker (→ more), bot flag is an
+    estimate, 15 days only.
+  - **Answer:** about half the edits are bots; rank wikis by human edits; human pressure peaks
+    13:00–18:00 UTC; only the biggest attention spikes warn of edit surges.
+- **Say:** close on the question from slide 2.
+
+### 17. Questions
+- **On slide:** "Questions?" + repo link. Keep the architecture diagram one click away (backup slide).
+- **Who answers:** the person whose block it is; the other adds only if asked. Both know everything in
+  docs/qa.md. Expect the grader to ask Sumaiya a pipeline question on purpose: she should be ready for
+  Q&A 23, 24 and 31, and Lynn for 21, 22 and 34.
+
+---
+
+## Backup slides (after 17, only if asked)
+- Kafka topics and consumer groups table (report Table, appendix).
+- Full incident table.
+- dbt lineage at full size.
+- Data profile table.
+
+## Build notes for the HTML slides
+- One idea per slide; findings as big numbers, not bullet walls.
+- Same template and fonts for both blocks so it reads as one deck.
+- Figures to reuse: `paper/figures/architecture.pdf`, `lineage.png`, `06_dashboard.png`,
+  `docs/diagram/wikipedia_pipeline_architecture_v1.png`.
+- Each slide's speaker script goes in its notes (Mon 23).

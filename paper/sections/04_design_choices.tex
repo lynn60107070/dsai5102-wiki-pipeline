@@ -57,21 +57,18 @@ Dashboard: Metabase$^\dagger$
     recreates the dashboard \\
 \bottomrule
 \end{tabularx}
-\caption{Tools by layer: their job, the alternatives we considered and why we chose them.
+\caption{Tools by layer: their job, the alternatives we considered and why we chose
+  them~\cite{airflow2026docs,kafka2026docs,dbt2026docs,duckdb2026docs,metabase2026docs,minio2026docs}.
   $^\dagger$~Not covered in the course.}
 \label{tab:tools}
 \end{table}
 
 \paragraph{Tools not covered in the course.} \emph{DuckDB} is an embedded, columnar SQL engine: it runs
-inside the process that queries it, like SQLite, but is built for analytical scans rather than
-transactions, so the warehouse is a single file on a laptop instead of a server to operate (its
-one-writer limit is discussed below). \emph{dbt} turns the
-transformations into SQL files under version control: each model declares the models it depends on, so
-dbt builds them in the right order and can draw the lineage graph, and the same project defines the data
-tests that block a bad build from reaching the dashboard. \emph{Metabase} is an open-source BI tool that
-runs as one container; we chose it over Superset (more services to run) and Looker Studio (cloud only,
-cannot reach a database on a laptop), and because its API lets a script recreate every tile on a fresh
-install.
+inside the process that queries it, like SQLite, but is built for analytical scans, so the warehouse is
+one file rather than a server. \emph{dbt} keeps the transformations as version-controlled SQL models whose
+declared dependencies give the build order, the lineage graph and the data tests that gate the dashboard.
+\emph{Metabase} is an open-source BI tool that runs in one container, chosen over Superset (more services
+to run) and Looker Studio (cloud only); its API lets a script rebuild every tile.
 
 \paragraph{Stream and batch.} Edits are a genuine event stream: they arrive continuously and cannot be
 re-downloaded later, so they go through Kafka, which buffers them durably and lets several consumers
@@ -94,7 +91,8 @@ after every successful build, each inside one transaction, and Metabase reads on
 at the finest grain (one row per edit), surrounded by dimensions for time, wiki, article and editor
 type. Natural keys are used instead of surrogate integers because they are stable across full rebuilds
 and readable in the dashboard. Marts are pre-aggregated per dashboard tile and store counts, not shares,
-so that any date range can be summed correctly before dividing.
+so that any date range can be summed correctly before dividing (distinct-editor counts are the
+exception and are never summed across rows).
 
 \paragraph{Reliability.} Every consumer commits its Kafka offsets only after its output is safely
 written (at-least-once delivery). This can repeat events after a crash but never loses them; duplicates
@@ -104,7 +102,3 @@ if any test fails, the export does not run and the dashboard keeps the last good
 \paragraph{Privacy and access.} User names are dropped in the stream processor; only an MD5 hash
 (to count distinct editors) and the editor type are kept. Metabase connects with an account that can
 only read the serving tables.
-
-\paragraph{Constraints we hit.} MinIO stopped publishing free official container images in 2025, so we
-pin the last free build archived by Bitnami. Airflow follows the course lab's major version (2.x) with
-the lighter LocalExecutor, which needs no Redis or Celery workers on a single machine.

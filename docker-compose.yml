@@ -63,7 +63,6 @@ services:
   broker:
     image: confluentinc/cp-kafka:8.0.0
     hostname: broker
-    container_name: broker
     restart: unless-stopped
     ports:
       - "9092:9092"
@@ -83,7 +82,7 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'   # topics are created explicitly by kafka-init
       # The lab used /tmp, which is wiped when the container is recreated; this path is on the volume.
       KAFKA_LOG_DIRS: '/var/lib/kafka/data'
-      # ~16 events/s needs far less than the default 1 GB heap; leaves room in an 8 GB Docker VM.
+      # ~20 events/s needs far less than the default 1 GB heap; leaves room in an 8 GB Docker VM.
       KAFKA_HEAP_OPTS: '-Xms512M -Xmx512M'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
     volumes:

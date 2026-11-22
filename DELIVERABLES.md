@@ -13,7 +13,7 @@ Checkpoint dates are in [SCHEDULE.md](SCHEDULE.md).
 - [x] Topic: Wikipedia live edits (stream) + hourly pageview files (batch) + sitematrix (reference data)
 - [x] Stack: Docker Compose · Kafka · MinIO · Airflow · DuckDB + dbt · Postgres (dashboard tables only) · Metabase
 - [x] Problem statement agreed as one sentence (L3, CP1, 1 Nov). Final version (README): *Wikipedia's volunteer patrollers
-      have limited time: where does editing pressure concentrate, how much of it comes from bots, and do
+      have limited time: where does editing pressure concentrate, how much of it comes from bots, and are
       spikes in reader attention followed by edit surges?*
 
 ## 1. Presentation: ≈15 min + 5 min Q&A · **Wed 25 Nov** (confirmed 28 Oct; live demo optional, our choice)

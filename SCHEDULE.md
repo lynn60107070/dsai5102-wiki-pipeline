@@ -25,6 +25,36 @@ list is in [DELIVERABLES.md](DELIVERABLES.md); how everything works is in [docs/
 
 ---
 
+## Final days (v3, 20 Nov)
+
+Pipeline, data, repo, Q&A sheet and report content are done. Each of us makes the slides and script
+for our own sections.
+**Sun 22 Nov**
+- Report (Lynn): read the entire thing; compare against the rubric; refine and iterate, with an agent
+  assessing it; compile the final version to PDF, ready for submission (no more edits after that).
+- Slides (both): Lynn makes a skeleton outline template for us both to work in, with the sections
+  split between the two speakers (one presents their sections, then the other presents the rest, no
+  back and forth); each of us drafts our own sections (HTML slides).
+
+**Mon 23 Nov**
+- Slides (both): make and finalize your own section's HTML slides; write the script for your section.
+- Demo video (Lynn): film it ([docs/demo.md](docs/demo.md)).
+
+**Tue 24 Nov: submission deadline**
+- Submission (Lynn): make the repo public; submit the repo link, the PDF and the slides.
+- Slides (both): confirm they are final and ready for submission; memorise your script and the
+  whole project's Q&A facts ([docs/qa.md](docs/qa.md)).
+
+**Wed 25 Nov: presentation**
+- Rehearse the presentation together for at least an hour (time to be confirmed).
+- Demo (Lynn): bring the stack up early, start the collector at least 30 minutes before, keep the
+  laptop plugged in.
+
+**After the presentation (optional)**
+- Delete `C:\wpfresh`; delete the damaged warehouse copy (5.3 GB); shrink Docker's disk file (~150 GB).
+
+---
+
 ## Timeline
 
 | Checkpoint | Date | Where the team should be | Status |

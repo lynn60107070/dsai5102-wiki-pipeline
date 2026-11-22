@@ -1,6 +1,6 @@
-# Design note (draft v0, to be agreed at CP1, task L3)
+# Design log
 
-Sumaiya draws the architecture diagram (S6) from this file. Anything marked **(open)** is still to decide.
+> Kept as written during the build. Where it differs, the report (`paper/`) and the README are current.
 
 ## 1. Problem statement
 
@@ -13,7 +13,7 @@ Audience: patrollers and wiki administrators deciding where to focus review effo
 
 | Source | Type | How often | Volume | Joins on |
 |---|---|---|---|---|
-| Wikimedia EventStreams `recentchange` | Stream (server-sent events) | Continuous, ~29 events/s (~14/s after keeping edits + new pages) | ~1.2M events/day | wiki, article, time |
+| Wikimedia EventStreams `recentchange` | Stream (server-sent events) | Continuous, ~20 kept events/s (edits + new pages) | ~1.7M kept events/day | wiki, article, time |
 | Pageview dumps (`dumps.wikimedia.org/other/pageviews`) | Batch files | Hourly, ~57 MB compressed | 6.4M rows/hour (5.25M Wikipedia); we keep ~193k (see §7) | wiki, article, hour |
 | Sitematrix API (`action=sitematrix`) | Reference (batch, once) | Rarely changes | ~1,000 wikis | wiki |
 
@@ -24,7 +24,7 @@ All times are UTC.
 ```
 EventStreams ──► producer ──► wiki.raw ──► processor (L7) ──► edits.bot / edits.human / edits.per_minute
                                  │                        └─► wiki.deadletter (bad events)
-                                 └──► raw-sink (consumer group, 2 replicas in L7) ──► lake raw/edits/
+                                 └──► raw-sink (consumer group `raw-archive`) ──► lake raw/edits/
 
 Pageview dumps ──► Airflow DAG (L5/L9): download → filter (S2) → lake raw/pageviews/
                                           → dbt build (DuckDB) → export marts → Postgres ──► Metabase
@@ -62,7 +62,7 @@ flush and commit. **Known limitation:** the per-minute counts live in memory, so
 for the 2–3 minutes around a processor restart (the warehouse is unaffected).
 
 **Real outage, 25 Oct 16:02–20:17 UTC (laptop asleep in a bag, no network): detected and fully
-recovered.** On wake the producer resumed from its saved `Last-Event-ID`, and Wikimedia replayed the
+recovered.** On wake the producer resumed from its saved `Last-Event-ID` (this worked on 25 Oct; from 27 Oct Wikimedia ignored the header, so replays now use `?since=`, see below), and Wikimedia replayed the
 missed ~4 hours at ~14× the normal rate (32–37k events/min for ~12 minutes); the sinks then caught up from
 Kafka. Every hour 16:00–20:00 has normal volume (83–89k edits), so no data was lost. `check_freshness`
 correctly failed in the 3 warehouse runs that executed right after waking (raw zone 258 minutes stale),
@@ -207,7 +207,7 @@ Fixes:
 - **`.env` is optional.** Every variable in `docker-compose.yml` has a working default (the
   `.env.example` values); `.env` only overrides them. A fresh clone needs only `docker compose up -d --build`.
 - **`bootstrap` service** (Airflow image, one-off, last to start, safe on every `up`):
-  1. `scripts/load_sample.py`: loads `sample/` (6 real hours of the clean zone, 386,992 edits, 17 MB,
+  1. `scripts/load_sample.py`: loads `sample/` (6 real hours of the clean zone, 4 Nov 06:00–12:00 UTC, 379,942 edits, plus 30 hours of pageviews,
      no user names) **only if the lake's clean zone is empty**, so sample rows can never mix with real data;
   2. unpauses `warehouse_hourly` and triggers it **through Airflow** (not by running dbt directly), so it
      can't collide with a scheduled run over DuckDB's single writer; waits for `export_marts`;
@@ -228,7 +228,7 @@ long and only unique within a wiki.
 
 | Table | Grain | Keys → dimension | Built as |
 |---|---|---|---|
-| `fact_edit` | one edit or page creation (`event_id`) | `hour_ts` → dim_time, `wiki_id` → dim_wiki, `article_key` → dim_article, `editor_type` → dim_editor_type | incremental (last day reloaded, `delete+insert` by `event_id`, so duplicates can't survive) |
+| `fact_edit` | one edit or page creation (`event_id`) | `hour_ts` → dim_time, `wiki_id` → dim_wiki, `article_key` → dim_article, `editor_type` → dim_editor_type | incremental (last 3 days reloaded, `delete+insert` by `event_id`, so duplicates can't survive) |
 | `fact_pageviews_hourly` | hour × wiki × article × access (≥ 10 views) | `wiki_id`, `article_key` | incremental, switched on by `pageviews_enabled` |
 | `fact_wiki_views_hourly` | hour × wiki × access (all views) | `wiki_id` | incremental, switched on by `pageviews_enabled` |
 | `dim_time` | one UTC hour, continuous from the first hour of data | `hour_ts` | table; flags `is_weekend`, `in_analysis_window` |

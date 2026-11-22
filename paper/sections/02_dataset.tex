@@ -62,7 +62,7 @@ Wikis with at least one edit                 & 771 \\
 Share of edits by flagged bots, all wikis    & 48.6\% \\
 Share of edits by flagged bots, Wikipedias   & 45.3\% \\
 Duplicate events removed                     & 10.8 million (30\% of the raw zone) \\
-Events rejected to the dead-letter topic     & 492 (whole run, 25 Oct -- 15 Nov) \\
+Events rejected to the dead-letter topic     & 492 (whole run, 25 Oct -- 14 Nov) \\
 Hours with no data / low hours               & 0 / 4 of 360 \\
 Hours with pageview data                     & 347 of 360 \\
 Raw zone (JSON lines, gzip)                  & 7.52 GB \\
@@ -85,5 +85,3 @@ zone has no more events for those hours, so the drop is in what the feed deliver
 pipeline.
 They are kept and marked on the dashboard's completeness tile. Pageview files are missing for 13 hours,
 so no attention spike can be found in those hours.
-The clean zone, Parquet with only the fields we need and no duplicates, is about seven times smaller
-than the raw zone.

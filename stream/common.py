@@ -37,7 +37,7 @@ def safe_commit(consumer, log) -> bool:
         return False
 
 # Edits and page creations only. Log entries (blocks, moves) and category changes are a different
-# kind of activity, and keeping only these two types halves the volume (~14 events/s instead of ~29).
+# kind of activity, and keeping only these two types halves the volume (~20 events/s instead of ~40).
 KEEP_TYPES = {"edit", "new"}
 
 

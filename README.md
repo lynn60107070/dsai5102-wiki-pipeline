@@ -68,7 +68,7 @@ pageview dumps (hourly) ─► pageviews_hourly: wait → fetch → upload ─�
 | Layer | Tool | Job | Why this tool |
 |---|---|---|---|
 | Containers | Docker Compose | Starts all 14 services with one command | Reproducible on any laptop; taught in lab 5 |
-| Streaming | Apache Kafka 8 (KRaft) | 5 topics, 4 consumer groups | Durable, replayable event log; taught in lab 10 |
+| Streaming | Apache Kafka 4.0 (KRaft; Confluent image cp-kafka 8.0.0) | 5 topics, 4 consumer groups | Durable, replayable event log; taught in lab 10 |
 | Stream processing | Python services | Validate, remove user names, split bot/human, per-minute counts | Simple, unit-tested; enough for ~20 events/s |
 | Data lake | MinIO (S3 API) | Raw + clean zones, partitioned `dt=/hour=` | S3-compatible locally; as in the course demo |
 | Orchestration | Apache Airflow 2.11 | Pageview ingestion, warehouse refresh | Taught in lab 8; Datasets for data-aware scheduling |
@@ -99,6 +99,10 @@ Design decisions, measurements and trade-offs: **[docs/design.md](docs/design.md
 unpaused in the Airflow UI it backfills every hour since 25 Oct, ~57 MB download per hour). The sample
 includes 30 hours of pageviews, so every tile has data on a fresh install. If the lake has no pageview
 files at all, `warehouse_hourly` builds without the pageview models, so the edit tiles still work.
+Unpausing it means about 740 hours and 42 GB of downloads (several hours, and each upload queues a
+warehouse run); to try the batch path, trigger a single run
+instead. On a fresh install the hourly tiles show the 6 sample hours (4 Nov) and then the live hours,
+with an empty stretch between them; that is expected.
 
 ## Repository layout
 
@@ -107,7 +111,8 @@ docker-compose.yml   all services          stream/     producer, processor, sink
 airflow/             DAGs + image (dbt)     ingest/     pageview download (batch source)
 dbt/                 models, seeds, tests   scripts/    bootstrap, export, compaction, Metabase setup, checks
 postgres/init/       databases + roles      sample/     6 hours of real data for a fresh install
-tests/               unit tests             docs/       design note + diagram      paper/   report (LaTeX)
+tests/               unit tests             docs/       design log + diagram       paper/   report (LaTeX)
+analysis/            the queries behind the report's findings (run against Postgres `serving`)
 ```
 
 ## Operating it

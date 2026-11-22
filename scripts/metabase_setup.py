@@ -97,7 +97,8 @@ GROUP BY wiki_id, 1
 ORDER BY SUM(edits) DESC
 LIMIT 15""",
         "viz": {"graph.dimensions": ["Wiki"], "graph.metrics": ["Bot share (%)"],
-                "graph.show_values": True, "graph.y_axis.max": 100},
+                "graph.show_values": True, "graph.y_axis.max": 100,
+                "series_settings": {"Bot share (%)": {"color": "#F9D45C"}}},  # bots are yellow on every tile
         "tags": {**DATES, "project": "text"},
         "note": "Share of edits made by flagged bot accounts on the 15 busiest wikis.",
         "layout": (8, 0, 12, 11),

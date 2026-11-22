@@ -4,15 +4,15 @@
 We asked where editing pressure concentrates across Wikipedia's language editions, how much of it
 comes from bots, and whether spikes in reader attention are followed by edit surges
 (\cref{sec:intro}). Over the 15-day window, bots made about half of all edits (45.3\% on Wikipedias),
-so raw edit counts overstate the work for patrollers by nearly a factor of two. The share depends heavily on
+so raw edit counts overstate what patrollers see in their default review list by nearly a factor of two. The share depends heavily on
 the language: once bot edits are removed, Chechen Wikipedia drops from 2nd to 65th place and Arabic from
 5th to 17th, while English Wikipedia alone carries 40.9\% of human Wikipedia edits and ten editions carry
-three quarters. Human pressure also has a clear daily peak, in the European afternoon and evening. Finally,
+three quarters. Human pressure also has a clear daily peak, 13:00--18:00 UTC. Finally,
 reader attention is followed by edit surges only for the largest, news-driven spikes: most spikes
-(77.6\%) bring no edits at all, but spikes above 20{,}000 views bring 3.1 times as many edits as steady
-articles of the same size (\cref{sec:results}).
+(77.6\%) bring no edits at all, but spikes above 20{,}000 views bring 3.1 times as many edits as
+non-spike article-hours above 20{,}000 views (\cref{sec:results}).
 
-\paragraph{Limitations.} The results come with five limits.
+\paragraph{Limitations.} The results come with six limits.
 \begin{itemize}
   \item \textbf{One laptop collects.} The stream is read by a single laptop, so sleep, standby and network
     drops opened gaps of up to 16 hours. All were replayed from the feed (\cref{tab:incidents}) and no
@@ -27,7 +27,12 @@ articles of the same size (\cref{sec:results}).
     reverts with an empty summary or one in another language are missed.
   \item \textbf{Attention and edits are linked in time, not by cause.} An attention spike followed by an
     edit surge does not show that readers caused the edits: a news event can drive both. A spike also
-    needs at least 1{,}000 views in the hour, so smaller articles cannot register one.
+    needs at least 1{,}000 views in the hour, so smaller articles cannot register one. Hours with no pageview file count as zero views in the
+    24-hour baseline, so a spike within 24 hours after one of the 13 missing hours is slightly overstated.
+  \item \textbf{Built for one laptop's volume.} The marts are rebuilt in full every hour, and the live
+    per-minute counts are approximate: open minutes are held in memory, so a processor restart can drop
+    or repeat part of a minute. Larger volumes would need incremental marts and checkpointed stream
+    state; the warehouse, not the live tile, is the source of truth.
   \item \textbf{A single Kafka broker.} Every topic has one copy, which is enough for a laptop but would
     lose buffered events if the broker's disk failed. The lake, not Kafka, is the long-term archive.
 \end{itemize}
@@ -44,8 +49,8 @@ articles of the same size (\cref{sec:results}).
 \end{itemize}
 
 \paragraph{Conclusion.} Editing pressure on Wikipedia is concentrated in a few large language editions
-and in the European afternoon, and about half of the raw edit volume is bot work that patrollers do not
-need to review; ranking wikis by human edits rather than total edits gives a truer picture of where
+and in the hours 13:00--18:00 UTC, and about half of the raw edit volume is bot work that is hidden from
+patrollers' default review list; ranking wikis by human edits rather than total edits gives a truer picture of where
 review effort is needed. Attention spikes are an early sign of edit surges only when they are very large,
 so an alert would have to watch for the biggest spikes rather than any jump in views. The pipeline itself
 collected the whole window on one laptop, combined a live stream with hourly batch files in one tested

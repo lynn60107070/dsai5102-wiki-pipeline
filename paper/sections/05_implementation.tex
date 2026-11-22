@@ -26,8 +26,7 @@ rows and no missing events. A compaction job removed every duplicate, and the st
 \paragraph{Outages and recovery.} The collector ran on one laptop for the whole window, so outages were
 routine; \cref{tab:incidents} in the appendix lists the ones that changed the design. To check the replays, we replayed
 3~Nov 15:00 to 6~Nov 00:00 a second time and compared the deduplicated hourly counts: only 4,491 edits
-(0.1\%) were new, and no hour of the window is empty. The only low hours, 02:00--06:00 UTC on 28~Oct,
-are just as low in the raw zone, for bots and humans alike, so the drop is in the feed, not in the pipeline. After the window closed, every lake file was read back and matched
+(0.1\%) were new, and no hour of the window is empty. After the window closed, every lake file was read back and matched
 the event count in its name, and the warehouse holds exactly the clean zone's 25,093,717 edits.
 
 \subsection{Batch ingestion and orchestration}\label{sec:impl-batch}
@@ -45,7 +44,8 @@ fifteen minutes.
 dbt organises the SQL in three layers (\cref{tab:schema}): \emph{staging} views over the lake,
 \emph{core} facts and dimensions, and \emph{marts}, one per dashboard tile. The fact tables are
 incremental: each run reloads only the last three days and replaces rows by key. Thirty-four data tests check
-unique and non-null keys, accepted values, and a relationship from every fact key to its dimension.
+unique and non-null keys, accepted values, and relationships from every key of \texttt{fact\_edit}, and
+from the wiki and article keys of the pageview facts, to their dimensions.
 \Cref{fig:lineage} in the appendix shows how the models depend on each other.
 
 \begin{table}[h]
@@ -68,7 +68,8 @@ unique and non-null keys, accepted values, and a relationship from every fact ke
 \subsection{Reproducibility}\label{sec:impl-repro}
 
 \texttt{docker compose up -d --build} on a fresh clone is the only step: every setting has a default,
-and a one-off bootstrap service loads six bundled hours of real data into the empty lake (never into
+and a one-off bootstrap service loads six bundled hours of real edits and 30 hours of pageviews into the empty lake (never into
 one that already has data), runs the warehouse DAG once through Airflow, and configures Metabase
-through its API. Testing this on a fresh clone found two problems, both fixed: file paths longer than
-Windows allows, and a dashboard tile that failed before the stream had created its table.
+through its API. Fresh-clone tests (25 Oct, 20 Nov) found four problems, all fixed: file paths longer than
+Windows allows, two dashboard tiles that failed before their tables existed, and a red first run of the
+freshness check.
