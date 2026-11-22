@@ -71,7 +71,7 @@ Written through GitHub PRs, one file per section; workflow in [paper/README.md](
 | Ingestion (stream) | Producers/consumers + streaming technologies, not just 1 → 1 | Producer → processor → 3 topics → sink consumer group (2 replicas) + dead-letter topic |
 | Warehouse | Well-designed schema optimised for queries, justified | Star schema (2 facts, 4 dims), partitioned Parquet, marts per dashboard tile, explained in the report |
 | Transformations | dbt/Spark, clean analytics-ready data | dbt staging → facts/dims → marts, incremental models, tests |
-| Dashboard | 2+ meaningful tiles with labels, titles, explanations | 6 tiles, each with a title + one-line explanation; From/To/Project filters |
+| Dashboard | 2+ meaningful tiles with labels, titles, explanations | 8 tiles, each with a title + one-line explanation; From/To/Project filters |
 | Reproducibility | Clear instructions, easy to run, it works | One `docker compose up`, sample-data mode, fresh-clone tested |
 | Documentation | Clear report + README with diagrams and examples | Diagram, tool table, schema table, dbt lineage graph, screenshots |
 | Presentation | Clear, well-prepared, answers questions confidently | 2 rehearsals, demo + backup video, Q&A sheet |
@@ -79,7 +79,7 @@ Written through GitHub PRs, one file per section; workflow in [paper/README.md](
 ## 5. Final pre-submission checklist
 - [ ] `docker compose up` on a fresh clone brings up every service (sample mode + live mode)
 - [x] All dbt tests pass; the Airflow DAG shows green runs (fresh clone, 20 Nov)
-- [x] Dashboard has ≥ 2 tiles (we have 6), each with a title and explanation
+- [x] Dashboard has ≥ 2 tiles (we have 8), each with a title and explanation
 - [x] README has setup instructions + architecture explanation + diagram
 - [ ] Report PDF is 5–10 pages (references and appendices not counted) and covers all six required parts (problem, architecture, design choices, implementation, results, discussion)
 - [ ] Repo link in the report, and the instructor can open it

@@ -232,15 +232,15 @@ for each run to read only hours before its start time.
 
 **32. Can I reproduce your five findings from the repo?**
 Yes: `analysis/findings.sql` holds the query behind every number in section 6, run against the exported
-marts in Postgres; it reproduces them exactly. Findings 1–2 can also be read off the dashboard tiles.
+marts in Postgres; it reproduces them exactly. Findings 1, 2, 4 and 5 can also be read off the dashboard tiles.
 
 ## Dashboard
 
 **33. Finding 5 answers part 3 of the question. Where on the dashboard does a patroller see it?**
-Honestly, not directly: the tile lists the largest spikes and the edits after them, and the comparison
-with non-spikes was computed from the same mart (it's on our slide as a chart). A better tile would show
-the share of article-hours with at least one edit in the next two hours, by view band, spikes against
-non-spikes.
+On the tile *Do attention spikes bring edits?*: the share of article-hours with at least one edit in
+the next two hours, by views in the hour, spikes against other article-hours. Below 20,000 views spikes
+do no better (14% vs 18%, 32% vs 33%); above it, 57% vs 22%. The table tile under it lists the largest
+spikes and the edits after them.
 
 **34. What is your comparison group, and is 3.1× more than noise?**
 Article-hours above 20,000 views that are *not* spikes (under 5× their previous 24-hour average). It's

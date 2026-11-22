@@ -3,10 +3,10 @@
 % in_analysis_window = t. Wikipedia-only figures filter is_wikipedia = t, as in the research question.
 \section{Results and Insights}\label{sec:results}
 
-The Metabase dashboard \emph{Wikipedia edits} answers the question with six tiles
-(\cref{fig:dashboard} in the appendix): live edits per minute, edits per hour by bots and humans, the bot share of the 15
-busiest wikis, the top Wikipedia languages split into bots and humans, reader attention spikes and the
-edits that follow them, and data completeness per hour. Each tile has a title and a one-line explanation;
+The Metabase dashboard \emph{Wikipedia edits} answers the question with eight tiles
+(\cref{fig:dashboard} in the appendix): live edits per minute, edits per hour and per hour of day by bots and humans,
+the bot share of the 15 busiest wikis, the top Wikipedia languages split into bots and humans, the share of
+spikes followed by edits against other busy articles, the largest spikes, and data completeness per hour. Each tile has a title and a one-line explanation;
 the \emph{From} and \emph{To} filters apply to every warehouse tile and the \emph{Project} filter to the two
 tiles over all wikis. Over the window (28 Oct -- 11 Nov 2026, UTC), 8{,}479{,}562 of the 25{,}093{,}717
 edits on 771 wikis (\cref{tab:profile}) were on 347 Wikipedias. We report five findings; the queries behind
@@ -62,7 +62,7 @@ together (52.4\% of all edits, against 33.8\%), most of them structured data and
 \paragraph{4. Humans follow the clock, bots do not.} On Wikipedias, human edits average 16{,}400 an hour at
 their peak at 17:00 UTC and 7{,}900 at their low at 04:00 UTC, a factor of 2.1; the six hours from 13:00
 to 18:00 UTC carry 30.8\% of the day's human edits. Bot edits vary by a factor of 1.5 over the day
-(tile \emph{Edits per hour: bots vs humans}). The human workload for patrollers therefore peaks between
+(tile \emph{Wikipedia edits by hour of day}). The human workload for patrollers therefore peaks between
 13:00 and 18:00 UTC, the European afternoon and the American morning.
 
 \paragraph{5. Most attention spikes are not followed by edits; very large ones are.} The window has
@@ -71,7 +71,7 @@ to 18:00 UTC carry 30.8\% of the day's human edits. Bot edits vary by a factor o
 spiking articles get about as many edits in the next two hours as other articles with at least 1{,}000
 views in the hour (0.64 against 0.61 on average). The difference appears only for the largest spikes:
 above 20{,}000 views, the 346 spikes got 5.5 edits in the next two hours against 1.8 for other article-hours
-above 20{,}000 views that are not spikes, 3.1 times as many, and 57\% of them got at least one edit, against 22\%. The largest
+above 20{,}000 views that are not spikes, 3.1 times as many, and 57\% of them got at least one edit, against 22\% (tile \emph{Do attention spikes bring edits?}). The largest
 surge followed breaking news: \emph{2026 Kraków shooting} on English Wikipedia went from about 45 views an
 hour to thousands on 7 Nov and got 203 edits in the two hours after 16:00 UTC (tile \emph{Reader attention
 spikes and the edits that follow}).

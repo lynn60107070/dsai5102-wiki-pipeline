@@ -1,0 +1,21 @@
+# Runs on every push and pull request: the 40 unit tests (stream, pageviews, Metabase setup) and a check
+# that docker-compose.yml is valid with no .env file, as on a fresh clone. No services are started.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"   # same as the stream and Airflow images
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m unittest -v
+      - name: docker-compose.yml is valid on a fresh clone (no .env)
+        run: docker compose config -q

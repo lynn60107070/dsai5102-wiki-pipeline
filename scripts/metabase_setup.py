@@ -124,6 +124,51 @@ LIMIT 15""",
         "layout": (8, 12, 12, 11),
     },
     {
+        "name": "Wikipedia edits by hour of day: bots vs humans",
+        "description": "Average edits per day in each UTC hour on Wikipedias, for bots and for humans "
+                       "(registered and logged-out), over the chosen dates. Humans follow the clock; bots "
+                       "much less. Source: mart_edits_hourly.",
+        "display": "line",
+        "sql": f"""\
+SELECT hour_of_day AS "Hour of day (UTC)",
+       CASE WHEN is_human THEN 'Humans' ELSE 'Bots' END AS "Editor",
+       ROUND(SUM(edits)::numeric / COUNT(DISTINCT date)) AS "Edits per day"
+FROM mart_edits_hourly
+WHERE is_wikipedia {DATE_FILTER}
+GROUP BY 1, 2
+ORDER BY 1""",
+        "viz": {"graph.dimensions": ["Hour of day (UTC)", "Editor"], "graph.metrics": ["Edits per day"],
+                "graph.x_axis.scale": "ordinal",
+                "series_settings": {"Bots": {"color": "#F9D45C"}, "Humans": {"color": "#A989C5"}}},
+        "tags": DATES,
+        "note": "Average Wikipedia edits per UTC hour: humans peak mid-afternoon.",
+        "layout": (19, 0, 12, 10),
+    },
+    {
+        "name": "Do attention spikes bring edits? Spikes vs other busy article-hours",
+        "description": "Share of Wikipedia article-hours with at least one edit in the 2 hours after, by "
+                       "views in the hour. Spikes are hours with at least 5 times the article's average "
+                       "views of the previous 24 hours; the others have as many views but no jump. "
+                       "Source: mart_attention_vs_edits (article-hours with at least 1,000 views).",
+        "display": "bar",
+        "sql": f"""\
+SELECT CASE WHEN views >= 20000 THEN '3. 20,000+ views'
+            WHEN views >= 5000 THEN '2. 5,000-20,000'
+            ELSE '1. 1,000-5,000' END AS "Views in the hour",
+       CASE WHEN is_spike THEN 'Spikes' ELSE 'Other article-hours' END AS "Article-hours",
+       ROUND(100.0 * AVG(CASE WHEN edits_next_2h > 0 THEN 1 ELSE 0 END), 1) AS "% with an edit in the next 2 h"
+FROM mart_attention_vs_edits
+WHERE has_full_baseline {HOUR_FILTER}
+GROUP BY 1, 2
+ORDER BY 1, 2""",
+        "viz": {"graph.dimensions": ["Views in the hour", "Article-hours"],
+                "graph.metrics": ["% with an edit in the next 2 h"], "graph.show_values": True,
+                "series_settings": {"Spikes": {"color": "#EF8C8C"}, "Other article-hours": {"color": "#A7ADB8"}}},
+        "tags": DATES,
+        "note": "Share followed by an edit within 2 h: only big spikes stand out.",
+        "layout": (19, 12, 12, 10),
+    },
+    {
         "name": "Reader attention spikes and the edits that follow",
         "description": "Wikipedia articles whose views in an hour jumped to at least 5 times their average of "
                        "the previous 24 hours (and at least 1,000 views), with the edits in that hour and the "
@@ -146,7 +191,7 @@ LIMIT 25""",
         "viz": {},
         "tags": DATES,
         "note": "Articles whose hourly views jumped to at least 5× their usual level, and the edits that followed.",
-        "layout": (19, 0, 24, 10),
+        "layout": (29, 0, 24, 10),
     },
     {
         "name": "Data completeness: edits collected per hour",
@@ -166,7 +211,7 @@ ORDER BY 1""",
                 "series_settings": {"Complete": {"color": "#509EE3"}, "Partial": {"color": "#F2A86F"}}},
         "tags": DATES,
         "note": "Edits stored per hour. Hours with no bar are collector gaps: findings avoid them.",
-        "layout": (29, 0, 24, 8),
+        "layout": (39, 0, 24, 8),
     },
 ]
 

@@ -1,5 +1,7 @@
 # Wikipedia live edits pipeline
 
+[![tests](https://github.com/lynn60107070/dsai5102-wiki-pipeline/actions/workflows/tests.yml/badge.svg)](https://github.com/lynn60107070/dsai5102-wiki-pipeline/actions/workflows/tests.yml)
+
 DSAI5102 Data Architecture & Engineering, final project · Lynn Younes & Sumaiya Rizwan
 
 **Question:** Wikipedia's volunteer patrollers have limited time: where does editing pressure
@@ -149,6 +151,8 @@ python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\
 pip install -r requirements.txt
 python -m unittest -v                                  # 40 unit tests, no Docker needed
 ```
+GitHub Actions runs the same tests, and checks that `docker-compose.yml` is valid without a `.env`, on
+every push ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
 Data tests (34) run inside every `dbt build`.
 
 ## Data sources

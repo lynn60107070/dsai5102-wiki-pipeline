@@ -132,12 +132,13 @@ play the backup video (L14) without apologising.
 - **Instructor listens for:** that we checked our data, not just collected it.
 
 ### 5. Dashboard overview (0:40)
-- **On slide:** the dashboard screenshot (`paper/figures/06_dashboard.png`), the 6 tiles labelled:
+- **On slide:** the dashboard screenshot (`paper/figures/06_dashboard.png`), the 8 tiles labelled:
   live edits per minute · edits per hour (bots vs humans) · bot share of the 15 busiest wikis · top
-  Wikipedia languages (bots vs humans) · attention spikes and the edits that follow · data completeness.
+  Wikipedia languages (bots vs humans) · edits by hour of day · spikes vs other busy articles · the
+  largest spikes and the edits that follow · data completeness.
   Callout: From / To filter every warehouse tile; Project filters the two all-wiki tiles.
 - **Say:** each tile maps to one part of the question; each has a title and a one-line explanation.
-- **Instructor listens for:** ≥ 2 tiles (we have 6), one categorical and one over time, titles, labels,
+- **Instructor listens for:** ≥ 2 tiles (we have 8), one categorical and one over time, titles, labels,
   explanations.
 
 ### 6. Findings 1–3: bots and where pressure goes (1:10)
@@ -158,8 +159,8 @@ play the backup video (L14) without apologising.
      the spike hour or the two hours after; above 20,000 views, spikes get **3.1×** the edits of
      non-spike article-hours above 20,000 views. Example: *2026 Kraków shooting*, 203 edits in two hours.
 - **Finding 5 as a chart, not text:** two bars, "spikes above 20k views: 57% got ≥ 1 edit in the next
-  2 h (n = 346)" against "non-spike article-hours above 20k views: 22%". The dashboard tile lists the
-  top spikes but doesn't show this comparison, so the slide has to.
+  2 h (n = 346)" against "non-spike article-hours above 20k views: 22%". The same comparison is the
+  dashboard tile *Do attention spikes bring edits?* (all three view bands).
 - **Say:** so an alert should watch only the biggest spikes. **Handover line.**
 - **Trap:** "Is 3.1× significant?" → descriptive over the whole window (346 spikes); no significance test,
   and consecutive hours of one story aren't independent. The comparison group is article-hours above
