@@ -84,7 +84,7 @@ the rubric row it earns. Each of us presents our own content, so the talk hands 
 
 Rehearse with a timer; if a run goes over 14:00, cut words, not slides.
 
-Slide 13 is a demo, not a slide: switch to the terminal and browser. If it fails for more than ~20 s,
+Slide 10 is a demo, not a slide: switch to the terminal and browser. If it fails for more than ~20 s,
 play the backup video (L14) without apologising.
 
 ---
@@ -153,7 +153,7 @@ play the backup video (L14) without apologising.
 
 ### 7. Findings 4–5: the clock and attention spikes (1:00)
 - **On slide:**
-  4. **Humans follow the clock, bots don't:** human peak 17:00 UTC is 2.1× the 04:00 low; 13:00–18:00
+  4. **Humans follow the clock, bots don't:** human peak 17:00 UTC is 2.1× the 04:00 low; 13:00–19:00
      carries 30.8% of the day → the European afternoon and American morning.
   5. **Attention spikes are not an early sign of edit surges:** 77.5% of 24,234 spikes get no edit in
      the spike hour or the two hours after, and at every level of views a spike is followed by an edit
@@ -261,7 +261,7 @@ play the backup video (L14) without apologising.
   - **Limits / next:** one laptop collects (→ a server), one Kafka broker (→ more), bot flag is an
     estimate, 15 days only.
   - **Answer:** about half the edits are bots; rank wikis by human edits; human pressure peaks
-    13:00–18:00 UTC; jumps in readers are not an early sign of edit surges.
+    13:00–19:00 UTC; jumps in readers are not an early sign of edit surges.
 - **Say:** close on the question from slide 2.
 
 ### 17. Questions

@@ -18,9 +18,9 @@
   <!-- hero: the live edit stream inside a deep orb, with floating cards (bob) -->
   <div class="orb ring" style="width:1060px;height:1060px;right:-330px;top:-260px"></div>
   <div class="hero-orb"><canvas class="bg"></canvas></div>
-  <div class="float-card fc1"><span class="dot" style="background:#E5484D"></span><div><div class="t">Live from EventStreams</div><div class="m">19.4 <span>edits / s</span></div></div></div>
-  <div class="float-card fc2"><div><div class="t">Flagged bots</div><div class="m" style="color:var(--bot-ink)">48.6%</div></div><div><div class="t">Humans</div><div class="m" style="color:var(--human-ink)">51.4%</div></div></div>
-  <div class="float-card fc3"><div><div class="t"><span class="pulse"></span>Edits since this slide opened</div><div class="m" id="live1">0</div></div></div>
+  <div class="float-card fc1"><span class="dot" style="background:#E5484D"></span><div><div class="t">Window average</div><div class="m">19.4 <span>edits / s</span></div></div></div>
+  <div class="float-card fc2"><div><div class="t">Flagged bots, all wikis</div><div class="m" style="color:var(--bot-ink)">48.6%</div></div><div><div class="t">Humans</div><div class="m" style="color:var(--human-ink)">51.4%</div></div></div>
+  <div class="float-card fc3"><div><div class="t"><span class="pulse"></span>At that rate, since this slide opened</div><div class="m" id="live1">0</div></div></div>
   <div style="position:absolute;left:80px;top:64px;width:860px">
     <div class="tile solid"><svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 26h8l5-12 7 22 6-16 4 6h10"/></svg></div>
     <h1 style="margin-top:46px">Where does Wikipedia's <span class="accent">editing pressure go?</span></h1>
@@ -37,12 +37,12 @@
   <h2>What the next 15 minutes <em>cover</em></h2>
   <p class="sub" style="max-width:1100px">In the order the project brief asks for: the problem, how it's built, the pipeline running, what it shows, and what we learned.</p>
   <div class="agenda">
-    <div class="ag reveal-ag" style="--d:.05s"><div class="n">01</div><h3>Problem &amp; dataset</h3><p>who it's for, three Wikimedia sources</p><span class="who">Sumaiya · 2:30</span></div>
-    <div class="ag reveal-ag" style="--d:.15s"><div class="n">02</div><h3>Architecture &amp; tools</h3><p>two paths, one lake, one warehouse; why each tool</p><span class="who">Lynn · 2:00</span></div>
-    <div class="ag reveal-ag" style="--d:.25s"><div class="n">03</div><h3>The pipeline, live</h3><p>Kafka, Airflow, dbt, then the demo</p><span class="who">Lynn · 4:50</span></div>
-    <div class="ag reveal-ag" style="--d:.35s"><div class="n">04</div><h3>Dashboard &amp; insights</h3><p>8 tiles, 5 findings</p><span class="who">Sumaiya · 2:50</span></div>
-    <div class="ag reveal-ag" style="--d:.45s"><div class="n">05</div><h3>Challenges &amp; lessons</h3><p>what broke, the decisions it forced, limits</p><span class="who">Lynn · 1:20</span></div>
-    <div class="ag reveal-ag" style="--d:.55s"><div class="n">06</div><h3>Questions</h3><p>backup for every answer in the appendix</p><span class="who">both · 5:00</span></div>
+    <div class="ag reveal-ag" style="--d:.05s"><div class="n">01</div><h3>Problem &amp; dataset</h3><p>who it's for, three Wikimedia sources</p><span class="who">Sumaiya</span></div>
+    <div class="ag reveal-ag" style="--d:.15s"><div class="n">02</div><h3>Architecture &amp; tools</h3><p>two paths, one lake, one warehouse; why each tool</p><span class="who">Lynn</span></div>
+    <div class="ag reveal-ag" style="--d:.25s"><div class="n">03</div><h3>The pipeline, live</h3><p>Kafka, Airflow, dbt, then the demo</p><span class="who">Lynn</span></div>
+    <div class="ag reveal-ag" style="--d:.35s"><div class="n">04</div><h3>Dashboard &amp; insights</h3><p>8 tiles, 5 findings</p><span class="who">Sumaiya</span></div>
+    <div class="ag reveal-ag" style="--d:.45s"><div class="n">05</div><h3>Challenges &amp; lessons</h3><p>what broke, the decisions it forced, limits</p><span class="who">Lynn</span></div>
+    <div class="ag reveal-ag" style="--d:.55s"><div class="n">06</div><h3>Questions</h3><p>backup for every answer in the appendix</p><span class="who">both</span></div>
   </div>
   <aside class="notes"><b>Sumaiya · 0:10.</b> One line: "We follow the brief: problem and data, architecture, the pipeline live, the dashboard, then challenges and lessons." Then straight into the problem.</aside>
 </section>
@@ -58,11 +58,11 @@
       <div class="card navy" style="padding:0;overflow:hidden;position:relative;height:300px">
         <canvas class="sub" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
         <div style="position:absolute;left:24px;top:20px;color:#F2F1EC">
-          <div class="small" style="color:#9A9EA6"><span class="pulse"></span>the raw stream</div>
+          <div class="small" style="color:#9A9EA6"><span class="pulse"></span>edits and new pages we keep</div>
           <div class="bignum" style="font-size:54px">~20 / second</div>
           <div style="color:#9A9EA6;font-size:18px">about 1.7 million edits a day</div>
         </div>
-        <div style="position:absolute;right:22px;bottom:16px;color:#9A9EA6;font-size:15px;text-align:right">since this slide opened<br><b id="live2" style="color:#F2F1EC;font-size:26px">0</b></div>
+        <div style="position:absolute;right:22px;bottom:16px;color:#9A9EA6;font-size:15px;text-align:right">at that rate, since this slide opened<br><b id="live2" style="color:#F2F1EC;font-size:26px">0</b></div>
       </div>
       <p class="small muted" style="margin-top:14px">Patrollers' time is limited, and the raw stream doesn't say where to spend it.</p>
     </div>
@@ -72,7 +72,7 @@
     <div class="card f" data-f="2"><div class="tag">Decision 2</div><h3 style="margin-top:12px">How much of the volume is flagged bot work, hidden from the default review list?</h3><p class="small muted" style="margin-top:6px">→ findings 1 and 4</p></div>
     <div class="card f" data-f="3"><div class="tag">Decision 3</div><h3 style="margin-top:12px">Does a jump in readers warn of a rush of edits?</h3><p class="small muted" style="margin-top:6px">→ finding 5</p></div>
   </div>
-  <aside class="notes"><b>Sumaiya · 1:00.</b> About 20 events a second, 1.7 million edits a day. Volunteer patrollers review recent changes for vandalism; their time is limited and the raw stream doesn't say where to spend it. Define editing pressure. Click 3× for the three decisions. <b>Trap:</b> "Does attention cause edits?" → we show timing, not cause (Details · A1).</aside>
+  <aside class="notes"><b>Sumaiya · 1:00.</b> About 20 edits a second (we keep edits and new pages, about half the raw feed), 1.7 million a day. The counters run at that rate; they are not live. Volunteer patrollers review recent changes for vandalism; their time is limited and the raw stream doesn't say where to spend it. Define editing pressure. Click 3× for the three decisions. <b>Trap:</b> "Does attention cause edits?" → we show timing, not cause (Details · A1).</aside>
 </section>
 <!-- ============================== 3. DATA ============================== -->
 <section class="slide" id="s3" data-apx="a2">
@@ -116,7 +116,7 @@
     <g transform="translate(530,286)"><rect width="76" height="48" rx="5" fill="#F7F0E8" stroke="#9A6B3F" stroke-width="1.5"/>
       <line x1="0" x2="76" y1="16" y2="16" stroke="#9A6B3F"/><line x1="0" x2="76" y1="32" y2="32" stroke="#9A6B3F" opacity=".5"/><line x1="30" x2="30" y1="0" y2="48" stroke="#9A6B3F" opacity=".5"/></g>
     <text x="870" y="300" font-family="Plus Jakarta Sans, sans-serif" font-size="20" font-weight="600" fill="#9A6B3F">Reference API · rarely changes</text>
-    <text x="870" y="326" font-family="Plus Jakarta Sans, sans-serif" font-size="17" fill="#5B5F66">1,073 wikis · non-article pages of 364 Wikipedias → dbt seeds</text>
+    <text x="870" y="326" font-family="Plus Jakarta Sans, sans-serif" font-size="17" fill="#5B5F66">1,073 wikis listed (771 edited) · non-article pages for 364 Wikipedias → dbt seeds</text>
   </svg>
   <div class="f" data-f="1" style="position:absolute;left:80px;top:552px;font-family:var(--serif);font-size:26px">Different arrival → <span style="color:var(--stream)">a stream path</span> <i>and</i> <span style="color:var(--batch)">a batch path</span>. <span class="muted" style="font-size:20px;font-family:var(--sans)">Missed stream data is gone for good; missed pageview hours can be fetched again.</span></div>
   <div class="f" data-f="2" style="position:absolute;left:80px;right:80px;top:622px;display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:26px;border-top:1.5px solid var(--ink);padding-top:16px">
@@ -179,7 +179,7 @@
     <g class="f" data-f="3">
       <path class="wire ref" d="M170,550 L203,550" marker-end="url(#m-r)"/>
       <path class="wire ref" d="M610,550 L1028,550" marker-end="url(#m-r)"/>
-      <g class="box ref"><rect x="205" y="518" width="405" height="64" rx="10"/><text x="220" y="546">dbt seeds (by hand)</text><text class="s" x="220" y="568">wiki names · non-article page titles</text></g>
+      <g class="box ref"><rect x="205" y="518" width="405" height="64" rx="10"/><text x="220" y="546">dbt seeds (scripted, refreshed rarely)</text><text class="s" x="220" y="568">wiki names · non-article page titles</text></g>
       <path class="wire ink" d="M990,270 L1028,270" marker-end="url(#m-k)"/>
       <path class="wire ink" d="M1210,270 L1248,270" marker-end="url(#m-k)"/>
       <path class="wire ink" d="M1410,270 L1438,270" marker-end="url(#m-k)"/>
@@ -289,14 +289,14 @@
   <div style="position:absolute;left:1120px;right:80px;top:210px;display:flex;flex-direction:column;gap:16px">
     <div class="card f" data-f="4" style="padding:18px 22px"><h3>At-least-once</h3><p class="small muted" style="margin-top:6px">Offsets committed only after the write. A crash can repeat events, never lose them; duplicates removed by event id.</p></div>
     <div class="card f" data-f="5" style="padding:18px 22px"><h3>Event time, not arrival time</h3><p class="small muted" style="margin-top:6px">Per-minute counts close only when <i>every</i> partition has passed the minute (per-partition watermark).</p></div>
-    <div class="card f" data-f="6" style="padding:18px 22px"><h3>Outages replayed</h3><p class="small muted" style="margin-top:6px">Gaps over 3 s are queued on disk and replayed with <code>?since=</code> while live data keeps flowing.</p></div>
+    <div class="card f" data-f="6" style="padding:18px 22px"><h3>Outages replayed</h3><p class="small muted" style="margin-top:6px">Gaps over 3 s are queued on disk and replayed with <code style="white-space:nowrap">?since=</code> while live data keeps flowing.</p></div>
   </div>
   <aside class="notes"><b>Lynn · 0:50.</b> Click through: two independent consumer groups on wiki.raw (archive + processor); processor splits bots/humans into topics read by ONE consumer group of 2 sinks (scaling = adding containers); per-minute counts → live tile; bad events → dead-letter with the reason. Then the three guarantees. <b>Traps:</b> exactly-once? (Q5) late events? (Q6) laptop sleeps? (Q7) why key by wiki? (Q23) → A8.</aside>
 </section>
 <!-- ============================== 12. AIRFLOW ============================== -->
 <section class="slide" id="s12" data-apx="a9">
   <div class="eyebrow"><b>03</b><span class="sec-name">The pipeline</span><i class="sec-line"></i><span class="sub-name">Batch and orchestration</span><span class="who">Lynn</span></div>
-  <h2>Two DAGs; nothing runs by hand</h2>
+  <h2>Two DAGs run the batch path end to end</h2>
   <div style="margin-top:34px">
     <div class="lbl" style="color:var(--batch);margin-bottom:12px">pageviews_hourly · one run per UTC hour · catchup backfills missed hours</div>
     <div style="display:flex;gap:0;align-items:stretch">
@@ -321,7 +321,7 @@
   </div>
   <div class="f card" data-f="1" data-on="show_fail" style="margin-top:30px;border-color:var(--bad);display:flex;gap:30px;align-items:center;padding:16px 24px">
     <div class="bignum" style="color:var(--bad);font-size:46px">4×</div>
-    <p style="font-size:19px">A test failed on 8–10 Nov → <b>export skipped</b>, the dashboard kept the last good data, the next run passed. Tests are a <b>gate</b>, not a report.</p>
+    <p style="font-size:19px">4 runs failed a test on 8–10 Nov → <b>export skipped</b>, the dashboard kept the last good data, the next run passed. Tests are a <b>gate</b>, not a report.</p>
   </div>
   <aside class="notes"><b>Lynn · 0:40.</b> pageviews_hourly: sensor waits for the file, fetch filters it, upload writes two Parquet files; re-runs overwrite the same files, so retries are safe. The upload updates a Dataset, which triggers warehouse_hourly: compact, dbt build with tests, export. Click: what happens when a test fails. <b>Traps:</b> why not cron (Q10); what if I unpause pageviews_hourly (Q26); green runs that hid 13 failed hours (Q42) → A9.</aside>
 </section>
@@ -347,7 +347,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
         <div class="card" style="padding:16px 18px"><div class="lbl muted">staging · views</div><p class="mono" style="margin-top:10px;font-size:14px;line-height:1.7">stg_edits<br>stg_pageviews<br>stg_wiki_views</p></div>
         <div class="card" style="padding:16px 18px"><div class="lbl muted">core · tables</div><p class="mono" style="margin-top:10px;font-size:14px;line-height:1.7">3 facts, 4 dims<br>2 seeds</p><p class="small muted" style="margin-top:6px;font-size:14px">facts reload only the last 3 days</p></div>
-        <div class="card" style="padding:16px 18px;border-color:var(--accent)"><div class="lbl acc">marts · 4</div><p class="small" style="margin-top:10px;font-size:15px">one per tile, so the dashboard never scans 25 M rows</p></div>
+        <div class="card" style="padding:16px 18px;border-color:var(--accent)"><div class="lbl acc">marts · 4</div><p class="small" style="margin-top:10px;font-size:15px">pre-aggregated for the 8 tiles, so the dashboard never scans 25 M rows</p></div>
       </div>
       <div class="f" data-f="1" style="margin-top:22px">
         <h3 style="font-family:var(--serif);font-size:26px">Marts store <span class="acc">counts</span>, not shares</h3>
@@ -359,7 +359,7 @@
       </div>
     </div>
   </div>
-  <aside class="notes"><b>Lynn · 0:50.</b> State the grain: one row per edit. Dimensions time, wiki, article, editor type; two pageview facts. Staging views → core tables (incremental facts reload the last 3 days) → one mart per tile. Click: counts not shares. Click: 35 tests gate the export. <b>Traps:</b> can I sum editors? (Q28, no); fact_pageviews not linked to dim_time (Q29, an omission); relationship test failures (Q31) → A10 with the lineage.</aside>
+  <aside class="notes"><b>Lynn · 0:50.</b> State the grain: one row per edit. Dimensions time, wiki, article, editor type; two pageview facts. Staging views → core tables (incremental facts reload the last 3 days) → 4 marts serving the 8 tiles. Click: counts not shares. Click: 35 tests gate the export. <b>Traps:</b> can I sum editors? (Q28, no); fact_pageviews not linked to dim_time (Q29, an omission); relationship test failures (Q31) → A10 with the lineage.</aside>
 </section>
 <!-- ============================== 14. DEMO ============================== -->
 <section class="slide" id="s14" data-apx="a11">
@@ -407,18 +407,18 @@
     <div class="tile" style="animation:slideIn .5s .75s both"><div class="num">8</div><span class="tag q">trust</span><div class="im" style="background-image:url(img/tile_completeness.png);background-size:auto 100%;background-position:center"></div><div class="cap">Data completeness: edits stored per hour</div></div>
   </div>
   <p class="f" data-f="1" style="margin-top:24px;font-size:20px"><b>From / To</b> filter every warehouse tile · <b>Project</b> filters the two all-wiki tiles · each tile has a title and a one-line explanation.</p>
-  <aside class="notes"><b>Sumaiya · 0:40.</b> Take over from the live demo: "This is the dashboard Lynn just rebuilt." Each tile maps to one part of the question; categorical tiles (3, 4) and time tiles (2, 5, 8). The full dashboard is in A3. Then the findings, one per slide.</aside>
+  <aside class="notes"><b>Sumaiya · 0:40.</b> Take over from the live demo: "This is the dashboard Lynn just showed." Each tile maps to one part of the question; categorical tiles (3, 4) and time tiles (2, 5, 8). The full dashboard is in A3. Then the findings, one per slide.</aside>
 </section>
 <!-- ============================== 5. FINDING 1 ============================== -->
 <section class="slide" id="s5" data-apx="a4">
   <div class="eyebrow"><b>04</b><span class="sec-name">Dashboard &amp; insights</span><i class="sec-line"></i><span class="sub-name">Finding 1</span><span class="who">Sumaiya</span></div>
   <div class="row" style="gap:56px">
     <div style="width:430px;flex:none">
-      <h2 style="font-size:46px">About half of all edits are <em>bots</em></h2>
-      <div class="big" style="margin-top:30px;color:var(--bot-ink)"><span class="count" data-to="48.6" data-dec="1">0</span><span style="font-size:60px">%</span></div>
-      <p class="muted" style="margin-top:6px">of all 25.1 M edits came from flagged bot accounts. <b style="color:var(--ink)">45.3%</b> on Wikipedias.</p>
+      <h2 style="font-size:46px">Almost half of Wikipedia edits are <em>bots</em></h2>
+      <div class="big" style="margin-top:30px;color:var(--bot-ink)"><span class="count" data-to="45.3" data-dec="1">0</span><span style="font-size:60px">%</span></div>
+      <p class="muted" style="margin-top:6px">of edits on Wikipedias came from flagged bot accounts. <b style="color:var(--ink)">48.6%</b> across all 771 wikis (25.1 M edits).</p>
       <div class="rule"></div>
-      <p style="font-size:21px">→ Raw edit counts overstate what patrollers see by about <b>1.8×</b>: flagged bot edits are hidden from their default review list.</p>
+      <p style="font-size:21px">→ Raw edit counts on Wikipedias overstate what patrollers see by about <b>1.8×</b>: flagged bot edits are hidden from their default review list.</p>
     </div>
     <div class="col">
       <div style="display:flex;gap:22px;font-size:16px;margin:6px 0 6px"><span><span class="dot" style="background:#F9D45C"></span>Bots</span><span><span class="dot" style="background:#A989C5"></span>Humans</span><span class="muted">every hour of the window, all wikis</span></div>
@@ -429,7 +429,7 @@
       </div>
     </div>
   </div>
-  <aside class="notes"><b>Sumaiya · ~0:35.</b> 48.6% of all edits, 45.3% on Wikipedias are flagged bots. For patrollers, half the raw count is work hidden from their default review list. Click: the daily share moves from 40% to 61% (1 Nov). <b>Trap:</b> bots make mistakes too → we say "hidden from the default list", and the bot flag is an estimate (A4, Q22).</aside>
+  <aside class="notes"><b>Sumaiya · ~0:35.</b> 45.3% of Wikipedia edits are flagged bots (48.6% across all wikis, including Wikidata and Commons). For patrollers, half the raw count is work hidden from their default review list. Click: the daily share moves from 40% to 61% (1 Nov). <b>Trap:</b> bots make mistakes too → we say "hidden from the default list", and the bot flag is an estimate (A4, Q22).</aside>
 </section>
 <!-- ============================== 6. FINDINGS 2-3 ============================== -->
 <section class="slide" id="s6" data-apx="a4">
@@ -462,12 +462,12 @@
   <div class="eyebrow"><b>04</b><span class="sec-name">Dashboard &amp; insights</span><i class="sec-line"></i><span class="sub-name">Finding 4</span><span class="who">Sumaiya</span></div>
   <div class="row" style="gap:56px">
     <div style="width:420px;flex:none">
-      <h2 style="font-size:46px">Humans follow the clock, <em>bots don't</em></h2>
+      <h2 style="font-size:46px">Humans follow the clock, <em>bots far less</em></h2>
       <div class="big" style="margin-top:30px;color:var(--human-ink)"><span class="count" data-to="2.1" data-dec="1">0</span><span style="font-size:60px">×</span></div>
       <p class="muted">human edits at the 17:00 UTC peak vs the 04:00 low. Bots vary only 1.5×.</p>
       <div class="rule"></div>
       <div class="f" data-f="1" data-on="show_band">
-        <p style="font-size:21px">→ 13:00–18:00 UTC carries <b>30.8%</b> of human edits: the European afternoon <i>and</i> the American morning.</p>
+        <p style="font-size:21px">→ the six hours 13:00–19:00 UTC carry <b>30.8%</b> of human edits (25% if spread evenly): the European afternoon <i>and</i> the American morning.</p>
         <div style="display:flex;gap:16px;margin-top:18px;font:500 16px var(--mono);color:var(--ink2)"><span>17:00 UTC</span><span>= 18:00 Berlin</span><span>= 12:00 New York</span></div>
       </div>
     </div>
@@ -501,17 +501,17 @@
     <div class="col">
       <div style="display:flex;gap:22px;font-size:16px;margin:0 0 6px"><span><span class="dot" style="background:#EF8C8C"></span>Spikes</span><span class="f" data-f="1" data-on="show_base"><span class="dot" style="background:#A7ADB8"></span>Steadily popular articles, same views</span><span class="muted">articles only</span></div>
       <div style="height:470px"><canvas id="c-spikes" class="chart"></canvas></div>
-      <p class="src" style="margin-top:6px">Share of article-hours with ≥ 1 edit in the next 2 h. Above 20,000 views: 346 spikes vs 580 hours of 39 articles. Descriptive, not causal.</p>
+      <p class="src" style="margin-top:6px">Share of article-hours with ≥ 1 edit in the next 2 h (spike hour not counted; full 24-h baseline only). Above 20,000 views: 346 spikes vs 580 hours of 39 articles. Descriptive, not causal.</p>
     </div>
   </div>
-  <aside class="notes"><b>Sumaiya · ~0:50.</b> A spike = ≥ 1,000 views and 5× its 24-hour average. 77.5% of 24,234 spikes get no edit. Click: the comparison: at every level of views, spikes are edited less often than steadily popular articles: 14 vs 20, 32 vs 48, 57 vs 84%. Click: so an alert on views alone would mostly point at articles left alone. <b>Handover:</b> "Lynn will close with what broke along the way and what we learned." <b>Traps:</b> comparison group, main pages reversed it (Q41); significance (Q34). Both in A5.</aside>
+  <aside class="notes"><b>Sumaiya · ~0:50.</b> A spike = ≥ 1,000 views and 5× its 24-hour average. 77.5% of 24,234 spikes get no edit in the spike hour or the two after. Click: the comparison: at every level of views, spikes are edited less often than steadily popular articles: 14 vs 20, 32 vs 48, 57 vs 84%. Click: so an alert on views alone would mostly point at articles left alone. <b>Handover:</b> "Lynn will close with what broke along the way and what we learned." <b>Traps:</b> "77.5% uses three hours, the bars two?" → the bars leave out the spike hour, so edits that came just before the spike can't count for it; the 77.5% is the broader "anything at all" figure. Comparison group not matched by topic (descriptive, A13); main pages reversed it (Q41); significance (Q34). All in A5.</aside>
 </section>
 <!-- ============================== 15. CHALLENGES ============================== -->
 <section class="slide" id="s15" data-apx="a12">
   <div class="eyebrow"><b>05</b><span class="sec-name">Challenges, decisions &amp; lessons</span><i class="sec-line"></i><span class="sub-name">What broke</span><span class="who">Lynn</span></div>
   <h2>What broke, and the design decision it forced</h2>
   <div class="inc" style="margin-top:26px">
-    <div class="card f" data-f="1"><h3>The laptop slept</h3><div class="k">Problem</div><p>Standby up to 5 h 47 min; Wikimedia drops long connections every few minutes.</p><div class="k fix">Decision</div><p>Queue every gap on disk, replay it by time (<code>?since=</code>), resume where it stopped.</p></div>
+    <div class="card f" data-f="1"><h3>The laptop slept</h3><div class="k">Problem</div><p>Standby up to 5 h 47 min; Wikimedia drops long connections every few minutes.</p><div class="k fix">Decision</div><p>Queue every gap on disk, replay it by time (<code style="white-space:nowrap">?since=</code>), resume where it stopped.</p></div>
     <div class="card f" data-f="1"><h3>One partition raced ahead</h3><div class="k">Problem</div><p><b>205,814</b> events wrongly dropped as "late" during a backlog.</p><div class="k fix">Decision</div><p>A per-partition watermark: a minute closes only when every partition has passed it.</p></div>
     <div class="card f" data-f="2"><h3>Sinks killed mid-backlog</h3><div class="k">Problem</div><p><b>381,066</b> duplicate events written.</p><div class="k fix">Decision</div><p>Hourly compaction, 60 s graceful shutdown, dedupe by event id in dbt.</p></div>
     <div class="card f" data-f="2"><h3>Docker's disk hit 351 GB</h3><div class="k">Problem</div><p>File-system errors; some warehouse writes lost.</p><div class="k fix">Decision</div><p>Checked every lake file, rebuilt the warehouse from the lake: <b>why the raw zone exists</b>.</p></div>
@@ -528,9 +528,9 @@
     <div class="col" style="flex:1.25">
       <div class="lbl acc" style="margin-bottom:14px">The answer</div>
       <div style="display:flex;flex-direction:column;gap:18px">
-        <div style="display:flex;gap:20px;align-items:baseline"><span class="bignum bot" style="font-size:44px;min-width:150px">48.6%</span><p>of edits are bots: <b>rank wikis by human edits</b>, not totals.</p></div>
+        <div style="display:flex;gap:20px;align-items:baseline"><span class="bignum bot" style="font-size:44px;min-width:150px">45.3%</span><p>of Wikipedia edits are bots: <b>rank wikis by human edits</b>, not totals.</p></div>
         <div style="display:flex;gap:20px;align-items:baseline"><span class="bignum human" style="font-size:44px;min-width:150px">74.2%</span><p>of human Wikipedia edits are on 10 Wikipedias; English alone 40.9%.</p></div>
-        <div style="display:flex;gap:20px;align-items:baseline"><span class="bignum human" style="font-size:44px;min-width:150px">13–18</span><p>UTC is when human pressure peaks (30.8% of the day).</p></div>
+        <div style="display:flex;gap:20px;align-items:baseline"><span class="bignum human" style="font-size:44px;min-width:150px">13–19</span><p>UTC is when human pressure peaks (30.8% of the day in 6 hours).</p></div>
         <div style="display:flex;gap:20px;align-items:baseline"><span class="bignum spk" style="font-size:44px;min-width:150px">77.5%</span><p>of reader spikes get no edit: <b>a jump in readers is not an early warning</b>.</p></div>
       </div>
     </div>
@@ -545,7 +545,7 @@
       <p style="margin-top:22px;font-family:var(--serif);font-size:23px;line-height:1.35">Lesson: a pipeline is only as good as its ability to <i>recover</i> and to <i>check itself</i>.</p>
     </div>
   </div>
-  <aside class="notes"><b>Lynn · 0:30.</b> Close on the question from slide 2. Four answers, then limits. <b>Q&amp;A split:</b> Sumaiya ready for Q23, 24, 31, 41, 45; Lynn for 21, 22, 34, 42, 43. → A13.</aside>
+  <aside class="notes"><b>Lynn · 0:30.</b> Close on the question from slide 3. Four answers, then limits. <b>Q&amp;A split:</b> Sumaiya ready for Q21, 22, 34, 41, 45 (problem, findings); Lynn for Q23, 24, 31, 42, 43 (pipeline). → A13.</aside>
 </section>
 <!-- ============================== 17. QUESTIONS ============================== -->
 <section class="slide title-slide" id="s17" data-apx="a0">
@@ -689,13 +689,13 @@
           <tr><td>Human share: English · top 3 · top 10</td><td class="n">40.9% · 53.4% · 74.2%</td></tr>
           <tr><td>Human peak · low (avg per hour)</td><td class="n">16,434 at 17:00 · 7,911 at 04:00</td></tr>
           <tr><td>Peak / low: humans · bots</td><td class="n">2.1× · 1.5×</td></tr>
-          <tr><td>Human edits 13:00–18:00 UTC</td><td class="n">30.8%</td></tr>
+          <tr><td>Human edits 13:00–19:00 UTC (6 h)</td><td class="n">30.8%</td></tr>
           <tr><td>Bot share: Spanish · German</td><td class="n">12.9% · 20.6%</td></tr>
         </table>
       </div>
     </div>
     <div class="qa" style="margin-top:22px">
-      <div class="q"><h4><span>Q37</span>Is "European afternoon" really what 17:00 UTC means?</h4><p>Only partly: 17:00 UTC is 18:00 in Central Europe but noon in New York, and English Wikipedia has 40.9% of human edits. So 13:00–18:00 UTC is the European afternoon <i>and</i> the American morning. We didn't split by language; <code>mart_edits_hourly</code> has <code>hour_of_day</code> and <code>language_name</code>, so it's one query away.</p></div>
+      <div class="q"><h4><span>Q37</span>Is "European afternoon" really what 17:00 UTC means?</h4><p>Only partly: 17:00 UTC is 18:00 in Central Europe but noon in New York, and English Wikipedia has 40.9% of human edits. So 13:00–19:00 UTC is the European afternoon <i>and</i> the American morning. We didn't split by language; <code>mart_edits_hourly</code> has <code>hour_of_day</code> and <code>language_name</code>, so it's one query away.</p></div>
       <div class="q"><h4><span>Q32</span>Can I reproduce the findings?</h4><p>Yes: <code>analysis/findings.sql</code> holds the query behind every number, run against the exported marts in Postgres; it reproduces them exactly. Findings 1, 2, 4 and 5 can also be read off the dashboard.</p></div>
     </div>
   </div>
@@ -783,7 +783,7 @@
       <div class="q"><h4><span>Q7</span>What if the laptop sleeps or the network drops?</h4><p>The producer notices any gap over 3 s and queues the missing time on disk; a second connection replays it while live data keeps flowing. Every outage was replayed (longest 9 and 16 h); no hour is empty. Replaying three days again added only 0.1% new edits.</p></div>
       <div class="q"><h4><span>Q23</span>Why key <code>wiki.raw</code> by wiki? Isn't it skewed?</h4><p>No consumer needs per-wiki order. The reason is co-location: per-wiki minute counts are state, and the key keeps each wiki's state in one processor instance if we scale it. The cost is skew (Wikidata and Commons are over half), accepted at 20 events/s; at higher volume we'd salt hot keys.</p></div>
       <div class="q"><h4><span>Q24</span>What guarantee does the live tile have?</h4><p>A weaker one. Open minutes live only in memory, so a restart can under-count them, and live-stats adds counts into Postgres, so a crash between write and commit can double-count a minute. Approximate by design; the warehouse is the source of truth. A real fix needs checkpointed state (Flink, Kafka Streams).</p></div>
-      <div class="q wide"><h4><span>Q25</span>What if the laptop is off longer than Wikimedia keeps replay history?</h4><p>That data is gone: EventStreams has no long-term archive, and <code>?since=</code> reaches back days, not weeks. The gap would show on the completeness tile and in <code>stream.status</code>; nothing is filled silently. Our longest gap was 16 hours. This is why the first extension is a collector on a server.</p></div>
+      <div class="q wide"><h4><span>Q25</span>What if the laptop is off longer than Wikimedia keeps replay history?</h4><p>That data is gone: EventStreams has no long-term archive, and <code style="white-space:nowrap">?since=</code> reaches back days, not weeks. The gap would show on the completeness tile and in <code>stream.status</code>; nothing is filled silently. Our longest gap was 16 hours. This is why the first extension is a collector on a server.</p></div>
     </div>
   </div>
 </section>
@@ -804,7 +804,7 @@
     <img src="img/lineage.png" alt="dbt lineage" style="width:100%;border:1px solid var(--border);border-radius:10px;background:#fff">
     <p class="small muted" style="margin:8px 0 20px">Generated from dbt's manifest (<code>scripts/lineage_figure.py</code>). Dashed: views; bold: incremental tables; plain: tables and the two seeds. <code>dbt build</code>: PASS=51 (35 tests + 14 models + 2 seeds).</p>
     <div class="qa">
-      <div class="q"><h4><span>Q14</span>Explain the schema. How is it optimised?</h4><ul><li>Star schema: one fact at the finest grain (one row per edit), dimensions for time, wiki, article, editor type, and two pageview facts.</li><li>Facts are incremental: each run reloads only the last three days.</li><li>One pre-aggregated mart per tile, so tiles don't scan millions of edits.</li><li>Marts store counts, not shares, so any date range sums before dividing.</li></ul></div>
+      <div class="q"><h4><span>Q14</span>Explain the schema. How is it optimised?</h4><ul><li>Star schema with three fact tables sharing dimensions: one row per edit (time, wiki, article, editor type), and two hourly pageview facts (wiki, article).</li><li>Facts are incremental: each run reloads only the last three days.</li><li>Four pre-aggregated marts serve the 8 tiles (the live tile reads its own Postgres table), so tiles don't scan millions of edits.</li><li>Marts store counts, not shares, so any date range sums before dividing.</li></ul></div>
       <div class="q"><h4><span>Q28</span>Can I sum <code>editors</code>?</h4><p>No. It's a distinct count, and distinct counts don't add up: summing hours counts a person once per hour. No tile sums it; the rule holds for event counts (edits, new pages, reverts). For distinct editors over any range: compute from <code>fact_edit</code> or store HyperLogLog sketches.</p></div>
       <div class="q"><h4><span>Q29</span>Why isn't <code>fact_pageviews_hourly</code> linked to <code>dim_time</code>?</h4><p>An omission. <code>dim_time</code> ends at the last edit hour, so a later pageview hour would fail the test. Fix: extend the time spine to the latest hour of either source and add a unique-combination test on hour × wiki × article × access. The incremental <code>unique_key</code> already deduplicates; nothing tests it.</p></div>
       <div class="q"><h4><span>Q31</span>The relationship test failed four times. Why?</h4><p>Most likely consistency: <code>dim_article</code> and <code>fact_edit</code> both read the live clean zone, and sinks write new files every few minutes, so a fact row can point to an article written after <code>dim_article</code> was built. The gate worked: export skipped, dashboard kept the last good data. Fix: each run reads only hours before its start.</p></div>
@@ -819,7 +819,7 @@
     <div class="q"><h4><span>Q20</span>Can I see the lake? Why no MinIO web page?</h4><p>MinIO stopped publishing free images in 2025; the last free build we pin has no web console. Browse it from the terminal: <code>docker compose exec minio mc ls --recursive local/lake/clean/edits/</code> shows the date/hour partitions. DuckDB reads the same files over the S3 API.</p></div>
     <div class="q"><h4><span>Q43</span>Can Metabase see two different builds at once?</h4><p>Not any more: until 23 Nov each table had its own transaction, so for a few seconds one tile could show the new build and another the old. Now all four are dropped and recreated in one transaction; a query that arrives meanwhile waits for the commit.</p></div>
     <div class="q"><h4><span>·</span>Demo checklist</h4><ul><li>Stack up 1–2 h early; producer says "live from now", not "backfilling".</li><li>Dashboard From = 28 Oct, To = 11 Nov set beforehand.</li><li>Keep <code>pageviews_hourly</code> paused (catchup).</li><li>If anything hangs for 20 s, play the backup video.</li></ul></div>
-    <div class="q"><h4><span>·</span>Tests</h4><p>41 unit tests (stream code, Metabase setup) run in GitHub Actions on every push; 35 dbt data tests run on every warehouse build.</p></div>
+    <div class="q"><h4><span>·</span>Tests</h4><p>43 unit tests (stream code, Metabase setup) run in GitHub Actions on every push; 35 dbt data tests run on every warehouse build.</p></div>
   </div></div>
 </section>
 
@@ -828,7 +828,7 @@
   <div class="apx-scroll">
     <table class="t compact">
       <thead><tr><th style="width:120px">Date</th><th>What happened</th><th>Fix</th></tr></thead>
-      <tr><td>27 Oct</td><td>Resuming with a <code>Last-Event-ID</code> header was silently ignored; replays ended with almost nothing</td><td>Replay by time with <code>?since=</code></td></tr>
+      <tr><td>27 Oct</td><td>Resuming with a <code>Last-Event-ID</code> header was silently ignored; replays ended with almost nothing</td><td>Replay by time with <code style="white-space:nowrap">?since=</code></td></tr>
       <tr><td>3 Nov</td><td>Wikimedia drops long connections every few minutes; a 16-hour replay restarted from its beginning each time and looped for two hours</td><td>Save how far a replay got and resume there</td></tr>
       <tr><td>5 Nov</td><td>After 9 hours asleep, the replay filled the sinks' buffers (~1 GB) and dbt was killed for lack of memory</td><td>Sinks also flush every 50,000 events</td></tr>
       <tr><td>7 Nov</td><td>A replay sends one data centre's topic up to now, then the other's; judging the end of a gap across both ended three replays with 0–202 events, leaving holes on 3 and 6 Nov</td><td>Track each topic separately; the holes were replayed (1,459,669 events)</td></tr>
@@ -839,7 +839,7 @@
       <tr><td>28 Oct – 11 Nov</td><td>13 pageview hours failed while the laptop was offline; the clean-up step ran last and succeeded, so Airflow showed green and never retried (found 23 Nov)</td><td>Clean-up is now a teardown task; a network error counts as "not yet published"; the 13 hours were not reloaded</td></tr>
       <tr><td>23 Nov</td><td>Main pages, Special:Search and project pages made up 1,746 of the 2,326 non-spike hours above 20,000 views; spikes looked three times as edited</td><td>A seed of each wiki's namespaces and main page marks non-article titles; finding 5 reversed</td></tr>
     </table>
-    <p class="small muted" style="margin-top:12px">Also on slide 15: a partition racing ahead dropped 205,814 events as late (→ per-partition watermark); sinks killed mid-backlog wrote 381,066 duplicates (→ compaction + 60 s graceful shutdown).</p>
+    <p class="small muted" style="margin-top:12px">Also on slide 16: a partition racing ahead dropped 205,814 events as late (→ per-partition watermark); sinks killed mid-backlog wrote 381,066 duplicates (→ compaction + 60 s graceful shutdown).</p>
   </div>
 </section>
 

@@ -102,8 +102,17 @@ unpaused in the Airflow UI it backfills every hour since 25 Oct, ~57 MB download
 includes 30 hours of pageviews, so every tile has data on a fresh install. If the lake has no pageview
 files at all, `warehouse_hourly` builds without the pageview models, so the edit tiles still work.
 Unpausing it means about 740 hours and 42 GB of downloads (several hours, and each upload queues a
-warehouse run); to try the batch path, trigger a single run
-instead. On a fresh install the hourly tiles show the 6 sample hours (4 Nov) and then the live hours,
+warehouse run). To try the batch path, leave it paused and run one recent hour (yesterday, within the
+warehouse's 3-day lookback) end to end:
+
+```bash
+docker compose exec airflow-scheduler airflow dags test pageviews_hourly "$(date -u -d '-1 day' +%Y-%m-%dT%H:00:00+00:00)"
+```
+
+This runs wait_for_file, fetch, upload and cleanup for that hour (about a minute) and then triggers
+`warehouse_hourly`. The warehouse loads only the last 3 days incrementally, so after loading hours older
+than that, rebuild once with a longer lookback:
+`docker compose exec airflow-scheduler bash -c 'cd $DBT_PROJECT_DIR && dbt build --vars "{lookback_days: 30}"'`. On a fresh install the hourly tiles show the 6 sample hours (4 Nov) and then the live hours,
 with an empty stretch between them; that is expected.
 
 ## Repository layout
@@ -114,7 +123,8 @@ airflow/             DAGs + image (dbt)     ingest/     pageviews (batch), wiki 
 dbt/                 models, seeds, tests   scripts/    bootstrap, export, compaction, Metabase setup, checks
 postgres/init/       databases + roles      sample/     6 hours of real data for a fresh install
 tests/               unit tests             docs/       design log + diagram       paper/   report (LaTeX)
-analysis/            the queries behind the report's findings (run against Postgres `serving`)
+analysis/            the queries behind the report's findings (run against Postgres `serving`; they need the
+                     collected 28 Oct–11 Nov window, which is not in the repo; on a fresh install they run on the sample)
 ```
 
 ## Operating it
@@ -149,7 +159,7 @@ docker compose exec airflow-scheduler /opt/airflow/dbt-venv/bin/python /opt/airf
 ```bash
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python -m unittest -v                                  # 41 unit tests, no Docker needed
+python -m unittest -v                                  # 43 unit tests, no Docker needed
 ```
 GitHub Actions runs the same tests, and checks that `docker-compose.yml` is valid without a `.env`, on
 every push ([.github/workflows/tests.yml](.github/workflows/tests.yml)).

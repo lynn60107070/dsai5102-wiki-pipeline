@@ -1,6 +1,6 @@
 -- Dimension: one row per wiki (grain: wiki_id).
 -- Project and language come from the server name (en.wikipedia.org -> wikipedia, en), so every wiki
--- in the facts has a row even before the sitematrix seed (dim_wiki_names, task S3) is filled; the seed
+-- in the facts has a row even before the sitematrix seed (dim_wiki_names) is filled; the seed
 -- adds the language names where it has them.
 
 with seen as (

@@ -223,7 +223,7 @@
         type: 'bar',
         data: { labels: d.labels.map(l => (l.startsWith('10') ? 'Oct ' : 'Nov ') + +l.slice(3)), datasets: [{ data: d.botShare,
           backgroundColor: d.botShare.map(v => v === Math.max(...d.botShare) ? '#E3B92E' : (v === Math.min(...d.botShare) ? '#D8C98F' : 'rgba(249,212,92,.65)')), borderRadius: 4 }] },
-        options: { maintainAspectRatio: false, scales: { x: { grid: { display: false }, ticks: { font: { size: 12 } } }, y: { min: 30, max: 65, grid: { color: '#ECEAE4' }, ticks: { callback: v => v + '%' }, border: { display: false } } },
+        options: { maintainAspectRatio: false, scales: { x: { grid: { display: false }, ticks: { font: { size: 12 } } }, y: { min: 0, max: 70, grid: { color: '#ECEAE4' }, ticks: { callback: v => v + '%', padding: 8 }, border: { display: false } } }, layout: { padding: { left: 6 } },
           plugins: { tooltip: { callbacks: { label: c => c.parsed.y + '% bots' } } } },
         plugins: [{ id: 'lbl', afterDatasetsDraw(c) { const { ctx } = c; const m = c.getDatasetMeta(0); const v = c.data.datasets[0].data;
           ctx.save(); ctx.font = '600 13px "Plus Jakarta Sans", sans-serif'; ctx.fillStyle = '#5B5F66'; ctx.textAlign = 'center';
@@ -242,7 +242,7 @@
       const band = { id: 'band', beforeDatasetsDraw(c) { const { ctx, chartArea: a, scales: { x } } = c;
         const x0 = x.getPixelForValue(13) - (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2, x1 = x.getPixelForValue(18) + (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2;
         ctx.save(); ctx.fillStyle = s._band ? 'rgba(169,137,197,.14)' : 'rgba(0,0,0,0)'; ctx.fillRect(x0, a.top, x1 - x0, a.bottom - a.top);
-        if (s._band) { ctx.fillStyle = '#6E4E8E'; ctx.font = '600 14px "Plus Jakarta Sans", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('13:00–18:00 · 30.8% of the day', (x0 + x1) / 2, a.bottom - 14); }
+        if (s._band) { ctx.fillStyle = '#6E4E8E'; ctx.font = '600 14px "Plus Jakarta Sans", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('13:00–19:00 · 30.8% of the day', (x0 + x1) / 2, a.bottom - 14); }
         ctx.restore(); } };
       const peaks = { id: 'peaks', afterDatasetsDraw(c) { const m = c.getDatasetMeta(0); const { ctx } = c; ctx.save();
         [[17, '16,434 at 17:00', -16], [4, '7,911 at 04:00', 28]].forEach(([i, t, dy]) => { const p = m.data[i]; if (!p) return;

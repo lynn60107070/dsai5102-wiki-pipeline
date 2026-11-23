@@ -40,7 +40,7 @@ import requests
 from kafka import KafkaProducer
 from kafka.errors import NoBrokersAvailable
 
-from stream.common import BOOTSTRAP, RAW_TOPIC, iter_sse, keep_event
+from stream.common import BOOTSTRAP, RAW_TOPIC, SendChecker, iter_sse, keep_event
 
 STREAM_URL = os.environ.get("STREAM_URL", "https://stream.wikimedia.org/v2/stream/recentchange")
 USER_AGENT = os.environ.get("WIKI_USER_AGENT", "")  # Wikimedia's API policy requires a descriptive one
@@ -223,8 +223,11 @@ def read_stream(since=None):
         yield from iter_sse(response.iter_lines(decode_unicode=True))
 
 
+SENDS = SendChecker()  # shared by the live and backfill threads; any failed send stops the producer
+
+
 def send(producer: KafkaProducer, event: dict, data: str):
-    producer.send(RAW_TOPIC, key=event.get("wiki", "unknown").encode(), value=data.encode())
+    SENDS.watch(producer.send(RAW_TOPIC, key=event.get("wiki", "unknown").encode(), value=data.encode()))
 
 
 def save_replay_progress(producer: KafkaProducer, progress: ReplayProgress):
@@ -234,6 +237,7 @@ def save_replay_progress(producer: KafkaProducer, progress: ReplayProgress):
     point = progress.safe_point()
     if point:
         producer.flush()  # only remember positions of events that are safely in Kafka
+        SENDS.check()
         advance_gap(point)
 
 
@@ -262,6 +266,7 @@ def backfill_worker(producer: KafkaProducer):
                 progress.add(when, topic)
                 if end.passed(when, topic):
                     producer.flush()
+                    SENDS.check()
                     finish_gap(0)
                     log.info("backfill: %s → %s UTC done, %d events recovered",
                              f"{since:%H:%M}", f"{until:%H:%M}", sent)
@@ -330,6 +335,7 @@ def main():
                     now = time.monotonic()
                     if now - last_save >= SAVE_EVERY_S:
                         producer.flush()  # only remember positions of events that are safely in Kafka
+                        SENDS.check()
                         save_position(continuity.last_time)
                         last_save = now
                     if now - last_log >= LOG_EVERY_S:
@@ -346,7 +352,8 @@ def main():
                 backoff = min(backoff * 2, 60)
     finally:
         producer.flush()
-        save_position(continuity.last_time or restart_from)
+        if SENDS.error is None:  # after a failed send, keep the last safe position instead
+            save_position(continuity.last_time or restart_from)
         producer.close()
 
 

@@ -6,7 +6,7 @@
              └─► wiki.deadletter   events that failed validation, with the reason
 
 Starts from the oldest event Kafka still holds (3 days) the first time, so the clean zone covers the
-history too. Offsets are committed after the outputs are flushed: at-least-once, like the sinks.
+history too. Offsets are committed only after the outputs are flushed and no send failed: at-least-once, like the sinks.
 Run inside Docker: `python -m stream.processor`
 """
 import json
@@ -20,7 +20,7 @@ from kafka import KafkaConsumer, KafkaProducer
 from kafka.errors import NoBrokersAvailable
 
 from stream.clean import InvalidEvent, MinuteCounter, clean_event
-from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, RAW_TOPIC, safe_commit
+from stream.common import BOOTSTRAP, CONSUMER_SETTINGS, RAW_TOPIC, SendChecker, safe_commit
 
 GROUP_ID = os.environ.get("PROCESSOR_GROUP", "processor")
 BOT_TOPIC, HUMAN_TOPIC = "edits.bot", "edits.human"
@@ -48,6 +48,7 @@ def main():
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 
     consumer, producer = connect()
+    sends = SendChecker()
     minutes = MinuteCounter()
     stats = {"bot": 0, "human": 0, "deadletter": 0, "minute_rows": 0}
     last_log = time.monotonic()
@@ -60,24 +61,25 @@ def main():
                     try:
                         event = clean_event(json.loads(record.value))
                     except (InvalidEvent, ValueError) as exc:
-                        producer.send(DEADLETTER_TOPIC, {"reason": str(exc),
-                                                         "raw": record.value.decode("utf-8", "replace")})
+                        sends.watch(producer.send(DEADLETTER_TOPIC, {"reason": str(exc),
+                                                         "raw": record.value.decode("utf-8", "replace")}))
                         stats["deadletter"] += 1
                         continue
                     key = event["wiki_id"].encode()
-                    producer.send(BOT_TOPIC if event["is_bot"] else HUMAN_TOPIC, event, key=key)
+                    sends.watch(producer.send(BOT_TOPIC if event["is_bot"] else HUMAN_TOPIC, event, key=key))
                     stats["bot" if event["is_bot"] else "human"] += 1
                     minutes.add(event["event_ts"], event["wiki_id"], event["is_bot"], source=record.partition)
 
             assigned = [tp.partition for tp in consumer.assignment()]
             for minute_ts, wiki, bot_edits, human_edits in minutes.pop_closed(sources=assigned):
-                producer.send(MINUTE_TOPIC, {"minute_ts": minute_ts, "wiki_id": wiki,
-                                             "bot_edits": bot_edits, "human_edits": human_edits},
-                              key=wiki.encode())
+                sends.watch(producer.send(MINUTE_TOPIC, {"minute_ts": minute_ts, "wiki_id": wiki,
+                                                         "bot_edits": bot_edits, "human_edits": human_edits},
+                                          key=wiki.encode()))
                 stats["minute_rows"] += 1
 
             if batch:
                 producer.flush()   # outputs are safely in Kafka before the input offsets move on
+                sends.check()      # a failed send: exit without committing, Docker restarts the service
                 safe_commit(consumer, log)
 
             if time.monotonic() - last_log >= LOG_EVERY_S:

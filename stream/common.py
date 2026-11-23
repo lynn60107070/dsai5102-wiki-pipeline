@@ -36,6 +36,35 @@ def safe_commit(consumer, log) -> bool:
                     exc.__class__.__name__, exc)
         return False
 
+class SendFailed(RuntimeError):
+    """A Kafka send failed after the producer's own retries."""
+
+
+class SendChecker:
+    """Remembers whether any Kafka send failed, so a service never commits past a lost event.
+
+    KafkaProducer.send() is asynchronous and flush() does not raise when a send failed, so without this
+    a failed send would be lost silently and its input offset or stream position saved anyway. Attach
+    `on_error` to every send future; after flush(), call `check()` before committing: it raises
+    SendFailed, the service exits, Docker restarts it, and it re-reads from the last commit
+    (at-least-once; duplicates are removed downstream)."""
+
+    def __init__(self):
+        self.error = None
+
+    def on_error(self, exc):
+        if self.error is None:
+            self.error = exc
+
+    def watch(self, future):
+        future.add_errback(self.on_error)
+        return future
+
+    def check(self):
+        if self.error is not None:
+            raise SendFailed(f"a Kafka send failed, not committing: {self.error!r}")
+
+
 # Edits and page creations only. Log entries (blocks, moves) and category changes are a different
 # kind of activity, and keeping only these two types halves the volume (~20 events/s instead of ~40).
 KEEP_TYPES = {"edit", "new"}

@@ -1,4 +1,4 @@
-"""Batch source: one hourly Wikipedia pageview file -> two Parquet files.  (Task S2)
+"""Batch source: one hourly Wikipedia pageview file -> two Parquet files.
 
 Source: https://dumps.wikimedia.org/other/pageviews/YYYY/YYYY-MM/pageviews-YYYYMMDD-HH0000.gz (CC0)
 Each line is `domain_code page_title count_views total_response_size`, for example `en.m Doha 412 0`.

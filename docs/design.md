@@ -86,7 +86,7 @@ tested 25 Oct: 0.7 s for ~70k events). Duplicates from at-least-once delivery ar
 **Why this MinIO image:** MinIO stopped publishing free official images in 2025 (Docker Hub and quay.io
 both refuse the pull). We use `bitnamilegacy/minio:2025.7.23-debian-12-r5`, the last free MinIO build,
 archived by Bitnami, pinned and multi-arch. Alternatives checked: SeaweedFS, RustFS, the `pgsty/minio`
-community rebuild. MinIO won because it matches the course demo and is the best-tested S3 target for DuckDB.
+community rebuild. MinIO won because it matches the course demo and works with DuckDB's S3 support.
 
 ## 5b. Orchestration (Airflow)
 
@@ -129,7 +129,7 @@ schedules batch work.
   editors) and the editor type (bot / registered / anonymous).
 - **DuckDB computes, Postgres serves:** `scripts/export_marts.py` copies every `marts.*` table into the
   Postgres database `serving` (in-memory DuckDB session: warehouse attached read-only, Postgres
-  read-write; each table replaced inside one transaction).
+  read-write; all marts replaced in a single transaction).
 - **Least privilege:** Metabase reads `serving` as `metabase_ro`, which can only SELECT (tested: DELETE
   is denied). Metabase's own settings live in the Postgres database `metabase`, not in a local file.
 - **Reproducible dashboard setup:** `scripts/metabase_setup.py` creates the admin account, the

@@ -1,5 +1,5 @@
 {{ config(enabled=var("pageviews_enabled")) }}
--- Total views per wiki and hour (all articles, no threshold), written by ingest/pageviews.py (S2).
+-- Total views per wiki and hour (all articles, no threshold), written by ingest/pageviews.py.
 
 select
     hour_ts,

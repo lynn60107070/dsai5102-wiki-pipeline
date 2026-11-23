@@ -17,7 +17,7 @@ in Docker Compose and start with one command.
 
 \paragraph{Stream path (always on).} A producer reads Wikimedia's live \emph{recentchange} feed
 (server-sent events), keeps edits and page creations (about 20 events per second), and publishes them
-to the Kafka topic \texttt{wiki.raw}, keyed by wiki so that each wiki's events stay in order. Two
+to the Kafka topic \texttt{wiki.raw}, keyed by wiki so that each wiki's minute counts stay in one processor instance if it is scaled. Two
 independent consumers read it. The \emph{raw sink} archives every event unchanged in the lake's raw
 zone. The \emph{processor} validates each event, removes personal data, separates bots from humans into
 \texttt{edits.bot} and \texttt{edits.human}, counts edits per wiki and minute into

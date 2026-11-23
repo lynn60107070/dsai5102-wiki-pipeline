@@ -1,8 +1,8 @@
-# Live demo script (≈ 4 minutes, task L14)
+# Live demo script (≈ 2:30, slide 10)
 
 The live demo is optional per the brief, but the stream never goes quiet, so it is our strongest moment.
-**Backup:** record this exact walkthrough the day before (Rehearsal 2, Mon 23 Nov) and keep the video
-open in a tab. If anything misbehaves for more than ~20 seconds, switch to the video without apologising.
+**Backup:** record this exact walkthrough before the presentation and keep the video open in a local
+tab (no network needed). If anything misbehaves for more than ~20 seconds, switch to the video without apologising.
 
 ## After the window (done 23 Nov)
 
@@ -35,13 +35,11 @@ docker compose exec raw-sink python -m stream.status   # "collector: running"; t
 
 | # | Show | Say (one line each) |
 |---|---|---|
-| 1 | Terminal: producer + processor logs scrolling | "This is every edit on every Wikipedia, live: about 1,200 a minute, 20 a second, coming through Kafka right now." |
-| 2 | Point at `last 60 s: N bot, M human, 0 dead-letter` | "The processor validates each event, drops user names, and splits bots from humans into separate topics." |
-| 3 | Lake (`mc ls`): `lake/raw/edits/dt=…/hour=…` then `lake/clean/edits/…` | "Two zones in the lake: raw, exactly as received, and clean Parquet, partitioned by date and hour." |
-| 4 | Airflow: `warehouse_hourly` graph, a green run | "Every hour, and whenever new pageviews land, Airflow compacts the lake, runs dbt with 35 data tests, and only if they pass, exports to Postgres." |
-| 5 | (Optional) click a task → Logs → dbt `PASS=51` (35 tests + 14 models + 2 seeds) | "If a test fails, the export never runs, so the dashboard can't show bad numbers." |
-| 6 | Metabase: live tile | "This tile is fed straight from the stream: this minute's edits appear about three minutes after it ends." |
-| 7 | Metabase: the other tiles | Hand over to Sumaiya for the findings. |
+| 1 | Terminal: producer + processor logs scrolling; point at `last 60 s: N bot, M human, 0 dead-letter` | "Every edit on every Wikimedia wiki, live: about 20 a second through Kafka. The processor validates each event, drops user names, and splits bots from humans." |
+| 2 | Lake (`mc ls`): `lake/raw/edits/dt=…/hour=…` then `lake/clean/edits/…` | "Two zones in the lake: raw, exactly as received, and clean Parquet, partitioned by date and hour." |
+| 3 | Airflow: `warehouse_hourly` graph, a green run | "Every hour, and whenever new pageviews land, Airflow compacts the lake, runs dbt with 35 data tests, and only if they pass, exports to Postgres. If a test fails, the dashboard keeps the last good data." |
+| 4 | Metabase: live tile | "This tile is fed straight from the stream: this minute's edits appear about three minutes after it ends." |
+| 5 | Metabase: the other tiles | Hand over to Sumaiya for the findings. |
 
 ## Likely live questions (short answers)
 

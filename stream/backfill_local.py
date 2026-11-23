@@ -1,4 +1,4 @@
-"""One-off (L4): copy the raw files collected on the local volume before MinIO existed into the lake.
+"""One-off: copy the raw files collected on the local volume before MinIO existed into the lake.
 
 Keeps the same dt=/hour= layout, adds the event count to each object name, verifies every upload by
 reading its size back, and never deletes the local files (remove the volume yourself once the counts match).

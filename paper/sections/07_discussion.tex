@@ -7,8 +7,8 @@ comes from bots, and whether spikes in reader attention are followed by edit sur
 so raw edit counts overstate what patrollers see in their default review list by nearly a factor of two. The share depends heavily on
 the language: once bot edits are removed, Chechen Wikipedia drops from 2nd to 65th place and Arabic from
 5th to 17th, while English Wikipedia alone carries 40.9\% of human Wikipedia edits and ten editions carry
-three quarters. Human pressure also has a clear daily peak, 13:00--18:00 UTC. Finally,
-spikes in reader attention are not an early sign of edit surges: most (77.5\%) bring no edits at all,
+three quarters. Human pressure also has a clear daily peak, 13:00--19:00 UTC. Finally,
+spikes in reader attention are not an early sign of edit surges: most (77.5\%) bring no edit within three hours,
 and at every level of views a spike is followed by an edit less often than an article that is steadily
 popular (57\% against 84\% of hours above 20{,}000 views, \cref{sec:results}).
 
@@ -23,17 +23,19 @@ popular (57\% against 84\% of hours above 20{,}000 views, \cref{sec:results}).
   \item \textbf{Bots are found by their flag.} An edit counts as a bot edit only if its account has the
     bot flag, which each wiki's community grants to approved bots. Bots that run without the flag count as
     humans, and edits a flagged account makes by hand count as bot edits, so the bot share is an estimate.
-    Reverts are detected by matching English words such as ``revert'' or ``undo'' in edit summaries, so
-    reverts with an empty summary or one in another language are missed.
   \item \textbf{Attention and edits are linked in time, not by cause.} An attention spike followed by an
     edit surge does not show that readers caused the edits: a news event can drive both. A spike also
     needs at least 1{,}000 views in the hour, so smaller articles cannot register one. Hours with no pageview file count as zero views in the
     24-hour baseline, so a spike within 24 hours after one of the 13 missing hours is slightly overstated.
-    Finding 5 is descriptive, with no significance test, and above 20{,}000 views compares with only 39 articles.
+    Finding 5 is descriptive, with no significance test, and above 20{,}000 views compares with only 39 articles,
+    which are not matched to the spikes by topic or age. Consecutive spike hours of the same story are
+    counted separately, so they are not independent observations.
   \item \textbf{Built for one laptop's volume.} The marts are rebuilt in full every hour, and the live
     per-minute counts are approximate: open minutes are held in memory, so a processor restart can drop
     or repeat part of a minute. Larger volumes would need incremental marts and checkpointed stream
     state; the warehouse, not the live tile, is the source of truth.
+  \item \textbf{Pseudonymised, not anonymous.} Editor keys are unsalted MD5 hashes of public user names,
+    so a known name can be hashed and matched; a salted hash is the next step. The raw zone keeps user names.
   \item \textbf{A single Kafka broker.} Every topic has one copy, which is enough for a laptop but would
     lose buffered events if the broker's disk failed. The lake, not Kafka, is the long-term archive.
 \end{itemize}
@@ -50,7 +52,7 @@ popular (57\% against 84\% of hours above 20{,}000 views, \cref{sec:results}).
 \end{itemize}
 
 \paragraph{Conclusion.} Editing pressure on Wikipedia is concentrated in a few large language editions
-and in the hours 13:00--18:00 UTC, and about half of the raw edit volume is bot work that is hidden from
+and in the hours 13:00--19:00 UTC, and about half of the raw edit volume is bot work that is hidden from
 patrollers' default review list; ranking wikis by human edits rather than total edits gives a truer picture of where
 review effort is needed. A jump in readers is not an early sign of edit surges: 77.5\% of
 spikes get no edit within three hours, so an alert on views alone would mostly point at articles left alone. The pipeline itself

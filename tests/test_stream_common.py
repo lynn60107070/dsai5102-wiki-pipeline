@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timezone
 
-from stream.common import event_time, hour_prefix, iter_sse, keep_event
+from stream.common import SendChecker, SendFailed, event_time, hour_prefix, iter_sse, keep_event
 
 
 class KeepEventTest(unittest.TestCase):
@@ -204,6 +204,35 @@ class IterSseTest(unittest.TestCase):
             'data: {"unfinished": true}',
         ]
         self.assertEqual(list(iter_sse(lines)), [('[{"offset":1}]', '{"a": 1}'), (None, '{"b": 2}')])
+
+
+
+class _Future:
+    """Stands in for kafka-python's FutureRecordMetadata: stores errbacks, fails on demand."""
+    def __init__(self):
+        self.errbacks = []
+
+    def add_errback(self, fn):
+        self.errbacks.append(fn)
+
+    def fail(self, exc):
+        for fn in self.errbacks:
+            fn(exc)
+
+
+class SendCheckerTest(unittest.TestCase):
+    def test_passes_when_every_send_succeeded(self):
+        sends = SendChecker()
+        sends.watch(_Future())
+        sends.check()  # no exception
+
+    def test_a_failed_send_blocks_the_commit(self):
+        sends = SendChecker()
+        ok, bad = sends.watch(_Future()), sends.watch(_Future())
+        bad.fail(TimeoutError("broker gone"))
+        with self.assertRaises(SendFailed):
+            sends.check()
+        self.assertIsInstance(sends.error, TimeoutError)
 
 
 if __name__ == "__main__":

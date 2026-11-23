@@ -38,7 +38,7 @@ models:
         data_tests: [unique, not_null]
 
   - name: dim_wiki
-    description: One row per wiki. Project and language parsed from the server name, names from the S3 seed.
+    description: One row per wiki. Project and language parsed from the server name, names from the dim_wiki_names seed (Sitematrix).
     columns:
       - name: wiki_id
         data_tests: [unique, not_null]

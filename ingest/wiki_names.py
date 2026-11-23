@@ -1,4 +1,4 @@
-"""Reference data: every Wikimedia wiki with its language -> dbt/seeds/dim_wiki_names.csv  (Task S3)
+"""Reference data: every Wikimedia wiki with its language -> dbt/seeds/dim_wiki_names.csv
 
 Source: the sitematrix API (https://meta.wikimedia.org/w/api.php?action=sitematrix), which lists every
 wiki by database name (`arwiki`, the same id as `wiki` in the edit stream), its language code, the

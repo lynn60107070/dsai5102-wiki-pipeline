@@ -166,7 +166,7 @@ ORDER BY 1, 2""",
                 "graph.metrics": ["% with an edit in the next 2 h"], "graph.show_values": True,
                 "series_settings": {"Spikes": {"color": "#EF8C8C"}, "Steadily popular": {"color": "#A7ADB8"}}},
         "tags": DATES,
-        "note": "Share followed by an edit within 2 h: spikes are edited less often.",
+        "note": "Share followed by an edit within 2 h: attention spikes against steadily popular articles.",
         "layout": (19, 12, 12, 10),
     },
     {
@@ -197,7 +197,7 @@ LIMIT 25""",
     {
         "name": "Data completeness: edits collected per hour",
         "description": "Edits stored per UTC hour. Hours with no bar are gaps, when the collector was offline "
-                       "(none from 28 Oct to 11 Nov); partial hours (orange) have under half the usual volume "
+                       "(in our run, none from 28 Oct to 11 Nov); partial hours (orange) have under half the usual volume "
                        "and are kept but marked. "
                        "Source: mart_data_completeness.",
         "display": "bar",

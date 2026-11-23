@@ -24,7 +24,7 @@ drive both, so we can show timing but not cause.
   what patrollers see by about 1.8× on Wikipedias.
 - Where editing pressure concentrates: English Wikipedia alone has 40.9% of human Wikipedia edits, and
   the top 10 of 347 Wikipedias have 74.2%. Ranking by total edits misleads: Chechen Wikipedia is #2 by
-  edits but #65 by human edits (99.5% bots). Humans peak at 17:00 UTC, 2.1× the 04:00 low (13:00–18:00 UTC: the European afternoon and American
+  edits but #65 by human edits (99.5% bots). Humans peak at 17:00 UTC, 2.1× the 04:00 low (13:00–19:00 UTC: the European afternoon and American
   morning).
 - Attention spikes are *not* an early sign of edit surges: 77.5% of 24,234 spikes get no edit, and at
   every level of views a spike is followed by an edit less often than a steadily popular article (above
@@ -94,14 +94,14 @@ another server, and Postgres is row-based and slower for large scans.
 
 **13. Then why is there a Postgres too?**
 A DuckDB file allows only one writer, so the dashboard would fail while dbt rebuilds it. After every
-successful build the marts are copied into Postgres in one transaction each, and Metabase reads those
+successful build the marts are copied into Postgres, all in a single transaction, and Metabase reads those
 copies through a read-only user.
 
 **14. Explain your schema. How is it optimised for the dashboard?**
 - A star schema: one fact table at the finest grain (one row per edit), plus dimensions for time, wiki,
   article and editor type, and two pageview fact tables.
 - Facts are incremental: each run reloads only the last three days.
-- One pre-aggregated mart per dashboard tile, so tiles don't scan millions of edits.
+- Four pre-aggregated marts, each serving one or more dashboard tiles, so tiles don't scan millions of edits.
 - Marts store counts, not shares, so any date range can be summed before dividing.
 
 **15. Why dbt and not plain SQL scripts or Spark?**
@@ -194,8 +194,9 @@ exactly why the first extension is a collector on a server.
 
 **26. If I clone this and unpause `pageviews_hourly`, what happens?**
 Catchup runs every hour since 25 Oct 05:00: about 740 runs and 42 GB of downloads, one at a time, and
-each upload queues a `warehouse_hourly` run. It works, but takes hours; to check the batch path, trigger
-one run. The README says this.
+each upload queues a `warehouse_hourly` run. It works, but takes hours. To check the batch path, leave it paused and
+run one recent hour with `airflow dags test pageviews_hourly <yesterday's hour>`; the README gives the exact
+command. Hours older than the 3-day lookback need one dbt run with a longer `lookback_days`.
 
 **27. Your raw pageview zone is already filtered to ≥ 10 views. Doesn't that break your own rule that
 the raw zone keeps everything?**
@@ -231,8 +232,9 @@ built. The gate worked: the export was skipped and the dashboard kept the last g
 for each run to read only hours before its start time.
 
 **32. Can I reproduce your five findings from the repo?**
-Yes: `analysis/findings.sql` holds the query behind every number in section 6, run against the exported
-marts in Postgres; it reproduces them exactly. Findings 1, 2, 4 and 5 can also be read off the dashboard tiles.
+With our collected data, yes: `analysis/findings.sql` holds the query behind every number in section 6, run
+against the exported marts in Postgres, and reproduces them exactly. The 15-day window itself (25M edits) is
+not in the repo; a fresh clone has only the six sample hours, so the same queries run but give sample numbers. Findings 1, 2, 4 and 5 can also be read off the dashboard tiles.
 
 ## Dashboard
 
@@ -267,7 +269,7 @@ spikes against Wikimedia's separate count of automated traffic.
 
 **37. Is "European afternoon" really what 17:00 UTC means?**
 Only partly: 17:00 UTC is 18:00 in Central Europe but noon in New York, and English Wikipedia alone has
-40.9% of human edits. So the peak window, 13:00–18:00 UTC, is the European afternoon *and* the American
+40.9% of human edits. So the peak window, 13:00–19:00 UTC, is the European afternoon *and* the American
 morning, which is how the report now puts it. We didn't split the hour profile by language;
 `mart_edits_hourly` has `hour_of_day` and `language_name`, so that is one query away.
 
@@ -304,8 +306,9 @@ A run's state follows its last task, and the clean-up step, which runs even afte
 succeeded, so failed hours looked green and were never retried. They failed within a second, while the
 laptop was offline. Fixed: clean-up is now a teardown task, which Airflow ignores for the run's state, and
 a network error counts as "file not published yet". We found it on 23 Nov, after the numbers were frozen;
-the files are still online, so clearing those 13 runs would load them, but every spike baseline nearby
-would change, so we kept the window as analysed and say so in the report.
+the files are still online, so clearing those 13 runs would load them, and we will after grading. We
+didn't before submission because every spike baseline in the 24 hours after each one would change after
+the report was written. The effect is bounded: 13 of 360 hours, and Q35 quantifies the baseline error.
 
 **43. `export_marts` replaces four tables. Can Metabase see two different builds at once?** *(Lynn)*
 Not any more: until 23 Nov each table had its own transaction, so for a few seconds one tile could show
@@ -322,4 +325,48 @@ be shifted an hour against the edits, moving edits between "same hour" and "next
 Findings 1–4 don't use the pageviews: they count edits, where each edit has its own revision id (zero
 repeats among 25,093,717) and the bot flag comes with the event. The error in finding 5 was in which pages
 we compared, not in the pipeline, and the reversal is shown in the report rather than hidden. Every number
-in section 6 is reproduced by `analysis/findings.sql` on the serving database.
+in section 6 is reproduced by `analysis/findings.sql` on the serving database (with our collected data;
+the window itself is not in the repo).
+
+## Fourth review round (23 Nov, harsh mock instructor)
+
+**46. Your question is about Wikipedias. Why is a headline 48.6%, across all wikis?** *(Sumaiya)*
+The Wikipedia figure is 45.3%, and that's the one the slides lead with. 48.6% covers all 771 wikis,
+including Wikidata and Commons (52.4% of all edits, mostly bot-driven structured data and file uploads).
+We collect every wiki because the feed is one stream and filtering is cheaper downstream; the "about 1.8×"
+overstatement (1 / (1 − 0.453)) is the Wikipedia number.
+
+**47. The 77.5% counts the spike hour plus two hours, but the bars count only the next two. Why switch?** *(Sumaiya)*
+They answer different questions. 77.5% is the broad one: did anything at all happen in the spike hour or
+the two after? The bars compare spikes with steadily popular articles, and there the spike hour is left out
+because an edit made before the jump in the same hour can't be a response to it. Both windows are stated
+in the report (section 6, finding 5). Counting the spike hour too doesn't change the direction: 20% against
+26%, 42% against 57%, 68% against 90% (checked 23 Nov on the serving database).
+
+**48. Steadily popular articles above 20,000 views are 39 ongoing-news pages that are always edited. Isn't the comparison confounded?** *(Sumaiya)*
+Partly, yes. The comparison is matched on views only, not on topic or article age, so it's descriptive;
+the report says so in the limitations, along with the fact that consecutive spike hours of one story aren't
+independent. The direction holds in all three view bands, including 1,000–5,000, with 21,472 spike hours
+against 64,746 steady ones. A matched comparison (same topic and age) is the next step.
+
+**49. You say the batch path runs end to end, but the seeds are made by a script you run, and the dead-letter topic is read by hand.** *(Lynn)*
+The recurring work runs in Airflow: every pageview hour and every warehouse build, with the quality gate.
+The two seeds are reference data that changes rarely (wiki names, non-article titles); they're generated by
+scripts in `ingest/` and committed, so a fresh clone needs no manual step. The dead-letter topic is for
+inspection by design: one event in three weeks.
+
+**50. Did you check 48.6% against Wikimedia's own statistics?** *(Sumaiya)*
+Not formally. Wikistats reports edits by editor type per wiki per month, so a cross-check is possible but
+covers monthly periods, and we didn't do it. Our number comes straight from the `bot` flag on each event. We say the bot share is an estimate because unflagged bots count as humans.
+
+**51. Who built what?**
+Sumaiya: the problem framing, the architecture diagram, the dashboard tiles and their SQL, the findings, and
+report sections 1, 2, 6 and 7. Lynn: the pipeline code (stream, batch, dbt, Docker, scripts, tests) and
+report sections 3–5, and assembling the report.
+
+**52. At-least-once: what if a Kafka send fails?** *(Lynn)*
+Since 23 Nov every send is checked: the producer and processor attach an error callback to each send, and
+after flushing they refuse to commit offsets or save the stream position if any send failed; the service
+exits and Docker restarts it from the last commit. Before that, `flush()` doesn't raise on a failed send,
+so a lost event was possible in principle (none were seen: the hourly counts have no gaps).
+

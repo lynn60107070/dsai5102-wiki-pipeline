@@ -1,5 +1,6 @@
-# Runs on every push and pull request: the 41 unit tests (stream, pageviews, Metabase setup) and a check
-# that docker-compose.yml is valid with no .env file, as on a fresh clone. No services are started.
+# Runs on every push and pull request: the unit tests (stream, pageviews, Metabase setup), a check that the
+# dbt project and the Airflow DAGs parse, and a check that docker-compose.yml is valid with no .env file,
+# as on a fresh clone. No services are started.
 name: tests
 
 on:
@@ -19,3 +20,12 @@ jobs:
       - run: python -m unittest -v
       - name: docker-compose.yml is valid on a fresh clone (no .env)
         run: docker compose config -q
+      - name: Airflow DAGs compile
+        run: python -m py_compile airflow/dags/*.py
+      - name: dbt project parses (models, tests, seeds)
+        env:   # dummy values: parsing never connects to the lake
+          MINIO_ROOT_USER: ci
+          MINIO_ROOT_PASSWORD: ci-password
+        run: |
+          pip install -r airflow/requirements-dbt.txt
+          dbt parse --project-dir dbt --profiles-dir dbt

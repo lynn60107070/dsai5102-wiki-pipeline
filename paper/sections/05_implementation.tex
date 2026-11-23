@@ -42,7 +42,7 @@ fifteen minutes.
 \subsection{Warehouse and transformations}\label{sec:impl-dbt}
 
 dbt organises the SQL in three layers (\cref{tab:schema}): \emph{staging} views over the lake,
-\emph{core} facts and dimensions, and \emph{marts}, one per dashboard tile. The fact tables are
+\emph{core} facts and dimensions, and four \emph{marts}, each pre-aggregated for one or more dashboard tiles. The fact tables are
 incremental: each run reloads only the last three days and replaces rows by key. Thirty-five data tests check
 unique and non-null keys, accepted values, and relationships from every key of \texttt{fact\_edit}, and
 from the wiki and article keys of the pageview facts, to their dimensions.

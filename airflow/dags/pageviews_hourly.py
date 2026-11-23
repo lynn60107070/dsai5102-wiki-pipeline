@@ -6,7 +6,7 @@ One run per UTC hour since 25 Oct 2026 05:00 (the first hour of edit data), so c
 
 wait_for_file  waits until Wikimedia has published the hour's file (it appears with some delay); a
                network error counts as "not yet", so a laptop that is briefly offline doesn't fail the hour
-fetch          ingest.pageviews.fetch_hour (Sumaiya, S2): download, keep Wikipedia rows, write
+fetch          ingest.pageviews.fetch_hour: download, keep Wikipedia rows, write
                articles.parquet (>= 10 views) + wiki_totals.parquet (docs/design.md section 7)
 upload         both files to s3://lake/raw/pageviews/dt=YYYY-MM-DD/hour=HH/ via the `minio_lake` connection;
                updates the Dataset s3://lake/raw/pageviews, which triggers warehouse_hourly
@@ -19,7 +19,10 @@ Re-running an hour overwrites the same two objects, so retries and backfills are
 
 Hour alignment: a file named ...-HH0000.gz holds the hour ENDING at HH (verified against the Pageview
 API, see ingest/pageviews.py), so the run for interval [HH:00, HH+1:00) fetches the file named HH+1.
-To reload a failed hour, clear its run in the UI (Browse -> DAG Runs). The DAG is paused when first
+To reload a failed hour, clear its run in the UI (Browse -> DAG Runs). The warehouse loads pageviews
+incrementally over the last 3 days (dbt var lookback_days), so hours older than that need one dbt build
+with a longer lookback afterwards (README, "DAGs"). To run one hour without unpausing:
+`airflow dags test pageviews_hourly <hour, e.g. 2026-11-22T10:00:00+00:00>`. The DAG is paused when first
 created; bootstrap leaves it paused, because unpausing it backfills every hour since 25 Oct.
 """
 import os
