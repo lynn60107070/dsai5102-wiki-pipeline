@@ -159,6 +159,23 @@ table.t.compact { font-size: 15px; } table.t.compact td { padding: 7px 10px; }
 .term .cursor { display: inline-block; width: 10px; height: 20px; background: #E7E6E1; vertical-align: -3px; animation: blink 1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 
+/* recorded demo (slide 10): click to play/pause; steps light up with the video */
+.demo-vid { position: relative; cursor: pointer; border-radius: 18px; overflow: hidden; background: #0f1d2c; box-shadow: 0 30px 70px rgba(16,42,67,.25); }
+.demo-vid video { display: block; width: 100%; height: auto; }
+.demo-play { position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+  background: rgba(15,29,44,.78); color: #fff; font-size: 52px; display: flex; align-items: center; justify-content: center; padding-left: 10px; transition: opacity .25s; }
+.demo-vid.playing .demo-play { opacity: 0; }
+.demo-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: rgba(255,255,255,.25); }
+.demo-bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+.demo-repro { position: absolute; inset: 0; border-radius: 18px; background: rgba(15,29,44,.82); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; }
+.demo-steps .card { padding: 12px 16px; display: flex; gap: 14px; align-items: center; font-size: 17px; line-height: 1.3; opacity: .45; transition: opacity .3s, border-color .3s; }
+.demo-steps .card .bignum { font-size: 26px; color: var(--accent); }
+.demo-steps .card code { font-size: 14px; }
+.demo-steps .card.on { opacity: 1; border-color: var(--accent); }
+.slide:has(.demo-repro.shown) .demo-steps .card { opacity: .45; border-color: rgba(214,228,242,.9); }
+.slide:has(.demo-repro.shown) .demo-steps [data-t="999"] { opacity: 1; border-color: var(--accent); }
+
 /* pulse */
 .pulse { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #E5484D; box-shadow: 0 0 0 0 rgba(229,72,77,.6); animation: pulse 1.6s infinite; vertical-align: middle; margin-right: 8px; }
 @keyframes pulse { 70% { box-shadow: 0 0 0 12px rgba(229,72,77,0); } 100% { box-shadow: 0 0 0 0 rgba(229,72,77,0); } }

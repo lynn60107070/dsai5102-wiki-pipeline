@@ -55,7 +55,7 @@ the rubric row it earns. Each of us presents our own content, so the talk hands 
 
 - **Sumaiya (2:40):** title, agenda, problem, data. *Handover:* "Lynn will show you how the pipeline turns
   these three sources into answers."
-- **Lynn (6:50):** architecture, tools, stream, batch, warehouse and dbt, live demo ending on the
+- **Lynn (6:50):** architecture, tools, stream, batch, warehouse and dbt, recorded demo ending on the
   dashboard. *Handover (on the dashboard):* "Sumaiya will show you what it tells us."
 - **Sumaiya (2:50):** dashboard, findings 1–5. *Handover:* "Lynn will close with what broke along the way
   and what we learned."
@@ -74,7 +74,7 @@ the rubric row it earns. Each of us presents our own content, so the talk hands 
 | 7 | Stream path: Kafka | 3 Pipeline | Lynn | 0:50 |
 | 8 | Batch path: Airflow | 3 Pipeline | Lynn | 0:40 |
 | 9 | Warehouse and dbt | 3 Pipeline | Lynn | 0:50 |
-| 10 | Live demo + one command to reproduce | 3 Pipeline | Lynn | 2:30 |
+| 10 | Demo (recorded) + one command to reproduce | 3 Pipeline | Lynn | 2:30 |
 | 11 | Dashboard overview | 4 Dashboard & insights | Sumaiya | 0:40 |
 | 12–14 | Findings 1, 2–3, 4 | 4 Dashboard & insights | Sumaiya | 1:30 |
 | 15 | Finding 5 | 4 Dashboard & insights | Sumaiya | 0:40 |
@@ -84,8 +84,7 @@ the rubric row it earns. Each of us presents our own content, so the talk hands 
 
 Rehearse with a timer; if a run goes over 14:00, cut words, not slides.
 
-Slide 10 is a demo, not a slide: switch to the terminal and browser. If it fails for more than ~20 s,
-play the backup video without apologising.
+Slide 10 plays a recording of the running stack (click or P); talk over it. No switching windows.
 
 ---
 
@@ -228,16 +227,18 @@ play the backup video without apologising.
 - **Instructor listens for:** schema *justified* and optimised for the queries, transformations that
   scale and produce clean data.
 
-### Slide 10. Live demo (2:30), follow [docs/demo.md](../docs/demo.md)
-1. Producer/processor logs scrolling: "every edit, live, through Kafka."
-2. Lake via `mc ls`: raw zone and clean Parquet, `dt=` / `hour=` partitions.
-3. Airflow: `warehouse_hourly` graph, a green run (optionally the dbt log `PASS`).
-4. Metabase: the live tile, then the other tiles with **From = 28 Oct, To = 11 Nov** set beforehand,
+### Slide 10. Demo (2:30): a recording of the running stack, narrated live
+The slide plays `slides/deck/img/demo.mp4` (recorded 23 Nov, 1:42, silent; click or P plays/pauses).
+The steps on the right light up as the video reaches them; it follows [docs/demo.md](../docs/demo.md).
+1. 0:00 `docker compose ps`, then producer/processor logs: "every edit, live, through Kafka."
+2. 0:27 Lake via `mc ls`: raw zone and clean Parquet, `dt=` / `hour=` partitions.
+3. 0:43 Airflow: `warehouse_hourly` graph, a green run, then the dbt log `PASS=51`.
+4. 1:10 Metabase: the live tile, then the other tiles with **From = 28 Oct, To = 11 Nov**,
    so the numbers match Sumaiya's slides.
-5. End on the reproduce line below, said over the dashboard.
+5. After the video, Space ×3 brings up the reproduce box below.
 - **Instructor listens for:** the pipeline actually running, end to end.
-- **Risk:** stack up 1–2 hours early, check the producer says "live from now" (not "backfilling"),
-  hotspot ready. Details in docs/demo.md.
+- **Why recorded:** no risk from the network or a sleeping laptop during the talk. The stack still
+  runs on the laptop if someone asks to see it live.
 
 ### Slide 10, end of the demo. One command to reproduce (~0:20)
 - **On slide:** `docker compose up -d --build` in large type. Underneath: a bootstrap service loads

@@ -363,20 +363,21 @@
 </section>
 <!-- ============================== 14. DEMO ============================== -->
 <section class="slide" id="s14" data-apx="a11">
-  <div class="eyebrow"><b>03</b><span class="sec-name">The pipeline</span><i class="sec-line"></i><span class="sub-name">Live demo</span><span class="who">Lynn</span></div>
+  <div class="eyebrow"><b>03</b><span class="sec-name">The pipeline</span><i class="sec-line"></i><span class="sub-name">Demo</span><span class="who">Lynn</span></div>
   <h2>Watch it run, end to end</h2>
-  <div class="row" style="margin-top:30px;gap:60px">
-    <div class="col">
-      <ol style="list-style:none;display:flex;flex-direction:column;gap:16px">
-        <li class="card" style="padding:16px 22px;display:flex;gap:18px;align-items:center"><span class="bignum" style="font-size:34px;color:var(--accent)">1</span><span>Producer and processor logs: every edit, live, through Kafka</span></li>
-        <li class="card" style="padding:16px 22px;display:flex;gap:18px;align-items:center"><span class="bignum" style="font-size:34px;color:var(--accent)">2</span><span>The lake: <code>mc ls</code>, raw and clean zones, <code>dt=</code>/<code>hour=</code> folders</span></li>
-        <li class="card" style="padding:16px 22px;display:flex;gap:18px;align-items:center"><span class="bignum" style="font-size:34px;color:var(--accent)">3</span><span>Airflow: a green <code>warehouse_hourly</code> run, dbt <code>PASS</code></span></li>
-        <li class="card" style="padding:16px 22px;display:flex;gap:18px;align-items:center"><span class="bignum" style="font-size:34px;color:var(--accent)">4</span><span>Metabase: the live tile, then the window 28 Oct – 11 Nov</span></li>
-      </ol>
-    </div>
-    <div style="width:640px;flex:none">
-      <div class="lbl muted" style="margin-bottom:12px">5 · Reproduce it on a fresh clone</div>
-      <div class="term">
+  <div class="row" style="margin-top:22px;gap:32px;align-items:flex-start">
+    <!-- Recorded demo (silent, 1:42); click or P plays/pauses; the steps on the right light up with it.
+         After it, Space brings the "reproduce" terminal up over the video. -->
+    <div style="position:relative;width:1060px;flex:none">
+      <div class="demo-vid">
+        <video src="img/demo.mp4" preload="metadata" muted playsinline></video>
+        <div class="demo-play">▶</div>
+        <div class="demo-bar"><i></i></div>
+      </div>
+      <div class="demo-repro f" data-f="1">
+      <div style="width:660px">
+      <div class="lbl" style="margin-bottom:12px;color:#fff">5 · Reproduce it on a fresh clone</div>
+      <div class="term" style="font-size:19px">
         <div><span class="p">$</span> git clone …/dsai5102-wiki-pipeline</div>
         <div><span class="p">$</span> docker compose up -d --build</div>
         <div class="f" data-f="1"><span class="dim">bootstrap:</span> 6 bundled hours of real edits <span class="dim">(~380k)</span></div>
@@ -385,10 +386,19 @@
         <div class="f" data-f="2"><span class="dim">metabase:</span> dashboard built through the API <span class="ok">✓</span></div>
         <div class="f" data-f="3"><span class="ok">ready in ~5 min</span> <span class="cursor"></span></div>
       </div>
-      <p class="small muted f" data-f="3" style="margin-top:14px">Tested on fresh clones on macOS and Windows.</p>
+      <p class="small f" data-f="3" style="margin-top:12px;color:#d6e4f2">Tested on fresh clones on macOS and Windows.</p>
+      </div>
+      </div>
     </div>
+    <ol class="demo-steps col" style="list-style:none;display:flex;flex-direction:column;gap:12px">
+      <li class="card" data-t="0"><span class="bignum">1</span><span>Services up; the stream through Kafka</span></li>
+      <li class="card" data-t="27"><span class="bignum">2</span><span>The lake: raw and clean zones, <code>dt=</code>/<code>hour=</code></span></li>
+      <li class="card" data-t="43"><span class="bignum">3</span><span>Airflow: a green run, dbt <code>PASS=51</code></span></li>
+      <li class="card" data-t="70"><span class="bignum">4</span><span>Metabase: live tile, then 28&nbsp;Oct&nbsp;–&nbsp;11&nbsp;Nov</span></li>
+      <li class="card" data-t="999"><span class="bignum">5</span><span>One command on a fresh clone</span></li>
+    </ol>
   </div>
-  <aside class="notes"><b>Lynn · 2:30.</b> Switch to the terminal and browser (docs/demo.md). Stack up 1–2 h early; producer must say "live from now". Set From = 28 Oct, To = 11 Nov beforehand. If anything hangs for 20 s, play the backup video without apologising. End here: one command on a fresh clone. → A11. <b>Handover</b> (on the dashboard): "Sumaiya will show you what it tells us."</aside>
+  <aside class="notes"><b>Lynn · 2:30.</b> <b>Click the video</b> (or press P) to play; it is silent and 1:42 long, talk over it. 0:00 services and stream logs · 0:27 lake raw/clean · 0:43 Airflow graph, ~1:02 dbt PASS=51 · 1:10 Metabase live tile, then scroll the window. Click again to pause if you need longer. Recorded 23 Nov on the live stack. Then Space ×3 for the reproduce box: one command on a fresh clone. → A11. <b>Handover</b> (on the dashboard): "Sumaiya will show you what it tells us."</aside>
 </section>
 <!-- ============================== 4. DASHBOARD ============================== -->
 <section class="slide" id="s4" data-apx="a3">
@@ -407,7 +417,7 @@
     <div class="tile" style="animation:slideIn .5s .75s both"><div class="num">8</div><span class="tag q">trust</span><div class="im" style="background-image:url(img/tile_completeness.png);background-size:auto 100%;background-position:center"></div><div class="cap">Data completeness: edits stored per hour</div></div>
   </div>
   <p class="f" data-f="1" style="margin-top:24px;font-size:20px"><b>From / To</b> filter every warehouse tile · <b>Project</b> filters the two all-wiki tiles · each tile has a title and a one-line explanation.</p>
-  <aside class="notes"><b>Sumaiya · 0:40.</b> Take over from the live demo: "This is the dashboard Lynn just showed." Each tile maps to one part of the question; categorical tiles (3, 4) and time tiles (2, 5, 8). The full dashboard is in A3. Then the findings, one per slide.</aside>
+  <aside class="notes"><b>Sumaiya · 0:40.</b> Take over from the demo: "This is the dashboard Lynn just showed." Each tile maps to one part of the question; categorical tiles (3, 4) and time tiles (2, 5, 8). The full dashboard is in A3. Then the findings, one per slide.</aside>
 </section>
 <!-- ============================== 5. FINDING 1 ============================== -->
 <section class="slide" id="s5" data-apx="a4">
@@ -818,7 +828,7 @@
     <div class="q wide"><h4><span>Q18</span>How would I run this myself, and what would you do differently?</h4><ul><li>Run it: <code>docker compose up -d --build</code> on a fresh clone. A bootstrap service loads six bundled hours of real edits (plus the 30 hours of pageviews the spike tile needs), runs the warehouse DAG once and builds the Metabase dashboard through its API, in about 5 minutes. Tested on fresh clones on macOS and Windows; the last test (20 Nov) found the spike tile failing without pageviews and a red first Airflow run, both fixed.</li><li>Differently: collect on a server (most incidents came from sleep and standby), more than one Kafka broker, detect reverts without relying on English words in edit summaries.</li></ul></div>
     <div class="q"><h4><span>Q20</span>Can I see the lake? Why no MinIO web page?</h4><p>MinIO stopped publishing free images in 2025; the last free build we pin has no web console. Browse it from the terminal: <code>docker compose exec minio mc ls --recursive local/lake/clean/edits/</code> shows the date/hour partitions. DuckDB reads the same files over the S3 API.</p></div>
     <div class="q"><h4><span>Q43</span>Can Metabase see two different builds at once?</h4><p>Not any more: until 23 Nov each table had its own transaction, so for a few seconds one tile could show the new build and another the old. Now all four are dropped and recreated in one transaction; a query that arrives meanwhile waits for the commit.</p></div>
-    <div class="q"><h4><span>·</span>Demo checklist</h4><ul><li>Stack up 1–2 h early; producer says "live from now", not "backfilling".</li><li>Dashboard From = 28 Oct, To = 11 Nov set beforehand.</li><li>Keep <code>pageviews_hourly</code> paused (catchup).</li><li>If anything hangs for 20 s, play the backup video.</li></ul></div>
+    <div class="q"><h4><span>·</span>Demo checklist</h4><ul><li>Slide 10 plays a recording of the running stack (23 Nov, 1:42, silent): click it or press P.</li><li>If asked to see it live: the stack runs on this laptop; steps in <code>docs/demo.md</code>.</li><li>Keep <code>pageviews_hourly</code> paused (catchup).</li></ul></div>
     <div class="q"><h4><span>·</span>Tests</h4><p>43 unit tests (stream code, Metabase setup) run in GitHub Actions on every push; 35 dbt data tests run on every warehouse build.</p></div>
   </div></div>
 </section>

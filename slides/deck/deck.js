@@ -112,6 +112,7 @@
   }
   function leave(s) {
     s.querySelectorAll('svg').forEach(v => v.pauseAnimations && v.pauseAnimations());
+    s.querySelectorAll('video').forEach(v => v.pause());
     (s._charts || []).forEach(c => c.destroy()); s._charts = [];
     s._spk = s._hod = s._daily = null;
     (s._timers || []).forEach(t => { clearInterval(t); cancelAnimationFrame(t); }); s._timers = [];
@@ -319,6 +320,22 @@
     if (e.key === 'o' || e.key === 'O') { ov.classList.contains('open') ? ov.classList.remove('open') : openOverview(); }
     else if (e.key === 'Escape') ov.classList.remove('open');
     else if (e.key === 's' || e.key === 'S') openPresenter();
+    else if (e.key === 'p' || e.key === 'P') { const w = slides[cur].querySelector('.demo-vid'); if (w) toggleDemo(w); }
+  });
+
+  // ---------- recorded demo: click or P plays/pauses; the step whose start time has passed lights up ----------
+  function toggleDemo(w) { const v = w.querySelector('video'); if (v.ended) v.currentTime = 0; v.paused ? v.play() : v.pause(); }
+  document.querySelectorAll('.demo-vid').forEach(w => {
+    const v = w.querySelector('video'), bar = w.querySelector('.demo-bar i');
+    const steps = [...w.closest('.slide').querySelectorAll('.demo-steps [data-t]')];
+    w.addEventListener('click', () => toggleDemo(w));
+    v.addEventListener('play', () => w.classList.add('playing'));
+    v.addEventListener('pause', () => w.classList.remove('playing'));
+    v.addEventListener('timeupdate', () => {
+      bar.style.width = (v.duration ? v.currentTime / v.duration * 100 : 0) + '%';
+      const t = v.currentTime; let k = -1; steps.forEach((s, i) => { if (t >= +s.dataset.t) k = i; });
+      steps.forEach((s, i) => s.classList.toggle('on', i === k && (t > 0 || !v.paused)));
+    });
   });
 
   // ---------- touch swipe ----------
