@@ -1,0 +1,153 @@
+/* =====================================================================
+   THEME, loaded after deck.css. The look of our delivery-ETA deck (Plus Jakarta Sans,
+   navy titles with one accent phrase, "01 Section" markers, ice gradients and orbs,
+   soft rounded cards, More-chips by the page number, navy control bar), recoloured
+   with the Metabase dashboard palette: blue accent, human purple and bot yellow glows.
+   ===================================================================== */
+:root {
+  --navy: #102A43; --charcoal: #1F2937; --muted: #5B6B7F; --line: #DCE6F1;
+  --blue: #2F80D0;            /* accent text: the dashboard blue, darkened for contrast */
+  --blue-fill: #509EE3;       /* the dashboard blue as a fill */
+  --sky: #A9D0F2; --ice: #EAF3FC;
+  --serif: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  --sans: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  --ink: var(--charcoal); --ink2: var(--muted); --hair: var(--line); --border: rgba(214,228,242,.9);
+  --accent: var(--blue); --accent-soft: var(--ice);
+  --paper: #f7fafd; --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+html, body { background: #dfe9f4; }
+body { font-family: var(--sans); color: var(--charcoal); }
+
+/* === SLIDE ATMOSPHERE: ice gradient, purple (humans) glow top right, yellow (bots) glow bottom left, one orb === */
+.slide {
+  isolation: isolate;
+  background:
+    radial-gradient(700px 460px at 0% 100%, rgba(249,212,92,.22), transparent 60%),
+    radial-gradient(1000px 620px at 100% 0%, rgba(169,137,197,.20), transparent 60%),
+    radial-gradient(900px 600px at 0% 100%, rgba(234,243,252,.9), transparent 60%),
+    linear-gradient(180deg, #fbfdff 0%, #f1f6fc 100%);
+}
+.slide:not(.title-slide)::before { content: ""; position: absolute; z-index: -1; width: 460px; height: 460px; right: -170px; top: -190px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.95), rgba(214,228,242,.75) 60%, rgba(169,208,242,.45)); }
+.slide.apx::before { opacity: .6; }
+.orb { position: absolute; border-radius: 50%; pointer-events: none; z-index: -1; }
+.orb.ring { background: none; border: 2px solid rgba(80,158,227,.14); }
+
+/* === TYPE === */
+h1, h2 { font-family: var(--sans); font-weight: 800; color: var(--navy); letter-spacing: -.02em; line-height: 1.06; }
+h1 { font-size: 88px; }
+h2 { font-size: 52px; }
+h2 em, h1 em, .accent { font-style: normal; color: var(--blue); }
+h3 { font-family: var(--sans); font-weight: 700; color: var(--navy); }
+.lede { font-family: var(--sans); }
+.sub { font-size: 24px; color: var(--muted); line-height: 1.4; margin-top: 18px; }
+.strong { font-weight: 700; color: var(--navy); }
+.rule { width: 100px; height: 4px; background: var(--blue-fill); border-radius: 2px; margin: 30px 0; }
+.big, .bignum { font-family: var(--sans); font-weight: 800; letter-spacing: -.03em; }
+.muted { color: var(--muted); }
+
+/* === SECTION MARKER: 01  Section name ———  speaker === */
+.eyebrow { font: 700 22px/1 var(--sans); letter-spacing: .03em; text-transform: none; color: var(--navy); gap: 18px; margin-bottom: 16px; }
+.eyebrow b { font-weight: 700; color: var(--navy); }
+.eyebrow .sec-name { font-weight: 600; color: var(--blue); margin-left: -6px; }
+.eyebrow .sec-line { width: 90px; height: 3px; background: var(--sky); border-radius: 2px; }
+.eyebrow .who { font: 600 14px var(--sans); color: var(--muted); background: var(--ice); padding: 6px 12px; border-radius: 999px; letter-spacing: .02em; }
+
+/* === CARDS, CHIPS, TABLES === */
+.card { background: rgba(255,255,255,.92); border: 1px solid rgba(214,228,242,.9); border-radius: 26px; box-shadow: 0 18px 50px rgba(16,42,67,.07); }
+.card.navy { background: linear-gradient(145deg, #1d3a5f, #102A43); border: none; color: #fff; }
+.tag { font: 600 12px var(--sans); letter-spacing: .04em; background: var(--ice); color: var(--navy); border-radius: 999px; padding: 6px 12px; }
+.tag.new { background: rgba(242,168,111,.22); color: #9A4F16; }
+code { background: var(--ice); color: var(--navy); border-radius: 6px; }
+table.t th { color: var(--blue); font: 700 13px var(--sans); letter-spacing: .06em; border-bottom: 2px solid var(--sky); }
+table.t td { border-bottom: 1px solid var(--line); }
+.qa .q { border-radius: 20px; box-shadow: 0 12px 34px rgba(16,42,67,.06); border-color: rgba(214,228,242,.9); }
+.qa .q h4 { color: var(--navy); font-family: var(--sans); }
+.qa .q h4 span { color: var(--blue); }
+.tiles .tile { border-radius: 20px; border-color: rgba(214,228,242,.9); box-shadow: 0 14px 40px rgba(16,42,67,.07); }
+.tiles .tile .num { background: var(--navy); }
+.task { border-radius: 14px; background: #fff; box-shadow: 0 8px 24px rgba(16,42,67,.05); }
+.inc .card { border-radius: 22px; }
+.inc h3 { font-family: var(--sans); font-weight: 700; color: var(--navy); font-size: 22px; }
+.apx-index a { color: var(--navy); font-weight: 600; }
+.apx-index a b { color: var(--blue); font-family: var(--sans); font-weight: 800; }
+.term { border-radius: 22px; background: #0f1d2c; box-shadow: 0 30px 70px rgba(16,42,67,.25); }
+.box text { font-family: var(--sans); fill: var(--navy); }
+.box text.s { fill: var(--muted); }
+.box rect { rx: 12px; }
+.box.hot rect { fill: var(--ice); stroke: var(--blue-fill); }
+.lbl { font-family: var(--sans); }
+
+/* === ICON TILE (title slide) === */
+.tile.solid { width: 84px; height: 84px; border-radius: 24px; background: linear-gradient(145deg, #509EE3, #102A43); display: grid; place-items: center; box-shadow: 0 14px 30px rgba(16,42,67,.2); border: none; }
+.tile.solid svg { width: 46px; height: 46px; }
+
+/* === TITLE + CLOSING SLIDE: glows, a deep orb holding the live stream, floating cards === */
+.slide.title-slide {
+  background:
+    radial-gradient(760px 480px at 88% 12%, rgba(80,158,227,.45), transparent 60%),
+    radial-gradient(640px 440px at 0% 100%, rgba(249,212,92,.30), transparent 60%),
+    radial-gradient(900px 600px at 40% 100%, rgba(169,137,197,.16), transparent 60%),
+    linear-gradient(180deg, #fbfdff 0%, #f1f6fc 100%);
+}
+.hero-orb { position: absolute; width: 860px; height: 860px; right: -230px; top: -150px; border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle at 30% 25%, #6aaee8 0%, #2F80D0 40%, #102A43 100%); box-shadow: 0 50px 120px rgba(16,42,67,.3); }
+.hero-orb canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.float-card { position: absolute; display: flex; gap: 22px; align-items: center; background: rgba(255,255,255,.96); border-radius: 24px; padding: 18px 26px;
+  box-shadow: 0 30px 70px rgba(16,42,67,.22); z-index: 3; animation: bob 5s ease-in-out infinite; }
+.float-card .t { font-size: 14px; color: var(--muted); font-weight: 500; }
+.float-card .m { font-size: 36px; font-weight: 800; color: var(--navy); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.float-card .m span { font-size: 16px; font-weight: 600; color: var(--muted); }
+.fc1 { left: 880px; top: 150px; animation-delay: 0s; }
+.fc2 { left: 1180px; top: 470px; animation-delay: .8s; }
+.fc3 { left: 900px; top: 640px; animation-delay: 1.6s; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+/* === FOOTER: brand left; "More: [A5]" chips + page number right === */
+.foot { left: 80px; right: 64px; bottom: 26px; font: 500 14px var(--sans); color: var(--muted); }
+.foot .line { visibility: hidden; }
+.foot .more { font: 600 14px var(--sans); color: var(--muted); }
+.foot .chipb { color: var(--blue); cursor: pointer; text-decoration: none; padding: 2px 9px; margin-left: 6px; border: 1.5px solid currentColor; border-radius: 7px; font: 700 14px var(--sans); background: none; }
+.foot .chipb:hover { background: var(--blue); color: #fff; }
+.foot .pn { font: 700 16px var(--sans); color: var(--muted); min-width: 60px; }
+.foot .pn b { color: var(--blue); }
+
+/* === CONTROL BAR: navy glass pill, hides when the mouse is idle === */
+#bar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 6px;
+  background: rgba(16,42,67,.86); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.14); border-radius: 999px; z-index: 65;
+  color: #fff; box-shadow: 0 10px 30px rgba(16,42,67,.35); transition: opacity .35s, transform .35s; font-family: var(--sans); }
+#bar.idle { opacity: 0; transform: translateX(-50%) translateY(10px); pointer-events: none; }
+#bar button { all: unset; cursor: pointer; height: 36px; min-width: 36px; padding: 0 12px; border-radius: 999px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; color: #e9f2fa; gap: 7px; }
+#bar button:hover { background: rgba(255,255,255,.14); }
+#bar .count { font-size: 13px; font-variant-numeric: tabular-nums; color: #c9d3e6; padding: 0 8px; min-width: 70px; text-align: center; }
+#bar .sep { width: 1px; height: 20px; background: rgba(255,255,255,.18); margin: 0 4px; }
+html[data-preview] #bar { display: none !important; }
+
+/* === CHROME in the navy palette === */
+#progress { background: var(--blue-fill); height: 4px; }
+#notes { background: #102A43; color: #e9f2fa; border-radius: 18px 18px 0 0; left: 50%; right: auto; transform: translateX(-50%); width: min(1100px, 94vw); font-family: var(--sans); border-top: none; }
+#notes b { color: #A9D0F2; }
+#overview { background: rgba(10,22,38,.95); font-family: var(--sans); }
+#overview a.cur { border-color: #509EE3; background: #16304d; }
+@media print { #bar { display: none !important; } }
+
+/* === BRIEF + RUBRIC SIGNPOSTS: sub-topic after the section, rubric row chip top right === */
+.eyebrow .sub-name { font-weight: 600; color: var(--navy); font-size: 18px; margin-left: -4px; }
+.rubric { position: absolute; top: 58px; right: 80px; font: 700 13px var(--sans); letter-spacing: .03em; color: var(--navy);
+  background: rgba(255,255,255,.85); border: 1.5px solid var(--sky); border-radius: 999px; padding: 7px 14px; z-index: 4; }
+.rubric::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--blue-fill); margin-right: 8px; vertical-align: 1px; }
+
+/* === AGENDA: the brief's six items as a connected row of cards === */
+.agenda { position: absolute; left: 80px; right: 80px; top: 360px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; }
+.agenda::before { content: ""; position: absolute; left: 30px; right: 30px; top: 34px; height: 3px; background: var(--sky); border-radius: 2px; z-index: -1; }
+.ag { background: rgba(255,255,255,.94); border: 1px solid rgba(214,228,242,.9); border-radius: 24px; box-shadow: 0 18px 50px rgba(16,42,67,.07); padding: 20px 20px 22px; min-height: 270px; display: flex; flex-direction: column; }
+.ag .n { width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(145deg, #509EE3, #102A43); color: #fff; font: 800 20px/52px var(--sans); text-align: center; margin-bottom: 18px; }
+.ag h3 { font-size: 21px; line-height: 1.2; }
+.ag p { font-size: 16px; color: var(--muted); margin-top: 8px; line-height: 1.4; flex: 1; }
+.ag .who { align-self: flex-start; font: 600 13px var(--sans); color: var(--navy); background: var(--ice); padding: 6px 12px; border-radius: 999px; margin-top: 14px; }
+.slide.active .reveal-ag { animation: slideIn .7s var(--ease) var(--d, 0s) both; }
+.rubmap { position: absolute; left: 80px; right: 80px; top: 668px; display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; font-size: 15px; color: var(--navy); }
+.rubmap .k { font: 700 13px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--blue); margin-right: 6px; }
+.rubmap span:not(.k) { background: rgba(255,255,255,.85); border: 1.5px solid var(--sky); border-radius: 999px; padding: 6px 14px; font-weight: 500; }
+.rubmap b { color: var(--blue); margin-right: 6px; }

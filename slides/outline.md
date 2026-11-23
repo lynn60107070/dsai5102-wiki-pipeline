@@ -45,42 +45,42 @@ us down for:
 
 ---
 
-## The split: one handover
+## The order: the brief's six items, three handovers
 
-**Block A, Sumaiya (~6 min): the question and the answer.** Problem → data → dashboard → findings.
-These are her report sections (01, 02, 06), so the content is already hers.
+The deck (`slides/deck/index.html`) follows the brief's list in order: (1) problem and dataset, (2)
+architecture and tools, (3) demonstrate the pipeline, (4) dashboard and insights, (5) challenges, design
+decisions and lessons, (6) questions. Slide 2 is an agenda with exactly these six items, every slide's
+marker names its item ("03 The pipeline · Stream ingestion"), and a chip in its top-right corner names
+the rubric row it earns. Each of us presents our own content, so the talk hands over three times:
 
-**Block B, Lynn (~9 min): how we built it and why you can trust it.** Architecture → tools → stream →
-batch → warehouse and dbt → live demo → reproducibility → challenges → lessons → conclusion.
+- **Sumaiya (2:40):** title, agenda, problem, data. *Handover:* "Lynn will show you how the pipeline turns
+  these three sources into answers."
+- **Lynn (6:50):** architecture, tools, stream, batch, warehouse and dbt, live demo ending on the
+  dashboard. *Handover (on the dashboard):* "Sumaiya will show you what it tells us."
+- **Sumaiya (2:50):** dashboard, findings 1–5. *Handover:* "Lynn will close with what broke along the way
+  and what we learned."
+- **Lynn (1:20):** challenges and design decisions, lessons and the answer, questions.
 
-Why this order: the instructor hears the answer in the first 6 minutes, then sees the engineering behind
-it, and the demo ends on the live dashboard that Sumaiya just explained. The conclusion goes back to the
-question, so the talk closes on the problem it opened with.
+**Target 13:40 spoken.** Section numbers below are the old outline's; the deck numbers are in the table.
 
-**Handover line** (end of slide 7, Sumaiya): *"Those are the answers. Lynn will show you how the
-pipeline produces them, live."*
-
-**Target 13:30 spoken, leaving 1:30 of buffer** for the demo and nerves. Slides 3 + 4 share one slide
-(the profile is a strip under the sources table), and slide 14 is said at the end of the demo, not
-shown separately, so the deck has 15 slides.
-
-| # | Slide | Speaker | Time | Cumulative |
+| Deck # | Slide | Brief item | Speaker | Time |
 |---|---|---|---|---|
-| 1 | Title | Sumaiya | 0:15 | 0:15 |
-| 2 | The problem: patrollers' limited time | Sumaiya | 1:00 | 1:15 |
-| 3+4 | Data: three sources + what we collected | Sumaiya | 1:15 | 2:30 |
-| 5 | Dashboard overview | Sumaiya | 0:40 | 3:10 |
-| 6 | Findings 1–3: bots and where pressure goes | Sumaiya | 1:10 | 4:20 |
-| 7 | Findings 4–5: the clock and attention spikes | Sumaiya | 1:00 | 5:20 |
-| 8 | Architecture (built up in 3 steps) | Lynn | 1:00 | 6:20 |
-| 9 | Tools and why | Lynn | 1:00 | 7:20 |
-| 10 | Stream path: Kafka | Lynn | 0:50 | 8:10 |
-| 11 | Batch path: Airflow | Lynn | 0:40 | 8:50 |
-| 12 | Warehouse and dbt | Lynn | 0:50 | 9:40 |
-| 13+14 | Live demo, ending on "one command to reproduce" | Lynn | 2:30 | 12:10 |
-| 15 | Challenges and design decisions | Lynn | 0:50 | 13:00 |
-| 16 | Lessons, limits and conclusion | Lynn | 0:30 | 13:30 |
-| 17 | Questions | both | – | – |
+| 1 | Title | | Sumaiya | 0:15 |
+| 2 | Agenda (the brief's six items) | | Sumaiya | 0:10 |
+| 3 | The problem | 1 Problem & dataset | Sumaiya | 1:00 |
+| 4 | Data: three sources + profile | 1 Problem & dataset | Sumaiya | 1:15 |
+| 5 | Architecture (3 builds) | 2 Architecture & tools | Lynn | 1:00 |
+| 6 | Tools and why | 2 Architecture & tools | Lynn | 1:00 |
+| 7 | Stream path: Kafka | 3 Pipeline | Lynn | 0:50 |
+| 8 | Batch path: Airflow | 3 Pipeline | Lynn | 0:40 |
+| 9 | Warehouse and dbt | 3 Pipeline | Lynn | 0:50 |
+| 10 | Live demo + one command to reproduce | 3 Pipeline | Lynn | 2:30 |
+| 11 | Dashboard overview | 4 Dashboard & insights | Sumaiya | 0:40 |
+| 12–14 | Findings 1, 2–3, 4 | 4 Dashboard & insights | Sumaiya | 1:30 |
+| 15 | Finding 5 | 4 Dashboard & insights | Sumaiya | 0:40 |
+| 16 | Challenges and design decisions | 5 Challenges & lessons | Lynn | 0:50 |
+| 17 | Lessons, limits and the answer | 5 Challenges & lessons | Lynn | 0:30 |
+| 18 | Questions | 6 Questions | both | – |
 
 Rehearse with a timer; if a run goes over 14:00, cut words, not slides.
 
