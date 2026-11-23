@@ -41,33 +41,15 @@ fifteen minutes.
 
 \subsection{Warehouse and transformations}\label{sec:impl-dbt}
 
-dbt organises the SQL in three layers (\cref{tab:schema}): \emph{staging} views over the lake,
+dbt organises the SQL in three layers (\cref{tab:schema} in the appendix): \emph{staging} views over the lake,
 \emph{core} facts and dimensions, and four \emph{marts}, each pre-aggregated for one or more dashboard tiles. The fact tables are
 incremental: each run reloads only the last three days and replaces rows by key. Thirty-five data tests check
 unique and non-null keys, accepted values, and relationships from every key of \texttt{fact\_edit}, and
 from the wiki and article keys of the pageview facts, to their dimensions.
 \Cref{fig:lineage} in the appendix shows how the models depend on each other.
-
-\begin{table}[h]
-  \centering\small
-  \begin{tabularx}{\linewidth}{lX}
-    \toprule
-    Table & Grain \\
-    \midrule
-    \texttt{fact\_edit} & one edit or page creation \\
-    \texttt{fact\_pageviews\_hourly} & hour $\times$ wiki $\times$ article $\times$ access (articles with $\geq$ 10 views) \\
-    \texttt{fact\_wiki\_views\_hourly} & hour $\times$ wiki $\times$ access (all views) \\
-    \texttt{dim\_time}, \texttt{dim\_wiki}, \texttt{dim\_article}, \texttt{dim\_editor\_type} & one UTC hour; one wiki; one article; one editor type \\
-    \texttt{mart\_*} (4) & edits per hour; activity per wiki and day; completeness per hour; attention vs edits per article-hour \\
-    \bottomrule
-  \end{tabularx}
-  \caption{Star schema and marts.}
-  \label{tab:schema}
-\end{table}
-
 \subsection{Reproducibility}\label{sec:impl-repro}
 
-\texttt{docker compose up -d --build} on a fresh clone is the only step: every setting has a default,
+\texttt{docker compose up -d -{}-build} on a fresh clone is the only step: every setting has a default,
 and a one-off bootstrap service loads six bundled hours of real edits and 30 hours of pageviews into the empty lake (never into
 one that already has data), runs the warehouse DAG once through Airflow, and configures Metabase
 through its API. Fresh-clone tests (25 Oct, 20 Nov and 23 Nov, the last with no new problems) found four problems, all fixed: file paths longer than

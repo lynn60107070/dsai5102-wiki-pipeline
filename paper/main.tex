@@ -10,12 +10,18 @@
 \usepackage{rotating}
 \usepackage{booktabs}
 \usepackage{tabularx}
+\usepackage{caption}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage[hidelinks]{hyperref}
 \usepackage[capitalise,noabbrev]{cleveref}
 
 \graphicspath{{figures/}}
+% Let floats share pages with text instead of getting half-empty pages of their own.
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.8}
 \lstset{basicstyle=\ttfamily\small, breaklines=true, frame=single}
 
 % \todo{...} shows open items in red while drafting; remove them all before submitting.

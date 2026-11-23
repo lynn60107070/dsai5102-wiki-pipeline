@@ -6,16 +6,9 @@
 pin the last free build archived by Bitnami. Airflow follows the course lab's major version (2.x) with
 the lighter LocalExecutor, which needs no Redis or Celery workers on a single machine.
 
-% The dashboard is a page tall, so it sits here; section 6 refers to it.
-\begin{figure}[p]
-  \centering
-  \includegraphics[height=0.9\textheight]{06_dashboard.png}
-  \caption{The \emph{Wikipedia edits} dashboard over the analysis window, 28 Oct -- 11 Nov 2026 (UTC),
-    taken on 23 Nov. The live tile is empty because the collector was stopped after the window closed.}
-  \label{fig:dashboard}
-\end{figure}
 
-\begin{table}[!htbp]
+
+\begin{table}[t]
   \centering\small
   \begin{tabular}{lcll}
     \toprule
@@ -31,13 +24,41 @@ the lighter LocalExecutor, which needs no Redis or Celery workers on a single ma
   \label{tab:topics}
 \end{table}
 
-\begin{figure}[!htbp]
+\begin{table}[t]
+  \centering\small
+  \begin{tabularx}{\linewidth}{lX}
+    \toprule
+    Table & Grain \\
+    \midrule
+    \texttt{fact\_edit} & one edit or page creation \\
+    \texttt{fact\_pageviews\_hourly} & hour $\times$ wiki $\times$ article $\times$ access (articles with $\geq$ 10 views) \\
+    \texttt{fact\_wiki\_views\_hourly} & hour $\times$ wiki $\times$ access (all views) \\
+    \texttt{dim\_time}, \texttt{dim\_wiki}, \texttt{dim\_article}, \texttt{dim\_editor\_type} & one UTC hour; one wiki; one article; one editor type \\
+    \texttt{mart\_*} (4) & edits per hour; activity per wiki and day; completeness per hour; attention vs edits per article-hour \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Star schema and marts.}
+  \label{tab:schema}
+\end{table}
+
+\begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{lineage.pdf}
   \caption{dbt lineage, generated from dbt's manifest (\texttt{scripts/lineage\_figure.py}). Dashed:
     views; bold: incremental tables; plain: tables (and the two seeds).}
   \label{fig:lineage}
 \end{figure}
+
+% The dashboard is a page tall, so it sits here; section 6 refers to it.
+\begin{figure}[p]
+  \centering
+  \includegraphics[height=0.9\textheight]{06_dashboard.png}
+  \caption{The \emph{Wikipedia edits} dashboard over the analysis window, 28 Oct -- 11 Nov 2026 (UTC),
+    taken on 23 Nov. The live tile is empty because the collector was stopped after the window closed.}
+  \label{fig:dashboard}
+\end{figure}
+
+
 
 \begin{table}[!htbp]
   \centering\small

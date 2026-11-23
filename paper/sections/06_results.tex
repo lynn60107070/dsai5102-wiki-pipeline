@@ -25,7 +25,7 @@ Spanish, but 81.6\% on Arabic and 99.5\% on Chechen. Chechen Wikipedia is second
 edits, but 65th by human edits; Arabic falls from 5th to 17th (\cref{fig:dashboard-wikis}; tiles \emph{Bot share of edits} and \emph{Top languages on Wikipedia}). Ranking wikis by total edits would send review effort to wikis where
 bots do almost all the work.
 
-\begin{table}[!htbp]
+\begin{figure}[t]
 \centering
 \small
 \begin{tabular}{@{}lrrrr@{}}
@@ -41,14 +41,12 @@ Russian  &   288{,}296   & 36.1\% &  6 &  5 \\
 Afrikaans&   225{,}540   & 98.0\% &  7 & 56 \\
 \bottomrule
 \end{tabular}
-\caption{The seven Wikipedias with the most edits in the analysis window, with their rank among the 347
+\captionof{table}{The seven Wikipedias with the most edits in the analysis window, with their rank among the 347
 Wikipedias by human (registered and logged-out) edits.}
 \label{tab:wiki-ranks}
-\end{table}
-
-\begin{figure}[!htbp]
+\vspace{1.2em}
   \centering
-  \includegraphics[width=0.8\linewidth]{06_dashboard_wikis.png}
+  \includegraphics[width=\linewidth]{06_dashboard_wikis.png}
   \caption{Two dashboard tiles over the analysis window: the bot share of the 15 busiest wikis (left) and
     the Wikipedia languages with the most edits, split into bots and humans (right). Full dashboard:
     \cref{fig:dashboard}.}
