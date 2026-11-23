@@ -241,9 +241,9 @@ long and only unique within a wiki.
 | `mart_edits_hourly` | hour × wiki × editor type | edits over time, bots vs humans |
 | `mart_wiki_activity` | day × wiki (counts only; shares computed after summing) | bot share by wiki, top languages, reverts |
 | `mart_data_completeness` | finished hour | gaps (`is_gap`) and partial hours (< 50% of median) |
-| `mart_attention_vs_edits` | article-hour with ≥ 1,000 views | attention spikes (≥ 5× previous-24 h average, full baseline only) vs edits in the same + next 2 hours |
+| `mart_attention_vs_edits` | article-hour with ≥ 1,000 views | attention spikes (≥ 5× previous-24 h average, full baseline only) vs edits in the same + next 2 hours; `is_content_page` marks articles |
 
-**Tests: 34** data tests, 28 with pageviews off (`dbt build` reports PASS=49 and 38, counting models and seeds; unique and not-null keys, accepted values, and a
+**Tests: 35** data tests, 28 with pageviews off (`dbt build` reports PASS=51 and 39, counting models and seeds; unique and not-null keys, accepted values, and a
 relationship test from every fact key to its dimension). Measured 25 Oct: full build 19 s, incremental
 `fact_edit` 1.3 s instead of 6.5 s; 630,405 edits, 0 duplicates; 396 wikis, 482,975 articles.
 The pageview models were tested on a fixture following the S2 contract (throwaway warehouse, deleted
@@ -278,6 +278,14 @@ read, 5.25M Wikipedia, 193k kept, 754 wiki totals, ~2.2 MB of Parquet, 17 s on a
 + 124 special ones like Commons) into the seed `dim_wiki_names`; `dim_wiki` prefers it over the values
 parsed from server names (e.g. `zh-min-nan` → language code `nan`, "Abstract Wikipedia" → not a
 language Wikipedia).
+
+**Non-article pages (23 Nov):** the pageview dumps count every page, so main pages, `Special:Search` and
+`Wikipedia:` project pages sat in `mart_attention_vs_edits` with huge views and almost no edits. They were
+1,746 of the 2,326 non-spike hours above 20,000 views and made spikes look 3.1× as edited (finding 5
+reversed once they were left out). `ingest/page_namespaces.py` asks each Wikipedia's siteinfo API for its
+namespace names (local, canonical, aliases) and main page → seed `wiki_non_article_titles` (21,246 titles,
+364 Wikipedias); the mart's `is_content_page` is false when a title is a main page or starts with
+`<namespace>:`. Titles like *Ramayana: Part 1* stay articles, since "Ramayana" is no namespace.
 
 Domain codes: no suffix = desktop Wikipedia, `.m` = mobile Wikipedia. Exceptions: `commons`, `meta`,
 `species`, `incubator`, `wikidata`, `foundation` are not Wikipedias even without a suffix, and `commons.m`

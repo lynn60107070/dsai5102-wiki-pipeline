@@ -11,8 +11,8 @@
 ## Where we are (26 Oct)
 
 **The whole pipeline is built and running.** Live edits stream through Kafka into the MinIO lake
-(since 25 Oct 05:58 UTC, no gaps), hourly pageviews are ingested by Airflow (backfilled from 25 Oct),
-dbt builds the star schema every hour with 49 data tests, and Metabase shows the results. A fresh clone
+(since 25 Oct 05:58 UTC; every outage was replayed, so no hour of the window is empty), hourly pageviews are ingested by Airflow (backfilled from 25 Oct),
+dbt builds the star schema every hour with 35 data tests, and Metabase shows the results. A fresh clone
 works with one `docker compose up` (tested). All build tasks (L1–L11, S2, S3) are done; S2 and S3 were
 taken over by Lynn on 26 Oct because they blocked the pipeline.
 
@@ -114,12 +114,12 @@ Owns `docs/diagram/`, `metabase/`, `paper/sections/01`, `02`, `06`, `07`.
 | S6 | ✅ **v1 merged 12 Nov (PR #3)**; in the README and report §3. **Architecture diagram** (draw.io → `docs/diagram/architecture.svg` + `.png` + `.pdf` for the report): stream path, batch path, lake zones, warehouse, serving. Everything it needs is in [docs/design.md](docs/design.md) §3–§5 and the README's text diagram. v1 at CP2, final at CP4 [R: Documentation: "with diagram"] | 2 h | **CP2** / **CP4** |
 | S7 | ✅ **Done, merged 1 Nov (PR #2).** **Tool justification table** for the report: per tool, its job, 1–2 alternatives, why we picked it; stress the ones not covered in class (DuckDB, dbt, Metabase) and the MinIO image problem (design.md §5). Put it in `paper/sections/04_design_choices.tex` where the `\todo` marks it (PR) [R: "explain tools not covered in the course"] | 2 h | **CP2** |
 | S8 | ✅ **PR #6, merged 20 Nov** (Lynn added duplicates, dead-letter and zone sizes). **Data profile** for the report, from the marts over the window: events per day, bot share, duplicates removed, gap/partial hours (`mart_data_completeness`), storage raw vs Parquet → one table in `02_dataset.tex` | 2 h | **CP4** |
-| S9 | ✅ **v1 merged 12 Nov (PR #4)**: 6 tiles + From/To/Project filters, checked on the window data. **Metabase dashboard** "Wikipedia edits". Two tiles exist (live per-minute, edits per hour bots vs humans). Add: (1) bot share by wiki, top 15 (`mart_wiki_activity`); (2) top languages by edits, Wikipedias only; (3) attention vs edits: biggest spikes and their edits (`mart_attention_vs_edits`, `is_spike`); (4) data completeness by hour. Each tile: title + one-line explanation; filters: date range, project. v1 at CP2, final at CP4. When final, add each tile's SQL to `CARDS` in [scripts/metabase_setup.py](scripts/metabase_setup.py) (or send it to Lynn) so a fresh install recreates it [R: Dashboard] | 4 h | **CP2** / **CP4** |
+| S9 | ✅ **v1 merged 12 Nov (PR #4)**: 6 tiles + From/To/Project filters (8 tiles since 23 Nov), checked on the window data. **Metabase dashboard** "Wikipedia edits". Two tiles exist (live per-minute, edits per hour bots vs humans). Add: (1) bot share by wiki, top 15 (`mart_wiki_activity`); (2) top languages by edits, Wikipedias only; (3) attention vs edits: biggest spikes and their edits (`mart_attention_vs_edits`, `is_spike`); (4) data completeness by hour. Each tile: title + one-line explanation; filters: date range, project. v1 at CP2, final at CP4. When final, add each tile's SQL to `CARDS` in [scripts/metabase_setup.py](scripts/metabase_setup.py) (or send it to Lynn) so a fresh install recreates it [R: Dashboard] | 4 h | **CP2** / **CP4** |
 | S10 | ✅ **Five findings in 06, PR #6, merged 20 Nov.** **Insights:** 3–5 findings with numbers from the window (e.g. "X% of edits are bots, but only Y% on arwiki"; "Chechen Wikipedia is #2 by edits: who makes them?"; "articles with an attention spike get N× more edits within 2 hours") | 2 h | **CP4** |
-| S11 | ✅ 01, 02, 07 merged 12 Nov (PR #5); 06, the 02 numbers and the 07 answer merged 20 Nov (PR #6); dashboard screenshot in the appendix. Only the two licence `\todo`s in 02 remain. **Report:** `01_introduction`, `02_dataset` (+ S8 table), `06_results` (dashboard screenshots + S10), `07_discussion` (limitations + extensions). Each file has `\todo` notes on what goes there | 5 h | **CP5** |
+| S11 | ✅ 01, 02, 07 merged 12 Nov (PR #5); 06, the 02 numbers and the 07 answer merged 20 Nov (PR #6); dashboard screenshot in the appendix. The licence `\todo`s in 02 are filled in. **Report:** `01_introduction`, `02_dataset` (+ S8 table), `06_results` (dashboard screenshots + S10), `07_discussion` (limitations + extensions). Each file has `\todo` notes on what goes there | 5 h | **CP5** |
 | S12 | Slides: problem + dataset (~2 min), dashboard + insights (~4 min) | 1.5 h | **CP5** |
 | S13 | ✅ **Done 20 Nov by Lynn** (Windows, project name `wpfresh`, README only): found and fixed the spike tile failing on a fresh install, a red first Airflow run, and the dead MinIO console link (commit 2c66219). **Fresh-clone test** on her Mac following only the README; log every step that was unclear | 1 h | **CP6** |
-| S14 | ✅ **On main 20 Nov** ([docs/qa.md](docs/qa.md)): Sumaiya's 18 questions + 2 added by Lynn (data checks, no MinIO console), numbers filled in. Q&A prep sheet: ~15 likely questions with short answers (start from the list in [docs/demo.md](docs/demo.md)) | 1.5 h | **CP6** |
+| S14 | ✅ **On main 20 Nov** ([docs/qa.md](docs/qa.md)): Sumaiya's 18 questions + 2 added by Lynn (data checks, no MinIO console), numbers filled in; 45 after the mock reviews of 23 Nov. Q&A prep sheet: ~15 likely questions with short answers (start from the list in [docs/demo.md](docs/demo.md)) | 1.5 h | **CP6** |
 
 ### Lynn (lead): architecture, all pipeline code, integration, report assembly
 Owns everything else: `docker-compose.yml`, `stream/`, `ingest/`, `airflow/`, `dbt/`, `scripts/`, `postgres/`, `sample/`, `tests/`, `README.md`, `docs/design.md`, `paper/main.tex` + `paper/sections/03`–`05` (+ the Overleaf project).
@@ -127,7 +127,7 @@ Owns everything else: `docker-compose.yml`, `stream/`, `ingest/`, `airflow/`, `d
 | ID | Task | Status / effort | Due |
 |---|---|---|---|
 | L1–L2 | Repo + layout; collector live since 25 Oct 05:58 UTC | ✅ 25 Oct | |
-| L4–L9 | MinIO lake; Airflow; dbt thin slice; stream processor + consumer group + live tile; star schema (49 tests); `warehouse_hourly` DAG | ✅ 25 Oct | |
+| L4–L9 | MinIO lake; Airflow; dbt thin slice; stream processor + consumer group + live tile; star schema with data tests; `warehouse_hourly` DAG | ✅ 25 Oct | |
 | L10–L11 | One-command setup + sample mode (fresh-clone tested); README v1 | ✅ 25 Oct | |
 | S2, S3 | Pageview ingestion (verified against the Pageview API) + wiki names seed; pageviews switched on and backfilled | ✅ 26 Oct | |
 | L16 | Paper skeleton + Overleaf project | ✅ 25 Oct | |

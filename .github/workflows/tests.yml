@@ -1,4 +1,4 @@
-# Runs on every push and pull request: the 40 unit tests (stream, pageviews, Metabase setup) and a check
+# Runs on every push and pull request: the 41 unit tests (stream, pageviews, Metabase setup) and a check
 # that docker-compose.yml is valid with no .env file, as on a fresh clone. No services are started.
 name: tests
 

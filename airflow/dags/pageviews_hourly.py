@@ -4,19 +4,23 @@ One run per UTC hour since 25 Oct 2026 05:00 (the first hour of edit data), so c
 
     wait_for_file -> fetch -> upload -> cleanup
 
-wait_for_file  waits until Wikimedia has published the hour's file (it appears with some delay)
+wait_for_file  waits until Wikimedia has published the hour's file (it appears with some delay); a
+               network error counts as "not yet", so a laptop that is briefly offline doesn't fail the hour
 fetch          ingest.pageviews.fetch_hour (Sumaiya, S2): download, keep Wikipedia rows, write
                articles.parquet (>= 10 views) + wiki_totals.parquet (docs/design.md section 7)
 upload         both files to s3://lake/raw/pageviews/dt=YYYY-MM-DD/hour=HH/ via the `minio_lake` connection;
                updates the Dataset s3://lake/raw/pageviews, which triggers warehouse_hourly
-cleanup        removes the local copies, even if an earlier step failed
+cleanup        removes the local copies, even if an earlier step failed. It is a teardown task, so it
+               doesn't decide the run's state: if upload never succeeds, the run is failed (red), not
+               green. Until 23 Nov it was a plain all_done task, so 13 failed hours of the window
+               showed as green runs and were never retried (report section 2).
 
 Re-running an hour overwrites the same two objects, so retries and backfills are safe (idempotent).
 
 Hour alignment: a file named ...-HH0000.gz holds the hour ENDING at HH (verified against the Pageview
 API, see ingest/pageviews.py), so the run for interval [HH:00, HH+1:00) fetches the file named HH+1.
-The DAG is paused when first created; unpause it in the UI once S2 is merged (and set
-`pageviews_enabled: true` in dbt/dbt_project.yml so the warehouse picks the files up).
+To reload a failed hour, clear its run in the UI (Browse -> DAG Runs). The DAG is paused when first
+created; bootstrap leaves it paused, because unpausing it backfills every hour since 25 Oct.
 """
 import os
 import shutil
@@ -25,7 +29,7 @@ from pathlib import Path
 
 import requests
 from airflow.datasets import Dataset
-from airflow.decorators import dag, task
+from airflow.decorators import dag, task, teardown
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.sensors.base import PokeReturnValue
 
@@ -62,8 +66,11 @@ def pageviews_hourly():
 
         hour = _file_hour(data_interval_start)
         url = file_url(hour.date(), hour.hour)
-        response = requests.head(url, timeout=30, allow_redirects=True,
-                                 headers={"User-Agent": os.environ.get("WIKI_USER_AGENT", "")})
+        try:
+            response = requests.head(url, timeout=30, allow_redirects=True,
+                                     headers={"User-Agent": os.environ.get("WIKI_USER_AGENT", "")})
+        except requests.RequestException:  # offline for a moment: poke again later
+            return PokeReturnValue(is_done=False)
         return PokeReturnValue(is_done=response.status_code == 200, xcom_value=url)
 
     @task
@@ -85,7 +92,7 @@ def pageviews_hourly():
             keys.append(key)
         return keys
 
-    @task(trigger_rule="all_done")
+    @teardown  # runs even if an earlier step failed, and doesn't decide the run's state
     def cleanup(data_interval_start=None):
         shutil.rmtree(_staging_dir(data_interval_start), ignore_errors=True)
 

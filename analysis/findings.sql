@@ -79,10 +79,13 @@ from by_hour;
 
 -- Finding 5: attention spikes and the edits that follow ----------------------------------------------
 -- Spike: >= 1,000 views in the hour and >= 5x the previous 24-hour average (is_spike in the mart).
--- Comparison group: article-hours in the same view range that are not spikes.
+-- Comparison group: article-hours in the same view range that are not spikes ("steadily popular").
+-- Articles only (is_content_page): main pages, Special:Search, Wikipedia: pages etc. get huge views and
+-- almost no edits; left in, they made up 1,746 of the 2,326 non-spike hours above 20,000 views and made
+-- spikes look 3.1x as edited (fixed 23 Nov, seed wiki_non_article_titles).
 with a as (
     select * from mart_attention_vs_edits
-    where hour_ts >= '2026-10-28' and hour_ts < '2026-11-12'
+    where hour_ts >= '2026-10-28' and hour_ts < '2026-11-12' and is_content_page
 )
 select count(*) filter (where is_spike)                                               as spikes,
        round(100.0 * avg((edits_same_hour + edits_next_2h = 0)::int) filter (where is_spike), 1)
@@ -91,21 +94,24 @@ select count(*) filter (where is_spike)                                         
        round(avg(edits_next_2h) filter (where not is_spike)::numeric, 2)             as other_edits_next_2h
 from a;
 
-with a as (
-    select * from mart_attention_vs_edits
-    where hour_ts >= '2026-10-28' and hour_ts < '2026-11-12' and views > 20000
-)
-select count(*) filter (where is_spike)                                               as spikes_over_20k,
+-- Finding 5 (cont.): share with an edit in the next 2 hours, by views in the hour (the dashboard tile)
+select case when views >= 20000 then '3. 20,000+' when views >= 5000 then '2. 5,000-20,000'
+            else '1. 1,000-5,000' end                                                as views_in_hour,
+       count(*) filter (where is_spike)                                               as spikes,
+       count(*) filter (where not is_spike)                                           as others,
+       round(100.0 * avg((edits_next_2h > 0)::int) filter (where is_spike), 1)       as pct_spikes_with_edit,
+       round(100.0 * avg((edits_next_2h > 0)::int) filter (where not is_spike), 1)   as pct_others_with_edit,
        round(avg(edits_next_2h) filter (where is_spike)::numeric, 2)                 as spike_edits_next_2h,
        round(avg(edits_next_2h) filter (where not is_spike)::numeric, 2)             as other_edits_next_2h,
-       round(100.0 * avg((edits_next_2h > 0)::int) filter (where is_spike), 1)       as pct_spikes_with_edit,
-       round(100.0 * avg((edits_next_2h > 0)::int) filter (where not is_spike), 1)   as pct_other_with_edit
-from a;
+       count(distinct article_key) filter (where not is_spike)                       as other_articles
+from mart_attention_vs_edits
+where hour_ts >= '2026-10-28' and hour_ts < '2026-11-12' and has_full_baseline and is_content_page
+group by 1 order by 1;
 
 -- Finding 5 (cont.): spikes per wiki, and the largest surge (2026 Krakow shooting, 7 Nov)
 select wiki_id, count(*) as spikes
 from mart_attention_vs_edits
-where is_spike and hour_ts >= '2026-10-28' and hour_ts < '2026-11-12'
+where is_spike and is_content_page and hour_ts >= '2026-10-28' and hour_ts < '2026-11-12'
 group by wiki_id order by spikes desc limit 3;
 
 select hour_ts, views, prev_24h_avg_views, is_spike, edits_same_hour, edits_next_2h

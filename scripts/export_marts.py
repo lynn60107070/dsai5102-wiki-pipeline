@@ -1,8 +1,9 @@
 """Copy every table in the warehouse's `marts` schema into the Postgres `serving` database.
 
 DuckDB computes, Postgres serves: DuckDB allows only one writer, so Metabase never opens the warehouse
-file; it reads these copies instead, through a read-only user. Each table is replaced inside one
-transaction, so Metabase never sees a half-copied table.
+file; it reads these copies instead, through a read-only user. All tables are replaced inside one
+transaction, so Metabase never sees a half-copied table or tables from two different builds (readers of a
+table wait the few seconds until the commit).
 
 Run (inside Airflow, with dbt's Python): /opt/airflow/dbt-venv/bin/python /opt/airflow/project/scripts/export_marts.py
 """
@@ -25,11 +26,12 @@ def main():
     tables = [row[0] for row in con.execute(
         "select table_name from information_schema.tables "
         "where table_catalog = 'wh' and table_schema = 'marts' order by 1").fetchall()]
+    con.execute("BEGIN")
     for table in tables:
-        con.execute("BEGIN")
         con.execute(f"DROP TABLE IF EXISTS serving.public.{table}")
         con.execute(f"CREATE TABLE serving.public.{table} AS SELECT * FROM wh.marts.{table}")
-        con.execute("COMMIT")
+    con.execute("COMMIT")
+    for table in tables:
         rows = con.execute(f"SELECT count(*) FROM serving.public.{table}").fetchone()[0]
         print(f"exported marts.{table} -> serving.public.{table} ({rows:,} rows)")
 

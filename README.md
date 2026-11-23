@@ -62,7 +62,7 @@ Wikimedia EventStreams ─► producer ─► [wiki.raw] ─┬─► raw-sink �
                        ┌──────────────────────────── batch (Airflow) ───────────────────────────────────────────────────┐  │
 pageview dumps (hourly) ─► pageviews_hourly: wait → fetch → upload ─► lake: raw/pageviews ── Dataset ─┐                  │  │
                           warehouse_hourly (hourly + on new pageviews):                               ▼                  │  │
-                            compact clean zone → dbt build (DuckDB star schema + 34 tests) → export ─► Postgres serving ─┼──┤
+                            compact clean zone → dbt build (DuckDB star schema + 35 tests) → export ─► Postgres serving ─┼──┤
                                                                                                                           ▼  ▼
                                                                                               Metabase (read-only user)
 ```
@@ -110,7 +110,7 @@ with an empty stretch between them; that is expected.
 
 ```
 docker-compose.yml   all services          stream/     producer, processor, sinks, status (Python)
-airflow/             DAGs + image (dbt)     ingest/     pageview download (batch source)
+airflow/             DAGs + image (dbt)     ingest/     pageviews (batch), wiki names + namespaces (seeds)
 dbt/                 models, seeds, tests   scripts/    bootstrap, export, compaction, Metabase setup, checks
 postgres/init/       databases + roles      sample/     6 hours of real data for a fresh install
 tests/               unit tests             docs/       design log + diagram       paper/   report (LaTeX)
@@ -149,16 +149,16 @@ docker compose exec airflow-scheduler /opt/airflow/dbt-venv/bin/python /opt/airf
 ```bash
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python -m unittest -v                                  # 40 unit tests, no Docker needed
+python -m unittest -v                                  # 41 unit tests, no Docker needed
 ```
 GitHub Actions runs the same tests, and checks that `docker-compose.yml` is valid without a `.env`, on
 every push ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
-Data tests (34) run inside every `dbt build`.
+Data tests (35) run inside every `dbt build`.
 
 ## Data sources
 
 - Wikimedia EventStreams `recentchange`: https://stream.wikimedia.org
 - Wikipedia pageview dumps: https://dumps.wikimedia.org/other/pageviews/
-- Wikimedia sitematrix API (wiki and language names)
+- Wikimedia sitematrix API (wiki and language names) and each Wikipedia's siteinfo API (namespaces, main page)
 
 Licences for each source are confirmed and cited in the report. Team workflow: [CONTRIBUTING.md](CONTRIBUTING.md).

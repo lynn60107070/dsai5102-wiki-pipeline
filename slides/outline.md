@@ -134,7 +134,7 @@ play the backup video (L14) without apologising.
 ### 5. Dashboard overview (0:40)
 - **On slide:** the dashboard screenshot (`paper/figures/06_dashboard.png`), the 8 tiles labelled:
   live edits per minute · edits per hour (bots vs humans) · bot share of the 15 busiest wikis · top
-  Wikipedia languages (bots vs humans) · edits by hour of day · spikes vs other busy articles · the
+  Wikipedia languages (bots vs humans) · edits by hour of day · spikes vs steadily popular articles · the
   largest spikes and the edits that follow · data completeness.
   Callout: From / To filter every warehouse tile; Project filters the two all-wiki tiles.
 - **Say:** each tile maps to one part of the question; each has a title and a one-line explanation.
@@ -155,16 +155,20 @@ play the backup video (L14) without apologising.
 - **On slide:**
   4. **Humans follow the clock, bots don't:** human peak 17:00 UTC is 2.1× the 04:00 low; 13:00–18:00
      carries 30.8% of the day → the European afternoon and American morning.
-  5. **Most attention spikes bring no edits; very large ones do:** 77.6% of 24,325 spikes get no edit in
-     the spike hour or the two hours after; above 20,000 views, spikes get **3.1×** the edits of
-     non-spike article-hours above 20,000 views. Example: *2026 Kraków shooting*, 203 edits in two hours.
-- **Finding 5 as a chart, not text:** two bars, "spikes above 20k views: 57% got ≥ 1 edit in the next
-  2 h (n = 346)" against "non-spike article-hours above 20k views: 22%". The same comparison is the
-  dashboard tile *Do attention spikes bring edits?* (all three view bands).
-- **Say:** so an alert should watch only the biggest spikes. **Handover line.**
-- **Trap:** "Is 3.1× significant?" → descriptive over the whole window (346 spikes); no significance test,
-  and consecutive hours of one story aren't independent. The comparison group is article-hours above
-  20,000 views that are not spikes (Q&A 34). Queries: `analysis/findings.sql`.
+  5. **Attention spikes are not an early sign of edit surges:** 77.5% of 24,234 spikes get no edit in
+     the spike hour or the two hours after, and at every level of views a spike is followed by an edit
+     *less* often than a steadily popular article. Big news still can: *2026 Kraków shooting*, 203 edits
+     in two hours.
+- **Finding 5 as a chart, not text:** the dashboard tile *Do attention spikes bring edits?*: three view
+  bands, spikes vs steadily popular articles, share with ≥ 1 edit in the next 2 h: 14% vs 20%, 32% vs
+  48%, **57% vs 84%** (above 20k views: 346 spikes vs 580 hours of 39 articles). Articles only.
+- **Say:** so an alert on jumps in views alone would mostly point at articles nobody then edits.
+  **Handover line.**
+- **Trap 1:** "What's in the comparison group?" → articles only; main pages and *Special:Search* were in
+  it at first and made spikes look 3× as edited: we caught it and the finding reversed (Q&A 41).
+- **Trap 2:** "Is it significant?" → descriptive; no significance test, consecutive hours of one story
+  aren't independent, and only 39 articles above 20k; but the direction holds in all three bands (Q&A
+  34). Queries: `analysis/findings.sql`.
 
 ---
 
@@ -219,7 +223,7 @@ play the backup video (L14) without apologising.
   `fact_wiki_views_hourly`; dims time, wiki, article, editor type; 4 marts (one per tile). Next to it,
   the dbt lineage (`paper/figures/lineage.png`): staging → core → marts.
 - **Say:** grain stated per table; incremental facts reload only the last 3 days; marts store counts,
-  not shares, so any date range sums correctly; **34 data tests gate the export**: if one fails, the
+  not shares, so any date range sums correctly; **35 data tests gate the export**: if one fails, the
   dashboard keeps the last good data (happened 4 times on 8–10 Nov).
 - **Instructor listens for:** schema *justified* and optimised for the queries, transformations that
   scale and produce clean data.
@@ -248,6 +252,8 @@ play the backup video (L14) without apologising.
   - sinks killed mid-backlog → 381,066 duplicates → compaction + 60 s graceful shutdown
   - Docker disk grew to 351 GB, warehouse writes lost → every lake file checked, warehouse rebuilt from
     the lake (why the raw zone exists)
+  - (optional, if time) analysis check: main pages in finding 5's comparison group reversed the result →
+    namespace seed from each wiki's API; Airflow runs that hid failed hours → teardown task
 - **Instructor listens for:** honest problems and *design decisions that came from them*.
 
 ### 16. Lessons, limits and conclusion (0:30)
@@ -255,14 +261,14 @@ play the backup video (L14) without apologising.
   - **Limits / next:** one laptop collects (→ a server), one Kafka broker (→ more), bot flag is an
     estimate, 15 days only.
   - **Answer:** about half the edits are bots; rank wikis by human edits; human pressure peaks
-    13:00–18:00 UTC; only the biggest attention spikes warn of edit surges.
+    13:00–18:00 UTC; jumps in readers are not an early sign of edit surges.
 - **Say:** close on the question from slide 2.
 
 ### 17. Questions
 - **On slide:** "Questions?" + repo link. Keep the architecture diagram one click away (backup slide).
 - **Who answers:** the person whose block it is; the other adds only if asked. Both know everything in
   docs/qa.md. Expect the grader to ask Sumaiya a pipeline question on purpose: she should be ready for
-  Q&A 23, 24 and 31, and Lynn for 21, 22 and 34.
+  Q&A 23, 24, 31, 41 and 45, and Lynn for 21, 22, 34, 42 and 43.
 
 ---
 

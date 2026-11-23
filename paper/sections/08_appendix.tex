@@ -35,7 +35,7 @@ the lighter LocalExecutor, which needs no Redis or Celery workers on a single ma
   \centering
   \includegraphics[width=\linewidth]{lineage.pdf}
   \caption{dbt lineage, generated from dbt's manifest (\texttt{scripts/lineage\_figure.py}). Dashed:
-    views; bold: incremental tables; plain: tables (and the \texttt{dim\_wiki\_names} seed).}
+    views; bold: incremental tables; plain: tables (and the two seeds).}
   \label{fig:lineage}
 \end{figure}
 
@@ -67,8 +67,16 @@ the lighter LocalExecutor, which needs no Redis or Celery workers on a single ma
     9--12 Nov & Hourly rebuilds grew Docker's disk file to 351\,GB (46\,GB in use), and its file system
       recorded errors; some writes to the warehouse file were lost & Checked every lake file against its
       event count (all intact), repaired and shrank the disk, rebuilt the warehouse from the lake \\
+    28 Oct -- 11 Nov & 13 pageview hours failed while the laptop was offline. The clean-up step ran last
+      and succeeded, so Airflow showed the runs as green and never retried them (found 23 Nov) & Clean-up
+      is now a teardown task, so a failed hour shows red, and a network error counts as ``not yet
+      published''. The 13 hours were not reloaded, so the window stays as analysed \\
+    23 Nov & Main pages, \emph{Special:Search} and project pages made up 1{,}746 of the 2{,}326 non-spike
+      hours above 20{,}000 views; they are almost never edited, so spikes looked three times as edited
+      & A seed of each wiki's namespaces and main page (from its API) marks non-article titles; finding 5
+      reversed \\
     \bottomrule
   \end{tabularx}
-  \caption{Collector and warehouse incidents during the window.}
+  \caption{Collector, warehouse and analysis incidents.}
   \label{tab:incidents}
 \end{table}

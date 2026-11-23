@@ -6,7 +6,7 @@
 The Metabase dashboard \emph{Wikipedia edits} answers the question with eight tiles
 (\cref{fig:dashboard} in the appendix): live edits per minute, edits per hour and per hour of day by bots and humans,
 the bot share of the 15 busiest wikis, the top Wikipedia languages split into bots and humans, the share of
-spikes followed by edits against other busy articles, the largest spikes, and data completeness per hour. Each tile has a title and a one-line explanation;
+spikes followed by edits against steadily popular articles, the largest spikes, and data completeness per hour. Each tile has a title and a one-line explanation;
 the \emph{From} and \emph{To} filters apply to every warehouse tile and the \emph{Project} filter to the two
 tiles over all wikis. Over the window (28 Oct -- 11 Nov 2026, UTC), 8{,}479{,}562 of the 25{,}093{,}717
 edits on 771 wikis (\cref{tab:profile}) were on 347 Wikipedias. We report five findings; the queries behind
@@ -65,13 +65,15 @@ to 18:00 UTC carry 30.8\% of the day's human edits. Bot edits vary by a factor o
 (tile \emph{Wikipedia edits by hour of day}). The human workload for patrollers therefore peaks between
 13:00 and 18:00 UTC, the European afternoon and the American morning.
 
-\paragraph{5. Most attention spikes are not followed by edits; very large ones are.} The window has
-24{,}325 attention spikes (\cref{sec:data}), mostly on English (10{,}738), Japanese (3{,}768) and German
-(2{,}677) Wikipedia. 77.6\% of them have no edit in the spike hour or the two hours after it. Overall,
-spiking articles get about as many edits in the next two hours as other articles with at least 1{,}000
-views in the hour (0.64 against 0.61 on average). The difference appears only for the largest spikes:
-above 20{,}000 views, the 346 spikes got 5.5 edits in the next two hours against 1.8 for other article-hours
-above 20{,}000 views that are not spikes, 3.1 times as many, and 57\% of them got at least one edit, against 22\% (tile \emph{Do attention spikes bring edits?}). The largest
-surge followed breaking news: \emph{2026 Kraków shooting} on English Wikipedia went from about 45 views an
+\paragraph{5. Attention spikes are not an early sign of edit surges.} The window has 24{,}234
+attention spikes on articles (\cref{sec:data}), mostly on English (10{,}719), Japanese (3{,}767) and German
+(2{,}670) Wikipedia. 77.5\% of them have no edit in the spike hour or the two hours after it. Compared
+with article-hours that have as many views but no jump (steadily popular articles), spikes are followed
+by an edit in the next two hours \emph{less} often at every level of views: 14\%
+against 20\% of hours at 1{,}000--5{,}000 views, 32\% against 48\% at 5{,}000--20{,}000, and 57\% against
+84\% above 20{,}000 (346 spikes against 580 hours of 39 articles; tile \emph{Do attention spikes bring
+edits?}). Main pages and non-article pages such as \emph{Special:Search} are left out: they get huge
+views and almost no edits, and kept in, they had wrongly made spikes look three times as edited
+(\cref{tab:incidents}). Big news can still bring a burst of edits: \emph{2026 Kraków shooting} on English Wikipedia went from about 45 views an
 hour to thousands on 7 Nov and got 203 edits in the two hours after 16:00 UTC (tile \emph{Reader attention
-spikes and the edits that follow}).
+spikes and the edits that follow}), but a jump in readers alone is a weak sign of edits.

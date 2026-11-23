@@ -1,7 +1,7 @@
 import re
 import unittest
 
-from scripts.metabase_setup import CARDS, FILTERS, dashboard_body, parameter_mappings, template_tags
+from scripts.metabase_setup import CARDS, FILTERS, NOTE_KEY, dashboard_body, parameter_mappings, template_tags
 
 TAG = re.compile(r"\{\{\s*(\w+)\s*\}\}")
 
@@ -106,6 +106,15 @@ class DashboardBodyTest(unittest.TestCase):
         first = dict(copy, id=8, row=0)
         ids = {d["id"] for d in dashboard_body([first, copy], CARD_IDS, [])["dashcards"]}
         self.assertTrue({8, 9} <= ids)
+
+    def test_the_note_of_a_renamed_or_removed_chart_is_dropped(self):
+        first = dashboard_body([], CARD_IDS, [])["dashcards"]
+        saved = [dict(d, id=500 + n) for n, d in enumerate(first)]
+        old = dict(saved[0], id=999, visualization_settings=dict(saved[0]["visualization_settings"]))
+        old["visualization_settings"][NOTE_KEY] = "A chart that no longer exists"
+        ids = {d["id"] for d in dashboard_body(saved + [old], CARD_IDS, [])["dashcards"]}
+        self.assertNotIn(999, ids)
+        self.assertEqual(ids, {d["id"] for d in saved})
 
     def test_a_hand_added_filter_survives(self):
         mine = {"id": "my_filter", "name": "Mine", "slug": "mine", "type": "string/="}

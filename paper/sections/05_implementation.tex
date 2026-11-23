@@ -33,7 +33,7 @@ the event count in its name, and the warehouse holds exactly the clean zone's 25
 
 \texttt{pageviews\_hourly} runs one task chain per UTC hour: a sensor waits until the file is
 published, the pageview script filters it (\cref{sec:data}), the upload writes two Parquet files to
-the lake, and a clean-up step removes local copies even after a failure. Re-running an hour overwrites
+the lake, and a clean-up \emph{teardown} task removes local copies even after a failure. Re-running an hour overwrites
 the same objects, so retries and backfills are safe. The upload updates an Airflow \emph{Dataset};
 \texttt{warehouse\_hourly} is scheduled on that Dataset \emph{or} hourly, so the two DAGs coordinate
 without calling each other. A separate freshness check turns red when the stream has not written for
@@ -43,7 +43,7 @@ fifteen minutes.
 
 dbt organises the SQL in three layers (\cref{tab:schema}): \emph{staging} views over the lake,
 \emph{core} facts and dimensions, and \emph{marts}, one per dashboard tile. The fact tables are
-incremental: each run reloads only the last three days and replaces rows by key. Thirty-four data tests check
+incremental: each run reloads only the last three days and replaces rows by key. Thirty-five data tests check
 unique and non-null keys, accepted values, and relationships from every key of \texttt{fact\_edit}, and
 from the wiki and article keys of the pageview facts, to their dimensions.
 \Cref{fig:lineage} in the appendix shows how the models depend on each other.

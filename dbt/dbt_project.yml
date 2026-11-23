@@ -45,3 +45,8 @@ seeds:
         project_family: varchar
         site_url: varchar
         is_arabic: boolean
+    wiki_non_article_titles:
+      +column_types:
+        wiki_id: varchar
+        kind: varchar
+        name: varchar

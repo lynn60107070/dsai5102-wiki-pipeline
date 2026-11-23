@@ -30,7 +30,10 @@ models:
   - name: mart_attention_vs_edits
     description: >
       Article-hours with >= 1,000 views, with the previous 24-hour baseline, a spike flag, and edits in
-      the same hour and the 2 hours after. Tile - do attention spikes cause edit surges?
+      the same hour and the 2 hours after. Tile - do attention spikes bring edits?
     columns:
       - name: hour_ts
+        data_tests: [not_null]
+      - name: is_content_page
+        description: False for main pages and non-article namespaces (seed wiki_non_article_titles).
         data_tests: [not_null]

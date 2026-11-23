@@ -8,9 +8,9 @@ so raw edit counts overstate what patrollers see in their default review list by
 the language: once bot edits are removed, Chechen Wikipedia drops from 2nd to 65th place and Arabic from
 5th to 17th, while English Wikipedia alone carries 40.9\% of human Wikipedia edits and ten editions carry
 three quarters. Human pressure also has a clear daily peak, 13:00--18:00 UTC. Finally,
-reader attention is followed by edit surges only for the largest, news-driven spikes: most spikes
-(77.6\%) bring no edits at all, but spikes above 20{,}000 views bring 3.1 times as many edits as
-non-spike article-hours above 20{,}000 views (\cref{sec:results}).
+spikes in reader attention are not an early sign of edit surges: most (77.5\%) bring no edits at all,
+and at every level of views a spike is followed by an edit less often than an article that is steadily
+popular (57\% against 84\% of hours above 20{,}000 views, \cref{sec:results}).
 
 \paragraph{Limitations.} The results come with six limits.
 \begin{itemize}
@@ -29,6 +29,7 @@ non-spike article-hours above 20{,}000 views (\cref{sec:results}).
     edit surge does not show that readers caused the edits: a news event can drive both. A spike also
     needs at least 1{,}000 views in the hour, so smaller articles cannot register one. Hours with no pageview file count as zero views in the
     24-hour baseline, so a spike within 24 hours after one of the 13 missing hours is slightly overstated.
+    Finding 5 is descriptive, with no significance test, and above 20{,}000 views compares with only 39 articles.
   \item \textbf{Built for one laptop's volume.} The marts are rebuilt in full every hour, and the live
     per-minute counts are approximate: open minutes are held in memory, so a processor restart can drop
     or repeat part of a minute. Larger volumes would need incremental marts and checkpointed stream
@@ -51,7 +52,7 @@ non-spike article-hours above 20{,}000 views (\cref{sec:results}).
 \paragraph{Conclusion.} Editing pressure on Wikipedia is concentrated in a few large language editions
 and in the hours 13:00--18:00 UTC, and about half of the raw edit volume is bot work that is hidden from
 patrollers' default review list; ranking wikis by human edits rather than total edits gives a truer picture of where
-review effort is needed. Attention spikes are an early sign of edit surges only when they are very large,
-so an alert would have to watch for the biggest spikes rather than any jump in views. The pipeline itself
+review effort is needed. A jump in readers is not an early sign of edit surges: 77.5\% of
+spikes get no edit within three hours, so an alert on views alone would mostly point at articles left alone. The pipeline itself
 collected the whole window on one laptop, combined a live stream with hourly batch files in one tested
 star schema, and serves the answer on a dashboard that anyone can rebuild with one command.

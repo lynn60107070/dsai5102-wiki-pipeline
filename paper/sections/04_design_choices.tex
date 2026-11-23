@@ -73,8 +73,8 @@ to run) and Looker Studio (cloud only); its API lets a script rebuild every tile
 \paragraph{Stream and batch.} Edits are a genuine event stream: they arrive continuously and cannot be
 re-downloaded later, so they go through Kafka, which buffers them durably and lets several consumers
 read the same events independently (the raw archive, the processor). Pageviews are published by
-Wikimedia as hourly files that stay available, so a scheduled batch job is the natural fit; it can
-also backfill missed hours automatically.
+Wikimedia as hourly files that stay available, so a scheduled batch job is the natural fit; after downtime
+Airflow catches up on the scheduled hours by itself, and a failed hour can be run again.
 
 \paragraph{Lake zones (ELT).} The raw zone keeps every event exactly as received (schema-on-read), so
 any later cleaning mistake can be redone from it. The clean zone holds validated, typed, privacy-safe

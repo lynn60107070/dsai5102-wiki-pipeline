@@ -1,7 +1,7 @@
 # Q&A prep sheet (S14)
 
-40 questions the instructor or other students are most likely to ask, grouped by the rubric row each one
-tests. Questions 21–40 are the hard ones from two rounds of a strict mock review (23 Nov): several expose real
+45 questions the instructor or other students are most likely to ask, grouped by the rubric row each one
+tests. Questions 21–45 are the hard ones from three rounds of a strict mock review (23 Nov): several expose real
 weaknesses, and the answers say how to admit them honestly. The first sentence of each answer *is* the answer; say the rest only if they follow up (about 20–30
 seconds each). Both of us should be able to give every answer. All numbers are from the analysis window,
 28 Oct – 11 Nov 2026 (UTC), as in the report.
@@ -26,9 +26,9 @@ drive both, so we can show timing but not cause.
   the top 10 of 347 Wikipedias have 74.2%. Ranking by total edits misleads: Chechen Wikipedia is #2 by
   edits but #65 by human edits (99.5% bots). Humans peak at 17:00 UTC, 2.1× the 04:00 low (13:00–18:00 UTC: the European afternoon and American
   morning).
-- Attention spikes: most are *not* followed by edits (77.6% of 24,325 get none). Only the largest ones
-  are: above 20,000 views, spikes get 3.1× the edits of non-spike article-hours above 20,000 views in the next
-  two hours (57% get at least one edit, against 22%). Every number in section 6: `analysis/findings.sql`.
+- Attention spikes are *not* an early sign of edit surges: 77.5% of 24,234 spikes get no edit, and at
+  every level of views a spike is followed by an edit less often than a steadily popular article (above
+  20,000 views: 57% against 84% within two hours). Every number in section 6: `analysis/findings.sql`.
 
 ---
 
@@ -106,7 +106,7 @@ copies through a read-only user.
 
 **15. Why dbt and not plain SQL scripts or Spark?**
 dbt keeps the SQL under version control, works out the build order from the model dependencies, and runs
-34 data tests on every build. If any test fails, the export doesn't run, so the dashboard never shows bad
+35 data tests on every build. If any test fails, the export doesn't run, so the dashboard never shows bad
 numbers; that happened four times on 8–10 Nov. Spark would need a cluster for data this size.
 
 ---
@@ -238,15 +238,17 @@ marts in Postgres; it reproduces them exactly. Findings 1, 2, 4 and 5 can also b
 
 **33. Finding 5 answers part 3 of the question. Where on the dashboard does a patroller see it?**
 On the tile *Do attention spikes bring edits?*: the share of article-hours with at least one edit in
-the next two hours, by views in the hour, spikes against other article-hours. Below 20,000 views spikes
-do no better (14% vs 18%, 32% vs 33%); above it, 57% vs 22%. The table tile under it lists the largest
-spikes and the edits after them.
+the next two hours, by views in the hour, spikes against steadily popular articles. Spikes are lower in
+every band: 14% vs 20%, 32% vs 48%, 57% vs 84%. The table tile under it lists the largest spikes and the
+edits after them, so a patroller can still see the big news stories.
 
-**34. What is your comparison group, and is 3.1× more than noise?**
-Article-hours above 20,000 views that are *not* spikes (under 5× their previous 24-hour average). It's
-descriptive: 346 spikes over 15 days, no significance test, and the same story often spikes several hours
-in a row, so the observations aren't independent; a news event can also drive both views and edits. The
-next step would be a matched comparison with confidence intervals.
+**34. What is your comparison group, and is the difference more than noise?**
+Article-hours with as many views that are *not* spikes (under 5× their previous 24-hour average), on
+articles only. It's descriptive: no significance test, and the same story often spikes several hours in a
+row, so the observations aren't independent. Above 20,000 views the comparison group is only 39 articles
+(580 hours), so a few long-running stories dominate it. But the direction is the same in all three view
+bands, including 1,000–5,000 views with 21,472 spikes and 64,746 other hours, so it isn't a small-sample
+accident. The next step would be a matched comparison with confidence intervals.
 
 **35. How sound is the spike baseline? Hours under 10 views and hours with no pageview file both count
 as zero.**
@@ -286,3 +288,38 @@ only stops repeats of the same send, not a second delivery from the source. Remo
 and safe (compaction per hour, then by `event_id` in dbt), and the raw zone is meant to record what we
 received. The cost is about 2.3 GB of extra compressed JSON (30% of the 7.52 GB raw zone); if storage mattered, tracking the last id per
 gap would cut it.
+
+## Third review round (23 Nov)
+
+**41. What pages were in your comparison group, and why did finding 5 change?** *(Sumaiya)*
+Our first comparison kept every page in the pageview files. Above 20,000 views, 1,746 of the 2,326
+non-spike hours were main pages, *Special:Search* and *Wikipedia:* project pages, which get huge views and
+are almost never edited (0.9% of those hours had an edit). That made spikes look three times as edited.
+We now ask each Wikipedia's own API for its namespaces and main page (a dbt seed) and keep articles only;
+then steadily popular articles are edited *more* often than spiking ones (84% vs 57% of hours). The
+mistake and the fix are in the report's incident table.
+
+**42. Every `pageviews_hourly` run is green, yet 13 hours are missing. How? Why not reload them?** *(Lynn)*
+A run's state follows its last task, and the clean-up step, which runs even after a failure, was last and
+succeeded, so failed hours looked green and were never retried. They failed within a second, while the
+laptop was offline. Fixed: clean-up is now a teardown task, which Airflow ignores for the run's state, and
+a network error counts as "file not published yet". We found it on 23 Nov, after the numbers were frozen;
+the files are still online, so clearing those 13 runs would load them, but every spike baseline nearby
+would change, so we kept the window as analysed and say so in the report.
+
+**43. `export_marts` replaces four tables. Can Metabase see two different builds at once?** *(Lynn)*
+Not any more: until 23 Nov each table had its own transaction, so for a few seconds one tile could show
+the new build and another the old. Now all four are dropped and recreated in one transaction; a dashboard
+query that arrives meanwhile waits for the commit and then sees the new build everywhere.
+
+**44. You fetch file HH+1 for the hour HH:00–HH+1:00. How do you know, and what breaks if it's off by one?**
+*(Lynn)*
+We checked one file against Wikimedia's Pageview API on 26 Oct: the file named 12:00 has exactly the API's
+11:00–12:00 numbers for English Wikipedia (`ingest/pageviews.py`). If we were off by one, every spike would
+be shifted an hour against the edits, moving edits between "same hour" and "next two hours".
+
+**45. Finding 5 reversed a day before submission. Why should we trust the other four?** *(Sumaiya)*
+Findings 1–4 don't use the pageviews: they count edits, where each edit has its own revision id (zero
+repeats among 25,093,717) and the bot flag comes with the event. The error in finding 5 was in which pages
+we compared, not in the pipeline, and the reversal is shown in the report rather than hidden. Every number
+in section 6 is reproduced by `analysis/findings.sql` on the serving database.

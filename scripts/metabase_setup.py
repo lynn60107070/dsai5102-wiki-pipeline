@@ -78,7 +78,7 @@ ORDER BY 1""",
         # line.missing: leave collector gaps empty instead of drawing a straight line across them
         "viz": {"graph.dimensions": ["Hour (UTC)", "Editor"], "graph.metrics": ["Edits"], "line.missing": "none"},
         "tags": {**DATES, "project": "text"},
-        "note": "Bots vs humans per hour; empty stretches are collector gaps.",
+        "note": "Bots vs humans per hour; a gap means the collector was off.",
         "layout": (0, 12, 12, 8),
     },
     {
@@ -125,19 +125,19 @@ LIMIT 15""",
     },
     {
         "name": "Wikipedia edits by hour of day: bots vs humans",
-        "description": "Average edits per day in each UTC hour on Wikipedias, for bots and for humans "
+        "description": "Average edits in each UTC hour of the day on Wikipedias, for bots and for humans "
                        "(registered and logged-out), over the chosen dates. Humans follow the clock; bots "
                        "much less. Source: mart_edits_hourly.",
         "display": "line",
         "sql": f"""\
 SELECT hour_of_day AS "Hour of day (UTC)",
        CASE WHEN is_human THEN 'Humans' ELSE 'Bots' END AS "Editor",
-       ROUND(SUM(edits)::numeric / COUNT(DISTINCT date)) AS "Edits per day"
+       ROUND(SUM(edits)::numeric / COUNT(DISTINCT date)) AS "Avg edits in this hour"
 FROM mart_edits_hourly
 WHERE is_wikipedia {DATE_FILTER}
 GROUP BY 1, 2
 ORDER BY 1""",
-        "viz": {"graph.dimensions": ["Hour of day (UTC)", "Editor"], "graph.metrics": ["Edits per day"],
+        "viz": {"graph.dimensions": ["Hour of day (UTC)", "Editor"], "graph.metrics": ["Avg edits in this hour"],
                 "graph.x_axis.scale": "ordinal",
                 "series_settings": {"Bots": {"color": "#F9D45C"}, "Humans": {"color": "#A989C5"}}},
         "tags": DATES,
@@ -145,34 +145,35 @@ ORDER BY 1""",
         "layout": (19, 0, 12, 10),
     },
     {
-        "name": "Do attention spikes bring edits? Spikes vs other busy article-hours",
+        "name": "Do attention spikes bring edits? Spikes vs steadily popular articles",
         "description": "Share of Wikipedia article-hours with at least one edit in the 2 hours after, by "
                        "views in the hour. Spikes are hours with at least 5 times the article's average "
-                       "views of the previous 24 hours; the others have as many views but no jump. "
-                       "Source: mart_attention_vs_edits (article-hours with at least 1,000 views).",
+                       "views of the previous 24 hours; the others have as many views but no jump. Main "
+                       "pages and non-article pages (Special:, Wikipedia:, ...) are left out: they get huge "
+                       "views and almost no edits. Source: mart_attention_vs_edits (>= 1,000 views).",
         "display": "bar",
         "sql": f"""\
 SELECT CASE WHEN views >= 20000 THEN '3. 20,000+ views'
             WHEN views >= 5000 THEN '2. 5,000-20,000'
             ELSE '1. 1,000-5,000' END AS "Views in the hour",
-       CASE WHEN is_spike THEN 'Spikes' ELSE 'Other article-hours' END AS "Article-hours",
+       CASE WHEN is_spike THEN 'Spikes' ELSE 'Steadily popular' END AS "Article-hours",
        ROUND(100.0 * AVG(CASE WHEN edits_next_2h > 0 THEN 1 ELSE 0 END), 1) AS "% with an edit in the next 2 h"
 FROM mart_attention_vs_edits
-WHERE has_full_baseline {HOUR_FILTER}
+WHERE has_full_baseline AND is_content_page {HOUR_FILTER}
 GROUP BY 1, 2
 ORDER BY 1, 2""",
         "viz": {"graph.dimensions": ["Views in the hour", "Article-hours"],
                 "graph.metrics": ["% with an edit in the next 2 h"], "graph.show_values": True,
-                "series_settings": {"Spikes": {"color": "#EF8C8C"}, "Other article-hours": {"color": "#A7ADB8"}}},
+                "series_settings": {"Spikes": {"color": "#EF8C8C"}, "Steadily popular": {"color": "#A7ADB8"}}},
         "tags": DATES,
-        "note": "Share followed by an edit within 2 h: only big spikes stand out.",
+        "note": "Share followed by an edit within 2 h: spikes are edited less often.",
         "layout": (19, 12, 12, 10),
     },
     {
         "name": "Reader attention spikes and the edits that follow",
         "description": "Wikipedia articles whose views in an hour jumped to at least 5 times their average of "
                        "the previous 24 hours (and at least 1,000 views), with the edits in that hour and the "
-                       "2 hours after. Source: mart_attention_vs_edits. Empty until 24 hours of pageviews exist.",
+                       "2 hours after (articles only). Source: mart_attention_vs_edits. Empty until 24 hours of pageviews exist.",
         "display": "table",
         "sql": f"""\
 SELECT hour_ts AS "Hour (UTC)",
@@ -185,7 +186,7 @@ SELECT hour_ts AS "Hour (UTC)",
        edits_same_hour AS "Edits, same hour",
        edits_next_2h AS "Edits, next 2 hours"
 FROM mart_attention_vs_edits a
-WHERE is_spike {HOUR_FILTER}
+WHERE is_spike AND is_content_page {HOUR_FILTER}
 ORDER BY views DESC
 LIMIT 25""",
         "viz": {},
@@ -195,8 +196,9 @@ LIMIT 25""",
     },
     {
         "name": "Data completeness: edits collected per hour",
-        "description": "Edits stored per UTC hour. Hours with no bar are gaps, when the collector was offline; "
-                       "partial hours (orange) have under half the usual volume. Findings should avoid both. "
+        "description": "Edits stored per UTC hour. Hours with no bar are gaps, when the collector was offline "
+                       "(none from 28 Oct to 11 Nov); partial hours (orange) have under half the usual volume "
+                       "and are kept but marked. "
                        "Source: mart_data_completeness.",
         "display": "bar",
         "sql": f"""\
@@ -210,7 +212,7 @@ ORDER BY 1""",
                 "stackable.stack_type": "stacked",
                 "series_settings": {"Complete": {"color": "#509EE3"}, "Partial": {"color": "#F2A86F"}}},
         "tags": DATES,
-        "note": "Edits stored per hour. Hours with no bar are collector gaps: findings avoid them.",
+        "note": "Edits stored per hour; orange hours have under half the usual volume.",
         "layout": (39, 0, 24, 8),
     },
 ]
@@ -262,7 +264,9 @@ def dashboard_body(dashcards: list, card_ids: list, parameters: list) -> dict:
                         "card_id": card_id, "row": row + 1, "col": col, "size_x": size_x, "size_y": size_y - 1,
                         "parameter_mappings": parameter_mappings(card, card_id)})
     reused = {d["id"] for d in managed}
-    others = [{k: d[k] for k in KEEP if k in d} for d in dashcards if d["id"] not in reused]
+    # A note whose chart is no longer in CARDS (renamed or removed) is dropped, not kept as an orphan.
+    stale = {d["id"] for name, d in notes.items() if name not in {c["name"] for c in CARDS}}
+    others = [{k: d[k] for k in KEEP if k in d} for d in dashcards if d["id"] not in reused | stale]
     bottom = max(c["layout"][0] + c["layout"][3] for c in CARDS)
     shift = max(0, bottom - min((d["row"] for d in others), default=bottom))
     for d in others:

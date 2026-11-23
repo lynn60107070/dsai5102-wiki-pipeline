@@ -66,6 +66,9 @@ run on the Airflow scheduler with the LocalExecutor.
 
 `ingest/wiki_names.py` reads the Sitematrix API and writes `dbt/seeds/dim_wiki_names.csv`, which is committed to
 Git. Every `dbt build` loads that file as a seed. This path does not go through Airflow, Kafka or MinIO.
+`ingest/page_namespaces.py` works the same way: it asks each Wikipedia's API for its namespace names and main
+page and writes `dbt/seeds/wiki_non_article_titles.csv`, which marks pages that are not articles in
+`mart_attention_vs_edits` (`is_content_page`).
 
 ## Data lake zones
 
@@ -95,10 +98,10 @@ its `httpfs` extension. There are three layers and no intermediate layer:
 | Layer | Models | Built as |
 |---|---|---|
 | `staging` | `stg_edits`, `stg_pageviews`, `stg_wiki_views` | Views over the lake |
-| `core` | `fact_edit`, `fact_pageviews_hourly`, `fact_wiki_views_hourly`; `dim_time`, `dim_wiki`, `dim_article`, `dim_editor_type`; seed `dim_wiki_names` | Tables; facts and `dim_article` are incremental |
+| `core` | `fact_edit`, `fact_pageviews_hourly`, `fact_wiki_views_hourly`; `dim_time`, `dim_wiki`, `dim_article`, `dim_editor_type`; seeds `dim_wiki_names`, `wiki_non_article_titles` | Tables; facts and `dim_article` are incremental |
 | `marts` | `mart_edits_hourly`, `mart_wiki_activity`, `mart_data_completeness`, `mart_attention_vs_edits` | Tables |
 
-`dbt build` runs the data tests too: 34 generic tests defined in the model YAML files. If one fails, the task
+`dbt build` runs the data tests too: 35 generic tests defined in the model YAML files. If one fails, the task
 fails and `export_marts` does not run, so the dashboard keeps the last good data.
 
 ## Dashboard serving
@@ -124,6 +127,7 @@ DuckDB is the warehouse; PostgreSQL only serves copies. The same PostgreSQL serv
 | Airflow DAGs and tasks | `airflow/dags/pageviews_hourly.py`, `airflow/dags/warehouse_hourly.py` |
 | `fetch` logic | `ingest/pageviews.py` |
 | Sitematrix script and seed | `ingest/wiki_names.py`, `dbt/seeds/dim_wiki_names.csv` |
+| Namespace script and seed | `ingest/page_namespaces.py`, `dbt/seeds/wiki_non_article_titles.csv` |
 | dbt layers | `dbt/models/staging`, `dbt/models/core`, `dbt/models/marts`, `dbt/profiles.yml` |
 | `compact_clean_zone`, `check_freshness`, `export_marts` | `scripts/compact_clean_zone.py`, `scripts/check_freshness.py`, `scripts/export_marts.py` |
 | PostgreSQL databases and role | `postgres/init/01_serving.sh` |
