@@ -4,6 +4,8 @@
 
 DSAI5102 Data Architecture & Engineering, final project · Lynn Younes & Sumaiya Rizwan
 
+**Report (PDF):** [report/DSAI5102_report_Younes_Rizwan.pdf](report/DSAI5102_report_Younes_Rizwan.pdf) · LaTeX source in [paper/](paper/)
+
 **Question:** Wikipedia's volunteer patrollers have limited time: where does editing pressure
 concentrate, how much of it comes from bots, and are spikes in reader attention followed by edit surges?
 
@@ -122,7 +124,7 @@ docker-compose.yml   all services          stream/     producer, processor, sink
 airflow/             DAGs + image (dbt)     ingest/     pageviews (batch), wiki names + namespaces (seeds)
 dbt/                 models, seeds, tests   scripts/    bootstrap, export, compaction, Metabase setup, checks
 postgres/init/       databases + roles      sample/     6 hours of real data for a fresh install
-tests/               unit tests             docs/       design log + diagram       paper/   report (LaTeX)
+tests/               unit tests             docs/       design log + diagram       paper/   report source (LaTeX); the PDF is in report/
 analysis/            the queries behind the report's findings (run against Postgres `serving`; they need the
                      collected 28 Oct–11 Nov window, which is not in the repo; on a fresh install they run on the sample)
 ```
