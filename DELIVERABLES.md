@@ -77,8 +77,8 @@ Written through GitHub PRs, one file per section; workflow in [paper/README.md](
 | Presentation | Clear, well-prepared, answers questions confidently | 2 rehearsals, demo + backup video, Q&A sheet |
 
 ## 5. Final pre-submission checklist
-- [ ] `docker compose up` on a fresh clone brings up every service (sample mode + live mode)
-- [x] All dbt tests pass; the Airflow DAG shows green runs (fresh clone, 20 Nov)
+- [x] `docker compose up` on a fresh clone brings up every service (sample mode + live mode) (23 Nov)
+- [x] All dbt tests pass; the Airflow DAGs show green runs (fresh clone, 23 Nov, incl. one pageview hour via `airflow dags test`)
 - [x] Dashboard has ≥ 2 tiles (we have 8), each with a title and explanation
 - [x] README has setup instructions + architecture explanation + diagram
 - [ ] Report PDF is 5–10 pages (references and appendices not counted) and covers all six required parts (problem, architecture, design choices, implementation, results, discussion)

@@ -70,6 +70,6 @@ from the wiki and article keys of the pageview facts, to their dimensions.
 \texttt{docker compose up -d --build} on a fresh clone is the only step: every setting has a default,
 and a one-off bootstrap service loads six bundled hours of real edits and 30 hours of pageviews into the empty lake (never into
 one that already has data), runs the warehouse DAG once through Airflow, and configures Metabase
-through its API. Fresh-clone tests (25 Oct, 20 Nov) found four problems, all fixed: file paths longer than
+through its API. Fresh-clone tests (25 Oct, 20 Nov and 23 Nov, the last with no new problems) found four problems, all fixed: file paths longer than
 Windows allows, two dashboard tiles that failed before their tables existed, and a red first run of the
 freshness check.
