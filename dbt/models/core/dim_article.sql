@@ -21,7 +21,8 @@ with from_edits as (
 
     select article_key, wiki_id, title, namespace, event_ts as seen_ts
     from {{ ref('stg_edits') }}
-    {% if is_incremental() %} where dt >= {{ since }} {% endif %}
+    where {{ before_run_start() }}
+    {% if is_incremental() %} and dt >= {{ since }} {% endif %}
 
 ),
 

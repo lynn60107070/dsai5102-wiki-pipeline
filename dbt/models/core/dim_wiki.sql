@@ -7,6 +7,7 @@ with seen as (
 
     select wiki_id, any_value(server_name) as server_name
     from {{ ref('stg_edits') }}
+    where {{ before_run_start() }}
     group by wiki_id
     {% if var("pageviews_enabled") %}
     union all

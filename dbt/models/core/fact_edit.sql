@@ -29,6 +29,7 @@ select
     recent_change_id
 from {{ ref('stg_edits') }}
 where dt >= date '{{ var("data_start") }}'
+  and {{ before_run_start() }}
 {% if is_incremental() %}
   and dt >= (select max(event_ts)::date - {{ var("lookback_days") }} from {{ this }})
 {% endif %}

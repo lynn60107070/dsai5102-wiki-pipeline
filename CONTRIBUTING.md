@@ -3,7 +3,6 @@
 The whole pipeline is built and running: live Wikipedia edits through Kafka into the MinIO lake, hourly
 pageviews through Airflow, a dbt star schema on DuckDB rebuilt every hour, and a Metabase dashboard.
 What's left is mostly **diagram, dashboard, insights, report and slides**.
-Tasks and deadlines: **[SCHEDULE.md](SCHEDULE.md)**. Everything we hand in: **[DELIVERABLES.md](DELIVERABLES.md)**.
 How it works and why: **[README.md](README.md)** (start here) and **[docs/design.md](docs/design.md)** (details).
 
 ## 1. One-time setup (macOS or Windows)
@@ -43,7 +42,7 @@ You edit only the files you own. To change someone else's file, ask them or open
 |---|---|---|
 | **Sumaiya** | `docs/diagram/`, `metabase/`, `paper/sections/01`, `02`, `06`, `07` | Diagram, tool table, dashboard, insights, half the report and slides |
 | **Lynn** (lead) | everything else: `docker-compose.yml`, `stream/`, `ingest/`, `airflow/`, `dbt/`, `scripts/`, `postgres/`, `sample/`, `tests/`, `README.md`, `docs/design.md`, `paper/main.tex` + `paper/sections/03`–`05` (+ the Overleaf project) | Architecture and all pipeline code, report assembly |
-| **Both** | `SCHEDULE.md`, `DELIVERABLES.md`, `CONTRIBUTING.md`, `paper/refs.bib` (add only) | Change only when both agree |
+| **Both** | `CONTRIBUTING.md`, `paper/refs.bib` (add only) | Change only when both agree |
 
 **The paper** is written the same way as the code (branches + PRs, one file per section); see
 [paper/README.md](paper/README.md).

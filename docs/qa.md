@@ -228,8 +228,10 @@ larger machine) and 3 brokers. The lake layout doesn't change.
 **31. The relationship test failed four times on 8–10 Nov. What was the cause?**
 Most likely consistency: `dim_article` and `fact_edit` both read the live clean zone, and the sinks write
 new files every few minutes, so a fact row can point to an article written after `dim_article` was
-built. The gate worked: the export was skipped and the dashboard kept the last good data. The real fix is
-for each run to read only hours before its start time.
+built. The gate worked: the export was skipped and the dashboard kept the last good data. Fixed 23 Nov:
+`fact_edit`, `dim_article` and `dim_wiki` all stop at the hour the dbt run started (macro
+`before_run_start`), so the hour still being written is left out of every model and loaded by the next
+run. A full build afterwards passed all 51 nodes and left the window's 25,093,717 edits unchanged.
 
 **32. Can I reproduce your five findings from the repo?**
 With our collected data, yes: `analysis/findings.sql` holds the query behind every number in section 6, run

@@ -83,8 +83,8 @@ the lighter LocalExecutor, which needs no Redis or Celery workers on a single ma
     8--10 Nov & Four warehouse runs failed a relationship test (fact rows whose article was missing
       from \texttt{dim\_article}) & The gate kept the last good data and the next run passed. Most likely
       cause: both models read the live clean zone, so files written between them reach
-      \texttt{fact\_edit} but not \texttt{dim\_article}; reading only hours before the run's start would
-      remove it \\
+      \texttt{fact\_edit} but not \texttt{dim\_article}; since 23 Nov all three edit models stop
+      at the hour the run started (\texttt{before\_run\_start}) \\
     9--12 Nov & Hourly rebuilds grew Docker's disk file to 351\,GB (46\,GB in use), and its file system
       recorded errors; some writes to the warehouse file were lost & Checked every lake file against its
       event count (all intact), repaired and shrank the disk, rebuilt the warehouse from the lake \\
