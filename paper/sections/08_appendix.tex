@@ -49,19 +49,23 @@ the lighter LocalExecutor, which needs no Redis or Celery workers on a single ma
   \label{fig:lineage}
 \end{figure}
 
-% The dashboard is a page tall, so it sits here; section 6 refers to it.
-\begin{figure}[p]
+% The dashboard is a page tall, so it gets its own appendix page; section 6 refers to it.
+\clearpage
+\section{Full dashboard}\label{app:dashboard}
+\begin{figure}[!h]
   \centering
-  \includegraphics[height=0.9\textheight]{06_dashboard.png}
+  \includegraphics[height=0.8\textheight]{06_dashboard.png}
   \caption{The \emph{Wikipedia edits} dashboard over the analysis window, 28 Oct -- 11 Nov 2026 (UTC),
     taken on 23 Nov. The date filter does not apply to the live tile, which always shows the last three hours
     of the stream (here 23 Nov).}
   \label{fig:dashboard}
 \end{figure}
 
+\clearpage
+\section{Incidents}\label{app:incidents}
+The collector, warehouse and analysis incidents that changed the design (\cref{sec:implementation}).
 
-
-\begin{table}[!htbp]
+\begin{table}[!h]
   \centering\small
   \begin{tabularx}{\linewidth}{l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
     \toprule
