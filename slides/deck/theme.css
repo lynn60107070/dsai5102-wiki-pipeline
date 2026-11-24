@@ -6,7 +6,7 @@
    ===================================================================== */
 :root {
   /* ===== PALETTE: change --brand to recolour the whole deck; every shade below is mixed from it. ===== */
-  --brand: #E5734A;
+  --brand: #8E3B8C;
   --brand-text: color-mix(in srgb, var(--brand) 80%, black);       /* accent words, numbers */
   --brand-bright: color-mix(in srgb, var(--brand) 82%, white);
   --brand-light: color-mix(in srgb, var(--brand) 42%, white);
