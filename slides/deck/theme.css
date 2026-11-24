@@ -22,6 +22,9 @@
   --brand-paper2: color-mix(in srgb, var(--brand) 8%, white);
   --brand-page: color-mix(in srgb, var(--brand) 11%, #e7e7e7);
   /* ===== end of palette ===== */
+  /* The globe (title and closing slides) stays Wikipedia blue whatever --brand is. */
+  --globe-light: #6AAEE8; --globe-mid: #2F80D0; --globe-dark: #102A43; --globe-land: #E4F1FD;
+  --globe-glow: #96CDFF; --globe-grid: #CFE3F6; --globe-ring: #509EE3; --globe-shade: #061424;
   --navy: var(--brand-ink); --charcoal: var(--brand-ink); --muted: var(--brand-muted); --line: var(--brand-line);
   --blue: var(--brand-text);            /* accent text */
   --blue-fill: var(--brand);       /* accent fill */
@@ -48,7 +51,7 @@ body { font-family: var(--sans); color: var(--charcoal); }
   background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.95), color-mix(in srgb, var(--brand-line) 75%, transparent) 60%, color-mix(in srgb, var(--brand-light) 45%, transparent)); }
 .slide.apx::before { opacity: .6; }
 .orb { position: absolute; border-radius: 50%; pointer-events: none; z-index: -1; }
-.orb.ring { background: none; border: 2px solid color-mix(in srgb, var(--brand) 14%, transparent); }
+.orb.ring { background: none; border: 2px solid color-mix(in srgb, var(--globe-ring) 14%, transparent); }
 
 /* === TYPE === */
 h1, h2 { font-family: var(--sans); font-weight: 800; color: var(--navy); letter-spacing: -.02em; line-height: 1.06; }
@@ -108,7 +111,7 @@ table.t td { border-bottom: 1px solid var(--line); }
     linear-gradient(180deg, var(--brand-paper) 0%, var(--brand-paper2) 100%);
 }
 .hero-orb { position: absolute; width: 860px; height: 860px; right: -230px; top: -150px; border-radius: 50%; overflow: hidden;
-  background: radial-gradient(circle at 30% 25%, var(--brand-bright) 0%, var(--brand-text) 40%, var(--brand-ink) 100%); box-shadow: 0 50px 120px color-mix(in srgb, var(--brand-ink) 30%, transparent); }
+  background: radial-gradient(circle at 30% 25%, var(--globe-light) 0%, var(--globe-mid) 40%, var(--globe-dark) 100%); box-shadow: 0 50px 120px color-mix(in srgb, var(--globe-dark) 30%, transparent); }
 .hero-orb canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .float-card { position: absolute; display: flex; gap: 22px; align-items: center; background: rgba(255,255,255,.96); border-radius: 24px; padding: 18px 26px;
   box-shadow: 0 30px 70px color-mix(in srgb, var(--brand-ink) 22%, transparent); z-index: 3; animation: bob 5s ease-in-out infinite; }
