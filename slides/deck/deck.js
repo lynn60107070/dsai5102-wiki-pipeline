@@ -1,5 +1,18 @@
 /* Deck engine: navigation, step builds, appendix links, notes, charts and animations. */
 (function () {
+  // colours from the CSS palette (theme.css :root, --brand), as rgba strings for canvas and the presenter window
+  const _cc = {};
+  function col(v, a = 1) {
+    let rgb = _cc[v];
+    if (!rgb) {
+      const el = document.createElement('i'); el.style.color = 'var(' + v + ')'; document.body.appendChild(el);
+      const c = getComputedStyle(el).color; el.remove();
+      const m = c.match(/color\(srgb\s+([-\d.e]+)\s+([-\d.e]+)\s+([-\d.e]+)/);
+      rgb = m ? [m[1], m[2], m[3]].map(x => Math.round(Math.min(1, Math.max(0, +x)) * 255)) : (c.match(/[\d.]+/g) || [0, 0, 0]).slice(0, 3).map(x => Math.round(+x));
+      _cc[v] = rgb;
+    }
+    return 'rgba(' + rgb.join(',') + ',' + a + ')';
+  }
   const stage = document.getElementById('stage');
   const slides = [...document.querySelectorAll('.slide')];
   const main = slides.filter(s => !s.classList.contains('apx'));
@@ -193,6 +206,47 @@
     };
     s._timers = s._timers || []; s._timers.push(requestAnimationFrame(frame));
   }
+  // ---------- problem slide: a recent-changes feed, newest on top; it starts slow, then runs at the real ~19.4 edits/s ----------
+  function feedCanvas(s, canvas, onReal) {
+    const ctx = canvas.getContext('2d'); const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = canvas.offsetWidth || 880, H = canvas.offsetHeight || 408, RH = 46;
+    canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const rows = []; const t0 = performance.now(); let last = t0, acc = 0, off = 0, real = false;
+    const pad = n => String(n).padStart(2, '0');
+    const mk = () => { const bot = Math.random() < 0.486, d = new Date(), big = Math.random() < 0.15;
+      const n = Math.round(big ? 400 + Math.random() * 4000 : 2 + Math.random() * 380), plus = Math.random() < 0.72;
+      return { time: pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()), wiki: WIKIS[Math.floor(Math.random() * WIKIS.length)], bot,
+        bar: 140 + Math.random() * 260, bar2: Math.random() < 0.4 ? 40 + Math.random() * 90 : 0, diff: (plus ? '+' : '\u2212') + n.toLocaleString('en-US'), plus, born: performance.now() }; };
+    for (let i = 0; i < 4; i++) rows.push(mk());
+    const pill = (x, y, txt, font, bg, fg, padX) => { ctx.font = font; const w = ctx.measureText(txt).width + padX * 2;
+      ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(x, y - 13, w, 26, 13); ctx.fill(); ctx.fillStyle = fg; ctx.fillText(txt, x + padX, y + 5); return w; };
+    const frame = t => {
+      const dt = Math.min(0.05, (t - last) / 1000); last = t; const el = (t - t0) / 1000;
+      const k = Math.min(1, el / 3.6), rate = 19.4 * (0.08 + 0.92 * k * k);
+      if (!real && k >= 1) { real = true; onReal && onReal(); }
+      acc += dt * rate;
+      while (acc >= 1) { acc -= 1; rows.unshift(mk()); off += RH; }
+      off *= Math.exp(-dt * 16); if (off < 0.2) off = 0;
+      const maxRows = Math.ceil(H / RH) + 3; if (rows.length > maxRows) rows.length = maxRows;
+      ctx.clearRect(0, 0, W, H);
+      rows.forEach((r, i) => {
+        const y = i * RH - off + RH / 2 + 4; if (y > H + RH) return;
+        const fresh = Math.max(0, 1 - (t - r.born) / 900);
+        if (fresh > 0) { ctx.fillStyle = col('--brand', 0.10 * fresh); ctx.fillRect(0, y - RH / 2, W, RH); }
+        ctx.fillStyle = col('--brand-line-soft'); ctx.fillRect(24, y + RH / 2 - 1, W - 48, 1);
+        ctx.font = '15px "JetBrains Mono", Consolas, monospace'; ctx.fillStyle = col('--brand-muted'); ctx.fillText(r.time, 24, y + 5);
+        let x = 124;
+        x += pill(x, y, r.wiki, '500 14px "JetBrains Mono", Consolas, monospace', col('--brand-tint'), col('--brand-text'), 10) + 10;
+        x += pill(x, y, r.bot ? 'BOT' : 'HUMAN', '700 12px "Plus Jakarta Sans", sans-serif', r.bot ? '#FFF1C2' : '#F1EAF8', r.bot ? '#8A6A00' : '#7B5EA0', 10) + 16;
+        ctx.fillStyle = col('--brand-line'); ctx.beginPath(); ctx.roundRect(x, y - 6, r.bar, 12, 6); ctx.fill();
+        if (r.bar2) { ctx.beginPath(); ctx.roundRect(x + r.bar + 10, y - 6, r.bar2, 12, 6); ctx.fill(); }
+        ctx.font = '600 15px "JetBrains Mono", Consolas, monospace'; ctx.fillStyle = r.plus ? '#2E8B6E' : '#D64545';
+        const dw = ctx.measureText(r.diff).width; ctx.fillText(r.diff, W - 24 - dw, y + 5);
+      });
+      s._timers.push(requestAnimationFrame(frame));
+    };
+    s._timers = s._timers || []; s._timers.push(requestAnimationFrame(frame));
+  }
   // ---------- title slide: a turning dotted globe; each edit pings where its wiki's language is mainly spoken ----------
   // Coarse continent outlines [lon, lat], only used to place land dots.
   const LAND = [
@@ -259,15 +313,15 @@
       const grow = still ? 1 : Math.min(1, age / 1.2), ease = 1 - Math.pow(1 - grow, 3);
       ctx.clearRect(0, 0, css, css);
       // atmosphere
-      const g = ctx.createRadialGradient(C, C, R * .92, C, C, R * 1.08); g.addColorStop(0, 'rgba(150,205,255,0)'); g.addColorStop(.5, 'rgba(150,205,255,.35)'); g.addColorStop(1, 'rgba(150,205,255,0)');
+      const g = ctx.createRadialGradient(C, C, R * .92, C, C, R * 1.08); g.addColorStop(0, col('--brand-light', 0)); g.addColorStop(.5, col('--brand-light', .35)); g.addColorStop(1, col('--brand-light', 0));
       ctx.globalAlpha = ease; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(C, C, R * 1.08, 0, 7); ctx.fill();
       // graticule
-      ctx.strokeStyle = 'rgba(207,227,246,.16)'; ctx.lineWidth = 1;
+      ctx.strokeStyle = col('--brand-tint', .16); ctx.lineWidth = 1;
       const line = pts => { ctx.beginPath(); let on = false; for (const [lo, la] of pts) { const [x, y, z] = project(lo, la, lon0); if (z > 0) { on ? ctx.lineTo(x, y) : ctx.moveTo(x, y); on = true; } else on = false; } ctx.stroke(); };
       for (let lo = -180; lo < 180; lo += 30) { const pts = []; for (let la = -80; la <= 80; la += 4) pts.push([lo, la]); line(pts); }
       for (let la = -60; la <= 60; la += 30) { const pts = []; for (let lo = -180; lo <= 180; lo += 4) pts.push([lo, la]); line(pts); }
       // land
-      ctx.fillStyle = '#e4f1fd';
+      ctx.fillStyle = col('--brand-tint');
       for (const [lo, la] of dots) { const [x, y, z] = project(lo, la, lon0); if (z <= 0) continue;
         ctx.globalAlpha = ease * (0.25 + 0.7 * z); ctx.beginPath(); ctx.arc(x, y, 2.3, 0, 7); ctx.fill(); }
       // new edits at the window's real rate
@@ -293,7 +347,7 @@
       }
       // light from the top left
       const sh = ctx.createRadialGradient(C - R * .4, C - R * .45, R * .1, C, C, R * 1.02);
-      sh.addColorStop(0, 'rgba(255,255,255,.10)'); sh.addColorStop(.6, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(6,20,36,.35)');
+      sh.addColorStop(0, 'rgba(255,255,255,.10)'); sh.addColorStop(.6, 'rgba(255,255,255,0)'); sh.addColorStop(1, col('--brand-deeper', .35));
       ctx.globalAlpha = ease; ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(C, C, R, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
     };
     s._timers = s._timers || [];
@@ -310,7 +364,7 @@
   // ---------- per-slide hooks ----------
   const hooks = {
     enter_s1(s) { globeCanvas(s, s.querySelector('canvas.bg')); liveCounter(s, s.querySelector('#live1')); },
-    enter_s2(s) { streamCanvas(s, s.querySelector('canvas.sub'), { lanes: [150, 290], alpha: 0.9, labelColor: '#6b7079' }); liveCounter(s, s.querySelector('#live2')); },
+    enter_s2(s) { const sp = s.querySelector('.rc-speed'); sp.classList.remove('on'); feedCanvas(s, s.querySelector('canvas.rc'), () => sp.classList.add('on')); liveCounter(s, s.querySelector('#live2')); },
     enter_s17(s) { globeCanvas(s, s.querySelector('canvas.bg'));
       // edits to Wikimedia wikis during a 15-minute talk at the window's average (25,093,717 in 15 days = 19.4/s):
       // count up to ~17,400, then keep ticking at that rate while the slide is open
@@ -470,14 +524,14 @@
     t0 = t0 || Date.now();
     const base = location.href.split('#')[0].split('?')[0];
     pw.document.write(`<!doctype html><html><head><title>Presenter · Wikipedia live edits</title><style>
-      body{margin:0;background:#0b1a2b;color:#F2F1EC;font-family:Plus Jakarta Sans,Segoe UI,sans-serif;display:grid;grid-template-columns:1.35fr 1fr;grid-template-rows:auto 1fr;gap:14px;padding:14px;height:100vh;box-sizing:border-box}
-      .card{background:#102A43;border:1px solid #1f3a5a;border-radius:12px;padding:12px;display:flex;flex-direction:column;min-height:0}
-      .h{font:600 11px Plus Jakarta Sans,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#A9D0F2;margin-bottom:8px;display:flex;justify-content:space-between}
+      body{margin:0;background:${col('--brand-deeper')};color:#F2F1EC;font-family:Plus Jakarta Sans,Segoe UI,sans-serif;display:grid;grid-template-columns:1.35fr 1fr;grid-template-rows:auto 1fr;gap:14px;padding:14px;height:100vh;box-sizing:border-box}
+      .card{background:${col('--brand-ink')};border:1px solid ${col('--brand-deep')};border-radius:12px;padding:12px;display:flex;flex-direction:column;min-height:0}
+      .h{font:600 11px Plus Jakarta Sans,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:${col('--brand-light')};margin-bottom:8px;display:flex;justify-content:space-between}
       .fr{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:6px;background:#000}
       .fr iframe{position:absolute;left:0;top:0;width:1600px;height:900px;border:0;transform-origin:0 0;pointer-events:none}
-      #notes{font-size:21px;line-height:1.5;overflow:auto;flex:1} #notes b{color:#A9D0F2}
+      #notes{font-size:21px;line-height:1.5;overflow:auto;flex:1} #notes b{color:${col('--brand-light')}}
       #timer{font:600 44px Plus Jakarta Sans,sans-serif;font-variant-numeric:tabular-nums} #pos{color:#9A9EA6;font-size:16px}
-      button{background:#16304d;color:#A9D0F2;border:1px solid #1f3a5a;border-radius:8px;padding:8px 14px;font:600 14px Plus Jakarta Sans,sans-serif;cursor:pointer;margin-right:6px}
+      button{background:${col('--brand-deep2')};color:${col('--brand-light')};border:1px solid ${col('--brand-deep')};border-radius:8px;padding:8px 14px;font:600 14px Plus Jakarta Sans,sans-serif;cursor:pointer;margin-right:6px}
     </style></head><body>
       <div class="card" style="grid-row:1/3"><div class="h"><span>Current</span><span id="step"></span></div><div class="fr"><iframe id="cur"></iframe></div>
         <div class="h" style="margin-top:14px"><span>Script</span></div><div id="notes"></div></div>
