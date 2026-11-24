@@ -193,33 +193,43 @@
     };
     s._timers = s._timers || []; s._timers.push(requestAnimationFrame(frame));
   }
-  // ---------- problem slide: glowing edits flow right and squeeze into the funnel tip; each arrival nudges the patroller ----------
-  function floodCanvas(s, canvas, onArrive) {
+  // ---------- problem slide: a recent-changes feed, newest on top; it starts slow, then runs at the real ~19.4 edits/s ----------
+  function feedCanvas(s, canvas, onReal) {
     const ctx = canvas.getContext('2d'); const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const W = canvas.offsetWidth || 1150, H = canvas.offsetHeight || 440;
+    const W = canvas.offsetWidth || 880, H = canvas.offsetHeight || 408, RH = 46;
     canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const cy = H / 2, dots = []; let last = performance.now(), acc = 0, lastHit = 0;
-    const mk = x => { const bot = Math.random() < 0.486; return { x, y0: 26 + Math.random() * (H - 52), v: 150 + Math.random() * 170, ph: Math.random() * 6.3, bot, r: bot ? 3 : 3.6,
-      label: Math.random() < 0.07 ? WIKIS[Math.floor(Math.random() * WIKIS.length)] : null }; };
-    for (let i = 0; i < 46; i++) dots.push(mk(Math.random() * W * 0.85));
-    const yAt = (d, x) => { const k = Math.min(1, Math.max(0, (x - W * 0.45) / (W * 0.55))), e = k * k * (3 - 2 * k);
-      return d.y0 + (cy + (d.y0 - cy) * 0.1 - d.y0) * e + Math.sin(x / 85 + d.ph) * 5 * (1 - e); };
+    const rows = []; const t0 = performance.now(); let last = t0, acc = 0, off = 0, real = false;
+    const pad = n => String(n).padStart(2, '0');
+    const mk = () => { const bot = Math.random() < 0.486, d = new Date(), big = Math.random() < 0.15;
+      const n = Math.round(big ? 400 + Math.random() * 4000 : 2 + Math.random() * 380), plus = Math.random() < 0.72;
+      return { time: pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()), wiki: WIKIS[Math.floor(Math.random() * WIKIS.length)], bot,
+        bar: 140 + Math.random() * 260, bar2: Math.random() < 0.4 ? 40 + Math.random() * 90 : 0, diff: (plus ? '+' : '\u2212') + n.toLocaleString('en-US'), plus, born: performance.now() }; };
+    for (let i = 0; i < 4; i++) rows.push(mk());
+    const pill = (x, y, txt, font, bg, fg, padX) => { ctx.font = font; const w = ctx.measureText(txt).width + padX * 2;
+      ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(x, y - 13, w, 26, 13); ctx.fill(); ctx.fillStyle = fg; ctx.fillText(txt, x + padX, y + 5); return w; };
     const frame = t => {
-      const dt = Math.min(0.05, (t - last) / 1000); last = t; acc += dt * 19.4;
-      while (acc >= 1) { acc -= 1; dots.push(mk(-12)); }
+      const dt = Math.min(0.05, (t - last) / 1000); last = t; const el = (t - t0) / 1000;
+      const k = Math.min(1, el / 3.6), rate = 19.4 * (0.08 + 0.92 * k * k);
+      if (!real && k >= 1) { real = true; onReal && onReal(); }
+      acc += dt * rate;
+      while (acc >= 1) { acc -= 1; rows.unshift(mk()); off += RH; }
+      off *= Math.exp(-dt * 16); if (off < 0.2) off = 0;
+      const maxRows = Math.ceil(H / RH) + 3; if (rows.length > maxRows) rows.length = maxRows;
       ctx.clearRect(0, 0, W, H);
-      for (let i = dots.length - 1; i >= 0; i--) {
-        const d = dots[i]; d.x += d.v * dt * (1 + 0.5 * Math.max(0, (d.x - W * 0.6) / W));
-        if (d.x > W + 8) { dots.splice(i, 1); if (onArrive && t - lastHit > 120) { lastHit = t; onArrive(); } continue; }
-        const col = d.bot ? '249,212,92' : '195,166,224', a = Math.min(1, (d.x + 12) / 120);
-        const L = 30 + d.v * 0.14, x0 = d.x - L, y = yAt(d, d.x), y0 = yAt(d, x0);
-        const g = ctx.createLinearGradient(x0, y0, d.x, y); g.addColorStop(0, 'rgba(' + col + ',0)'); g.addColorStop(1, 'rgba(' + col + ',' + 0.5 * a + ')');
-        ctx.strokeStyle = g; ctx.lineWidth = d.r * 1.2; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(d.x - L / 2, yAt(d, d.x - L / 2), d.x, y); ctx.stroke();
-        ctx.shadowColor = 'rgba(' + col + ',' + 0.9 * a + ')'; ctx.shadowBlur = 12; ctx.fillStyle = 'rgba(' + col + ',' + a + ')';
-        ctx.beginPath(); ctx.arc(d.x, y, d.r, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
-        if (d.label) { ctx.fillStyle = 'rgba(201,214,227,' + 0.45 * a * Math.max(0, 1 - Math.max(0, (d.x - W * 0.55) / (W * 0.3))) + ')'; ctx.font = '13px "JetBrains Mono", Consolas, monospace'; ctx.fillText(d.label, d.x + 9, y + 4); }
-      }
+      rows.forEach((r, i) => {
+        const y = i * RH - off + RH / 2 + 4; if (y > H + RH) return;
+        const fresh = Math.max(0, 1 - (t - r.born) / 900);
+        if (fresh > 0) { ctx.fillStyle = 'rgba(80,158,227,' + 0.10 * fresh + ')'; ctx.fillRect(0, y - RH / 2, W, RH); }
+        ctx.fillStyle = '#EEF2F7'; ctx.fillRect(24, y + RH / 2 - 1, W - 48, 1);
+        ctx.font = '15px "JetBrains Mono", Consolas, monospace'; ctx.fillStyle = '#8A94A3'; ctx.fillText(r.time, 24, y + 5);
+        let x = 124;
+        x += pill(x, y, r.wiki, '500 14px "JetBrains Mono", Consolas, monospace', '#EAF3FC', '#2F80D0', 10) + 10;
+        x += pill(x, y, r.bot ? 'BOT' : 'HUMAN', '700 12px "Plus Jakarta Sans", sans-serif', r.bot ? '#FFF1C2' : '#F1EAF8', r.bot ? '#8A6A00' : '#7B5EA0', 10) + 16;
+        ctx.fillStyle = '#E3EAF2'; ctx.beginPath(); ctx.roundRect(x, y - 6, r.bar, 12, 6); ctx.fill();
+        if (r.bar2) { ctx.beginPath(); ctx.roundRect(x + r.bar + 10, y - 6, r.bar2, 12, 6); ctx.fill(); }
+        ctx.font = '600 15px "JetBrains Mono", Consolas, monospace'; ctx.fillStyle = r.plus ? '#2E8B6E' : '#D64545';
+        const dw = ctx.measureText(r.diff).width; ctx.fillText(r.diff, W - 24 - dw, y + 5);
+      });
       s._timers.push(requestAnimationFrame(frame));
     };
     s._timers = s._timers || []; s._timers.push(requestAnimationFrame(frame));
@@ -341,7 +351,7 @@
   // ---------- per-slide hooks ----------
   const hooks = {
     enter_s1(s) { globeCanvas(s, s.querySelector('canvas.bg')); liveCounter(s, s.querySelector('#live1')); },
-    enter_s2(s) { const disc = s.querySelector('.pt-disc'); floodCanvas(s, s.querySelector('canvas.sub'), () => { disc.classList.remove('hit'); void disc.offsetWidth; disc.classList.add('hit'); }); liveCounter(s, s.querySelector('#live2')); },
+    enter_s2(s) { const sp = s.querySelector('.rc-speed'); sp.classList.remove('on'); feedCanvas(s, s.querySelector('canvas.rc'), () => sp.classList.add('on')); liveCounter(s, s.querySelector('#live2')); },
     enter_s17(s) { globeCanvas(s, s.querySelector('canvas.bg'));
       // edits to Wikimedia wikis during a 15-minute talk at the window's average (25,093,717 in 15 days = 19.4/s):
       // count up to ~17,400, then keep ticking at that rate while the slide is open

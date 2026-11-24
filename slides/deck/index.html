@@ -6,8 +6,8 @@
 <title>Wikipedia Live Edits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="deck.css?v=wq5">
-<link rel="stylesheet" href="theme.css?v=wq5">
+<link rel="stylesheet" href="deck.css?v=wq6">
+<link rel="stylesheet" href="theme.css?v=wq6">
 </head>
 <body>
 <div id="progress"></div>
@@ -49,36 +49,29 @@
 <!-- ============================== 2. PROBLEM ============================== -->
 <section class="slide" id="s2" data-apx="a1">
   <div class="eyebrow"><b>01</b><span class="sec-name">Problem &amp; dataset</span><i class="sec-line"></i><span class="sub-name">The problem</span><span class="who">Sumaiya</span></div>
-  <h2 class="fl-h" style="margin-top:6px"><span>Too many edits,</span> <em>too few patrollers</em></h2>
-  <!-- the flood: every edit as a glowing dot (purple human, yellow bot); dots squeeze into the funnel tip, where one patroller waits -->
-  <div class="fl-wrap">
-    <div class="flood">
-      <canvas class="sub"></canvas>
-      <div class="fl-num">
-        <div class="bignum">~<span class="count" data-to="20" data-dur="1600" data-delay="500">0</span><span class="u"> edits / second</span></div>
-        <div class="sub2">1.7 million a day, on 771 wikis</div>
-      </div>
-      <div class="fl-key"><span><i class="ldot" style="background:#C3A6E0"></i>human</span><span><i class="ldot" style="background:#F9D45C"></i>bot</span></div>
+  <h2 class="rc-h" style="margin-top:6px">Too many edits, <em>too few patrollers</em></h2>
+  <!-- a Recent-changes style feed: newest edit on top, starting slow, then at the real rate -->
+  <div class="rc-card">
+    <div class="rc-head">
+      <span class="rc-title"><span class="pulse"></span>Recent changes <span class="muted">· all wikis</span></span>
+      <span class="rc-speed">real speed</span>
+      <span class="rc-cnt"><b id="live2">0</b> since this slide opened</span>
+    </div>
+    <canvas class="rc"></canvas>
+  </div>
+  <!-- the numbers, as type -->
+  <div class="rc-side">
+    <div class="rc-big">~<span class="count" data-to="20" data-dur="1500" data-delay="600">0</span></div>
+    <div class="rc-lbl">edits every second</div>
+    <div class="rc-mid">1.7 million</div>
+    <div class="rc-lbl">a day, on 771 wikis</div>
+    <div class="rc-one">
+      <svg viewBox="0 0 48 48" width="46" height="46"><circle cx="24" cy="24" r="23" fill="#F1EAF8"/><circle cx="24" cy="18" r="7" fill="#A989C5"/><path d="M11 38c0-8 6-12 13-12s13 4 13 12z" fill="#A989C5"/></svg>
+      <span>One volunteer can't read them all.</span>
     </div>
   </div>
-  <!-- the patroller, with radar rings; bumps every time an edit arrives -->
-  <div class="patroller">
-    <div class="pt-disc">
-      <i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i>
-      <svg viewBox="0 0 200 200" width="220" height="220">
-        <circle cx="100" cy="100" r="92" fill="#fff" stroke="#DCE6F1" stroke-width="3"/>
-        <circle cx="92" cy="74" r="24" fill="#A989C5"/>
-        <path d="M44 150c0-30 21-48 48-48s48 18 48 48z" fill="#A989C5"/>
-        <g class="pt-lens"><circle cx="140" cy="132" r="22" fill="#fff" fill-opacity=".9" stroke="#102A43" stroke-width="7"/>
-        <path d="M156 148l18 18" stroke="#102A43" stroke-width="9" stroke-linecap="round"/></g>
-      </svg>
-    </div>
-    <div class="pt-name">A volunteer patroller</div>
-    <div class="pt-sub">limited time to review</div>
-  </div>
-  <div class="fl-punch">The raw stream doesn't say <em>where to look.<svg viewBox="0 0 300 16" preserveAspectRatio="none"><path d="M3 11 C 80 3, 200 3, 297 9"/></svg></em></div>
-  <div class="fl-live"><span class="pulse"></span>edits since this slide opened<br><b id="live2">0</b></div>
-  <aside class="notes"><b>Sumaiya · 0:30.</b> Every dot is an edit: about 20 a second (we keep edits and new pages, about half the raw feed), 1.7 million a day. The counter runs at that rate; it isn't live. Volunteer patrollers review recent changes for vandalism; their time is limited and the raw stream doesn't say where to spend it. Audience: patrollers and wiki admins.</aside>
+  <div class="rc-punch">The raw stream doesn't say <mark>where to look.</mark></div>
+  <aside class="notes"><b>Sumaiya · 0:30.</b> This is what patrollers work from: the recent-changes feed. It starts slow; then it runs at the real rate, about 20 edits a second (we keep edits and new pages, about half the raw feed), 1.7 million a day. Titles are blurred on purpose: at that speed nobody can read them. The counter runs at that rate; it isn't live. Volunteer patrollers review recent changes for vandalism; their time is limited and the raw stream doesn't say where to spend it. Audience: patrollers and wiki admins.</aside>
 </section>
 <!-- ============================== 2b. THE QUESTIONS ============================== -->
 <section class="slide" id="s2q" data-apx="a1">
@@ -1051,7 +1044,7 @@
 <div id="notes"></div>
 <div id="help" style="display:none">→ next · ← back · D details · B back · A appendix · O overview · S presenter · N notes · F full screen</div>
 <script src="vendor/chart.umd.min.js"></script>
-<script src="data.js?v=wq5"></script>
-<script src="deck.js?v=wq5"></script>
+<script src="data.js?v=wq6"></script>
+<script src="deck.js?v=wq6"></script>
 </body>
 </html>
