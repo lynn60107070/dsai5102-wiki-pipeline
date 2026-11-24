@@ -191,6 +191,114 @@
     };
     s._timers = s._timers || []; s._timers.push(requestAnimationFrame(frame));
   }
+  // ---------- title slide: a turning dotted globe; each edit pings where its wiki's language is mainly spoken ----------
+  // Coarse continent outlines [lon, lat], only used to place land dots.
+  const LAND = [
+    [[-166,68],[-156,71],[-140,70],[-128,70],[-115,68],[-95,72],[-80,73],[-65,62],[-60,55],[-56,52],[-66,45],[-70,42],[-75,38],[-76,35],[-81,31],[-80,25],[-83,29],[-90,30],[-97,27],[-97,22],[-92,18],[-87,21],[-88,16],[-83,15],[-83,10],[-79,9],[-80,7],[-86,12],[-92,14],[-96,16],[-105,20],[-106,23],[-110,24],[-112,29],[-115,31],[-117,32],[-118,34],[-121,35],[-124,40],[-124,46],[-125,49],[-131,54],[-136,58],[-145,60],[-152,59],[-158,57],[-162,55],[-158,58],[-163,60],[-165,62],[-166,64]],
+    [[-73,78],[-60,82],[-30,83],[-20,80],[-20,72],[-25,68],[-40,65],[-44,60],[-50,62],[-54,67],[-58,74],[-68,76]],
+    [[-80,9],[-75,11],[-72,12],[-62,11],[-60,8],[-52,5],[-50,0],[-44,-2],[-35,-5],[-35,-9],[-39,-15],[-41,-22],[-48,-26],[-53,-33],[-58,-38],[-62,-39],[-65,-42],[-66,-47],[-69,-51],[-68,-55],[-72,-53],[-74,-47],[-73,-40],[-71,-30],[-70,-18],[-76,-14],[-81,-6],[-80,-1],[-78,2],[-77,7]],
+    [[-9,37],[-9,43],[-2,43.5],[-4,48],[2,51],[5,53],[8,54],[8,57],[11,58],[5,58],[5,62],[11,64],[15,68],[20,70],[28,71],[40,67],[45,68],[55,69],[60,70],[70,73],[80,73],[100,77],[112,74],[130,72],[140,72],[160,70],[170,70],[180,69],[178,64],[170,60],[163,58],[160,53],[156,51],[155,57],[142,59],[136,54],[140,48],[135,43],[130,42],[129,35],[126,35],[126,38],[122,40],[118,38],[122,32],[120,26],[115,22],[108,21],[106,17],[109,12],[105,9],[103,10],[100,13],[99,8],[103,1.5],[101,3],[98,8],[98,16],[94,17],[92,22],[88,22],[85,20],[80,15],[80,10],[77,8],[73,16],[72,21],[68,23],[66,25],[57,25],[56,27],[50,30],[48,30],[50,27],[51,24],[56,26],[59,22],[56,18],[52,16],[45,13],[43,13],[39,21],[35,28],[33,30],[35,32],[36,36],[28,37],[26,40],[23,38],[20,40],[16,40],[16,38],[12,42],[9,44],[3,43],[0,40],[-2,37],[-5,36]],
+    [[-17,21],[-17,15],[-12,8],[-8,4.5],[-2,5],[5,6],[9,4],[9,0],[13,-5],[12,-12],[14,-23],[18,-34],[20,-35],[26,-34],[32,-29],[35,-24],[35,-18],[40,-15],[40,-10],[39,-5],[42,0],[48,4],[51,11],[44,11],[43,12],[39,16],[37,22],[35,27],[32,31],[29,31],[20,32],[20,30],[15,32],[11,33],[10,37],[3,37],[-2,35],[-6,36],[-10,30],[-13,27]],
+    [[44,-25],[47,-25],[50,-15],[49,-12],[44,-16]],
+    [[114,-22],[114,-34],[118,-35],[124,-33],[131,-31],[138,-35],[141,-38],[146,-39],[150,-37],[153,-31],[153,-25],[146,-19],[142,-11],[136,-12],[136,-15],[130,-12],[126,-14],[122,-18]],
+    [[130,31],[131,34],[135,34],[140,35],[141,38],[142,43],[145,44],[141,45],[140,41],[136,37],[132,35],[129,33]],
+    [[-5,50],[1,51],[2,53],[0,54],[-2,56],[-2,58],[-5,58.5],[-6,56],[-5,55],[-3,54],[-4,53],[-5,52]],
+    [[-10,52],[-6,52],[-6,54],[-8,55],[-10,54]],
+    [[-24,65],[-22,66.5],[-14,66.5],[-13,65],[-18,63.5]],
+    [[95,5],[98,4],[106,-6],[104,-6],[100,-2]],
+    [[109,1],[111,-3],[116,-4],[119,1],[117,7],[113,3]],
+    [[131,-1],[141,-3],[150,-10],[143,-9],[138,-8],[132,-4]],
+    [[120,18],[122,18],[126,7],[125,6],[122,10],[120,14]],
+    [[172,-34],[178,-38],[175,-41],[172,-44],[167,-46],[171,-41]],
+  ];
+  // The busiest wikis in the window: share of all edits (%), flagged-bot share, and where the language is mainly
+  // spoken (approximate). null = multilingual (Wikidata, Commons, everything else): pings anywhere on land.
+  // Shares and bot shares: mart_wiki_activity, 28 Oct – 11 Nov 2026; overall 48.6% bots.
+  const SPOTS = { en: [[-98,39],[-100,55],[-2,53],[78,21],[134,-25]], zh: [[104,35],[113,28],[121,24]], fr: [[2.5,46.5],[-72,47]],
+    ar: [[31,27],[45,24],[-6,32],[44,33]], ru: [[38,55],[60,57],[85,55]], es: [[-3.7,40],[-102,23],[-64,-34],[-74,4]] };
+  const GLOBE_WIKIS = [
+    ['commonswiki', 26.39, .679, null], ['wikidatawiki', 26.00, .154, null], ['enwiki', 10.95, .309, SPOTS.en],
+    ['enwiktionary', 3.97, .896, SPOTS.en], ['zhwikisource', 2.46, .983, SPOTS.zh], ['cewiki', 2.26, .995, [[45.7,43.3]]],
+    ['frwiki', 1.84, .373, SPOTS.fr], ['elwiktionary', 1.54, .992, [[22,39]]], ['dewiki', 1.46, .206, [[10,51]]],
+    ['zhwiktionary', 1.16, .989, SPOTS.zh], ['arwiki', 1.16, .816, SPOTS.ar], ['ruwiki', 1.15, .361, SPOTS.ru],
+    ['afwiki', .90, .980, [[25,-29]]], ['itwiki', .90, .317, [[12.5,42.5]]], ['zhwiki', .88, .349, SPOTS.zh],
+    ['trwiki', .88, .680, [[35,39]]], ['eswiki', .86, .129, SPOTS.es], ['jawiki', .74, .198, [[138,36]]],
+    ['kaawiki', .64, .557, [[59,43]]], ['cebwiki', .60, .995, [[123.9,10.3]]], ['kowiktionary', .47, .811, [[127.5,36.5]]],
+    ['mgwiktionary', .45, 1, [[47,-19]]], ['other wikis', 12.34, .478, null],
+  ];
+  const GLOBE_TOTAL = GLOBE_WIKIS.reduce((a, w) => a + w[1], 0);
+  let LAND_DOTS = null;
+  function landDots() {
+    if (LAND_DOTS) return LAND_DOTS;
+    const inside = (p, lon, lat) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+      const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) c = !c; } return c; };
+    LAND_DOTS = [];
+    for (let lat = -58; lat <= 82; lat += 2.4) {
+      const step = 2.4 / Math.max(0.25, Math.cos(lat * Math.PI / 180));
+      for (let lon = -180; lon < 180; lon += step) if (LAND.some(p => inside(p, lon, lat))) LAND_DOTS.push([lon, lat]);
+    }
+    return LAND_DOTS;
+  }
+  function globeCanvas(s, canvas) {
+    const ctx = canvas.getContext && canvas.getContext('2d'); if (!ctx) return;
+    const css = canvas.offsetWidth || 860, dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = canvas.height = css * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const C = css / 2, R = css / 2 - 28, tilt = 22 * Math.PI / 180, rad = Math.PI / 180;
+    const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dots = landDots(), pings = []; const t0 = performance.now(); let last = t0, acc = 0;
+    const pick = () => { let r = Math.random() * GLOBE_TOTAL; for (const w of GLOBE_WIKIS) { if ((r -= w[1]) <= 0) return w; } return GLOBE_WIKIS[0]; };
+    const project = (lon, lat, lon0) => {
+      const l = (lon - lon0) * rad, p = lat * rad, cp = Math.cos(p);
+      const z = Math.sin(tilt) * Math.sin(p) + Math.cos(tilt) * cp * Math.cos(l);
+      return [C + R * cp * Math.sin(l), C - R * (Math.cos(tilt) * Math.sin(p) - Math.sin(tilt) * cp * Math.cos(l)), z];
+    };
+    const draw = (t, dt) => {
+      const age = (t - t0) / 1000, lon0 = 10 - age * 9;   // one turn every 40 s, starting over Europe and Africa
+      const grow = still ? 1 : Math.min(1, age / 1.2), ease = 1 - Math.pow(1 - grow, 3);
+      ctx.clearRect(0, 0, css, css);
+      // atmosphere
+      const g = ctx.createRadialGradient(C, C, R * .92, C, C, R * 1.08); g.addColorStop(0, 'rgba(150,205,255,0)'); g.addColorStop(.5, 'rgba(150,205,255,.35)'); g.addColorStop(1, 'rgba(150,205,255,0)');
+      ctx.globalAlpha = ease; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(C, C, R * 1.08, 0, 7); ctx.fill();
+      // graticule
+      ctx.strokeStyle = 'rgba(207,227,246,.16)'; ctx.lineWidth = 1;
+      const line = pts => { ctx.beginPath(); let on = false; for (const [lo, la] of pts) { const [x, y, z] = project(lo, la, lon0); if (z > 0) { on ? ctx.lineTo(x, y) : ctx.moveTo(x, y); on = true; } else on = false; } ctx.stroke(); };
+      for (let lo = -180; lo < 180; lo += 30) { const pts = []; for (let la = -80; la <= 80; la += 4) pts.push([lo, la]); line(pts); }
+      for (let la = -60; la <= 60; la += 30) { const pts = []; for (let lo = -180; lo <= 180; lo += 4) pts.push([lo, la]); line(pts); }
+      // land
+      ctx.fillStyle = '#e4f1fd';
+      for (const [lo, la] of dots) { const [x, y, z] = project(lo, la, lon0); if (z <= 0) continue;
+        ctx.globalAlpha = ease * (0.25 + 0.7 * z); ctx.beginPath(); ctx.arc(x, y, 2.3, 0, 7); ctx.fill(); }
+      // new edits at the window's real rate
+      if (!still && grow >= 1) { acc += dt * 19.4;
+        while (acc >= 1) { acc -= 1; const w = pick(), bot = Math.random() < w[2];
+          const at = w[3] ? w[3][Math.floor(Math.random() * w[3].length)] : dots[Math.floor(Math.random() * dots.length)];
+          pings.push({ lon: at[0] + (Math.random() - .5) * 5, lat: at[1] + (Math.random() - .5) * 4, bot, born: t, label: Math.random() < 0.07 && w[0] !== 'other wikis' ? w[0] : null }); }
+        if (pings.length > 160) pings.splice(0, pings.length - 160);
+      }
+      // pings: a glowing dot with a ring that grows and fades over 2.4 s
+      ctx.font = '600 15px "JetBrains Mono", Consolas, monospace';
+      for (let i = pings.length - 1; i >= 0; i--) {
+        const p = pings[i], k = (t - p.born) / 2400; if (k >= 1) { pings.splice(i, 1); continue; }
+        const [x, y, z] = project(p.lon, p.lat, lon0); if (z <= 0.05) continue;
+        const col = p.bot ? '255,214,74' : '214,182,255', fade = (1 - k * k) * Math.min(1, z * 2.5);
+        ctx.globalAlpha = 1;
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, 14); glow.addColorStop(0, `rgba(${col},${0.55 * fade})`); glow.addColorStop(1, `rgba(${col},0)`);
+        ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, y, 14, 0, 7); ctx.fill();
+        ctx.strokeStyle = `rgba(${col},${0.9 * (1 - k) * Math.min(1, z * 2.5)})`; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x, y, 4 + 26 * k, 0, 7); ctx.stroke();
+        ctx.fillStyle = `rgba(${col},${fade})`; ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 7); ctx.fill();
+        if (p.label) { ctx.fillStyle = `rgba(255,255,255,${0.95 * fade})`; ctx.fillText(p.label, x + 11, y - 9); }
+      }
+      // light from the top left
+      const sh = ctx.createRadialGradient(C - R * .4, C - R * .45, R * .1, C, C, R * 1.02);
+      sh.addColorStop(0, 'rgba(255,255,255,.10)'); sh.addColorStop(.6, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(6,20,36,.35)');
+      ctx.globalAlpha = ease; ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(C, C, R, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    };
+    s._timers = s._timers || [];
+    if (still) { draw(t0, 0); return; }
+    const frame = t => { const dt = Math.min(0.05, (t - last) / 1000); last = t; draw(t, dt); s._timers.push(requestAnimationFrame(frame)); };
+    s._timers.push(requestAnimationFrame(frame));
+  }
   function liveCounter(s, el) {
     const t0 = performance.now();
     const id = setInterval(() => { el.textContent = fmt(Math.floor((performance.now() - t0) / 1000 * 19.4), 0); }, 80);
@@ -199,7 +307,7 @@
 
   // ---------- per-slide hooks ----------
   const hooks = {
-    enter_s1(s) { streamCanvas(s, s.querySelector('canvas.bg'), { alpha: 0.95, labelColor: '#cfe3f6', lanes: [120, 760] }); liveCounter(s, s.querySelector('#live1')); },
+    enter_s1(s) { globeCanvas(s, s.querySelector('canvas.bg')); liveCounter(s, s.querySelector('#live1')); },
     enter_s2(s) { streamCanvas(s, s.querySelector('canvas.sub'), { lanes: [150, 290], alpha: 0.9, labelColor: '#6b7079' }); liveCounter(s, s.querySelector('#live2')); },
     enter_s17(s) { streamCanvas(s, s.querySelector('canvas.bg'), { alpha: 0.95, labelColor: '#cfe3f6', lanes: [120, 760] }); },
 
