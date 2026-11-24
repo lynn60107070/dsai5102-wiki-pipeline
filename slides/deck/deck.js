@@ -313,15 +313,15 @@
       const grow = still ? 1 : Math.min(1, age / 1.2), ease = 1 - Math.pow(1 - grow, 3);
       ctx.clearRect(0, 0, css, css);
       // atmosphere
-      const g = ctx.createRadialGradient(C, C, R * .92, C, C, R * 1.08); g.addColorStop(0, col('--brand-light', 0)); g.addColorStop(.5, col('--brand-light', .35)); g.addColorStop(1, col('--brand-light', 0));
+      const g = ctx.createRadialGradient(C, C, R * .92, C, C, R * 1.08); g.addColorStop(0, col('--globe-glow', 0)); g.addColorStop(.5, col('--globe-glow', .35)); g.addColorStop(1, col('--globe-glow', 0));
       ctx.globalAlpha = ease; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(C, C, R * 1.08, 0, 7); ctx.fill();
       // graticule
-      ctx.strokeStyle = col('--brand-tint', .16); ctx.lineWidth = 1;
+      ctx.strokeStyle = col('--globe-grid', .16); ctx.lineWidth = 1;
       const line = pts => { ctx.beginPath(); let on = false; for (const [lo, la] of pts) { const [x, y, z] = project(lo, la, lon0); if (z > 0) { on ? ctx.lineTo(x, y) : ctx.moveTo(x, y); on = true; } else on = false; } ctx.stroke(); };
       for (let lo = -180; lo < 180; lo += 30) { const pts = []; for (let la = -80; la <= 80; la += 4) pts.push([lo, la]); line(pts); }
       for (let la = -60; la <= 60; la += 30) { const pts = []; for (let lo = -180; lo <= 180; lo += 4) pts.push([lo, la]); line(pts); }
       // land
-      ctx.fillStyle = col('--brand-tint');
+      ctx.fillStyle = col('--globe-land');
       for (const [lo, la] of dots) { const [x, y, z] = project(lo, la, lon0); if (z <= 0) continue;
         ctx.globalAlpha = ease * (0.25 + 0.7 * z); ctx.beginPath(); ctx.arc(x, y, 2.3, 0, 7); ctx.fill(); }
       // new edits at the window's real rate
@@ -347,7 +347,7 @@
       }
       // light from the top left
       const sh = ctx.createRadialGradient(C - R * .4, C - R * .45, R * .1, C, C, R * 1.02);
-      sh.addColorStop(0, 'rgba(255,255,255,.10)'); sh.addColorStop(.6, 'rgba(255,255,255,0)'); sh.addColorStop(1, col('--brand-deeper', .35));
+      sh.addColorStop(0, 'rgba(255,255,255,.10)'); sh.addColorStop(.6, 'rgba(255,255,255,0)'); sh.addColorStop(1, col('--globe-shade', .35));
       ctx.globalAlpha = ease; ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(C, C, R, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
     };
     s._timers = s._timers || [];
