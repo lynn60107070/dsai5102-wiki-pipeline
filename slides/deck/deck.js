@@ -349,9 +349,9 @@
     enter_s7(s) {
       const H = D.hod, hrs = [...Array(24).keys()].map(h => String(h).padStart(2, '0'));
       const band = { id: 'band', beforeDatasetsDraw(c) { const { ctx, chartArea: a, scales: { x } } = c;
-        const x0 = x.getPixelForValue(13) - (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2, x1 = x.getPixelForValue(18) + (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2;
+        const x0 = x.getPixelForValue(13) - (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2, x1 = x.getPixelForValue(21) + (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2;
         ctx.save(); ctx.fillStyle = s._band ? 'rgba(169,137,197,.14)' : 'rgba(0,0,0,0)'; ctx.fillRect(x0, a.top, x1 - x0, a.bottom - a.top);
-        if (s._band) { ctx.fillStyle = '#6E4E8E'; ctx.font = '600 14px "Plus Jakarta Sans", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('13:00–19:00 · 30.8% of the day', (x0 + x1) / 2, a.bottom - 14); }
+        if (s._band) { ctx.fillStyle = '#6E4E8E'; ctx.font = '600 14px "Plus Jakarta Sans", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('13:00–22:00 · above 14,800 an hour', (x0 + x1) / 2, a.bottom - 14); }
         ctx.restore(); } };
       const peaks = { id: 'peaks', afterDatasetsDraw(c) { const m = c.getDatasetMeta(0); const { ctx } = c; ctx.save();
         [[17, '16,434 at 17:00', -16], [4, '7,911 at 04:00', 28]].forEach(([i, t, dy]) => { const p = m.data[i]; if (!p) return;
