@@ -152,8 +152,9 @@ Slide 10 plays a recording of the running stack (click or P); talk over it. No s
 
 ### Slides 14–15. Findings 4–5: the clock and attention spikes (1:00)
 - **On slide:**
-  4. **Humans follow the clock, bots don't:** human peak 17:00 UTC is 2.1× the 04:00 low; 13:00–19:00
-     carries 30.8% of the day → the European afternoon and American morning.
+  4. **Humans follow the clock, bots don't:** human peak 17:00 UTC is 2.1× the 04:00 low; a plateau above
+     14,800 an hour from 13:00 to 22:00 (busiest six hours 31%) → the European afternoon and evening
+     and the American morning.
   5. **Attention spikes are not an early sign of edit surges:** 77.5% of 24,234 spikes get no edit in
      the spike hour or the two hours after, and at every level of views a spike is followed by an edit
      *less* often than a steadily popular article. Big news still can: *2026 Kraków shooting*, 203 edits
@@ -261,8 +262,8 @@ The steps on the right light up as the video reaches them; it follows [docs/demo
 - **On slide:** two columns.
   - **Limits / next:** one laptop collects (→ a server), one Kafka broker (→ more), bot flag is an
     estimate, 15 days only.
-  - **Answer:** about half the edits are bots; rank wikis by human edits; human pressure peaks
-    13:00–19:00 UTC; jumps in readers are not an early sign of edit surges.
+  - **Answer:** about half the edits are bots; rank wikis by human edits; human pressure is highest
+    over a 13:00–22:00 UTC plateau; jumps in readers are not an early sign of edit surges.
 - **Say:** close on the question from slide 3.
 
 ### Slide 18. Questions

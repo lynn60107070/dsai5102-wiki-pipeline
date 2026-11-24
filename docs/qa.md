@@ -24,8 +24,9 @@ drive both, so we can show timing but not cause.
   what patrollers see by about 1.8× on Wikipedias.
 - Where editing pressure concentrates: English Wikipedia alone has 40.9% of human Wikipedia edits, and
   the top 10 of 347 Wikipedias have 74.2%. Ranking by total edits misleads: Chechen Wikipedia is #2 by
-  edits but #65 by human edits (99.5% bots). Humans peak at 17:00 UTC, 2.1× the 04:00 low (13:00–19:00 UTC: the European afternoon and American
-  morning).
+  edits but #65 by human edits (99.5% bots). Humans peak at 17:00 UTC, 2.1× the 04:00 low, on a broad plateau above 14,800 an hour from 13:00 to
+  22:00 UTC (the busiest six hours carry 31%, 25% if even): the European afternoon and evening and the
+  American morning.
 - Attention spikes are *not* an early sign of edit surges: 77.5% of 24,234 spikes get no edit, and at
   every level of views a spike is followed by an edit less often than a steadily popular article (above
   20,000 views: 57% against 84% within two hours). Every number in section 6: `analysis/findings.sql`.
@@ -271,8 +272,8 @@ spikes against Wikimedia's separate count of automated traffic.
 
 **37. Is "European afternoon" really what 17:00 UTC means?**
 Only partly: 17:00 UTC is 18:00 in Central Europe but noon in New York, and English Wikipedia alone has
-40.9% of human edits. So the peak window, 13:00–19:00 UTC, is the European afternoon *and* the American
-morning, which is how the report now puts it. We didn't split the hour profile by language;
+40.9% of human edits. So the 13:00–22:00 UTC plateau is the European afternoon and evening *and* the
+American morning, which is how the report now puts it. We didn't split the hour profile by language;
 `mart_edits_hourly` has `hour_of_day` and `language_name`, so that is one query away.
 
 **38. You deduplicate by `event_id`. Could the same edit arrive twice with different ids?**
