@@ -11,7 +11,7 @@ dropped. Each event names the wiki, the page, the time, whether the account has 
 user name. The raw archive keeps events as received; the clean zone, which the warehouse reads, keeps
 only a hash of the user name. The feed covers every Wikimedia project, so the volumes in
 \cref{tab:sources,tab:profile} are for all of them, and the bot share is also given for the Wikipedias
-alone. There is no archive to download later, so the collector runs all the time and replays outages
+alone. There is no archive to download later, so our producer runs all the time and replays outages
 from the feed. Licence: none is stated for the event data itself; its use falls under the Wikimedia
 Terms of Use~\cite{wikimedia2026terms}.
 
@@ -19,10 +19,10 @@ Terms of Use~\cite{wikimedia2026terms}.
 per hour~\cite{wikimedia2026pageviews}, counting human readers only. We keep the articles with at least
 10 views in the hour, plus the total views per wiki over all articles. We call an article-hour an
 \emph{attention spike} when it has at least 1{,}000 views and at least five times the article's average
-over the previous 24 hours, so the 10-view cut-off keeps every spike. The files stay online, so a failed
+over the previous 24 hours (all with pageview data), so the 10-view cut-off keeps every spike. The files stay online, so a failed
 hour can be reloaded by running it again. Licence: CC0~\cite{wikimedia2026dumpslegal}.
 
-\paragraph{Wiki names (reference).} The Sitematrix API~\cite{wikimedia2026sitematrix} lists every
+\paragraph{Wiki names (reference).} The SiteMatrix API~\cite{wikimedia2026sitematrix} lists every
 Wikimedia wiki with its project and language. It changes rarely, so it is read once and stored as a small
 reference table that turns ids like \texttt{arzwiki} into ``Egyptian Arabic Wikipedia''. Each
 Wikipedia's API also gives its namespaces and main page, to tell articles from other pages.
@@ -40,7 +40,7 @@ EventStreams \emph{recentchange} & Stream (server-sent events) & Continuously & 
   1.7 million a day & wiki, article, hour \\
 Pageview dumps & Batch files & Hourly & One file of about 57~MB and 6.4 million rows (5.25 million
   for Wikipedias); we keep about 193{,}000 + per-wiki totals & wiki, article, hour \\
-Sitematrix API & Reference table & Rarely & 1{,}073 wikis & wiki \\
+SiteMatrix API & Reference table & Rarely & 1{,}073 wikis & wiki \\
 \bottomrule
 \end{tabularx}
 \caption{Data sources. Pageview figures are from one file, 24 Oct 2026 12:00 UTC.}
@@ -77,13 +77,12 @@ Clean zone (Parquet)                         & 1.08 GB \\
 \paragraph{Data profile.} \Cref{tab:profile} summarises the data collected in the analysis window, 28 Oct
 to 11 Nov 2026 (UTC; 15 days, 360 hours). The pipeline kept 25{,}093{,}717 edits and page creations, about
 1.67 million a day, on 771 wikis. Edits by flagged bot accounts made up 48.6\% of all edits
-and 45.3\% of edits on the Wikipedias. Because the feed is delivered at least once and outages were
-replayed, 10.8 million events, 30\% of the raw zone, arrived more than once; they are removed by compaction in the lake and
-then by event id in dbt, before the warehouse tables. Outages were replayed (\cref{sec:implementation}),
-so no hour of the window is empty. Four hours, 02:00--06:00 UTC on 28 Oct, have under half the median
+and 45.3\% of edits on the Wikipedias. Outages were replayed from the feed
+(\cref{sec:implementation}), so no hour of the window is empty. With the replays and the feed's at-least-once delivery, 10.8 million
+events (30\% of the raw zone) arrived more than once; lake compaction and dbt (by event id) remove them. Four hours, 02:00--06:00 UTC on 28 Oct, have under half the median
 hour's edits; bot and human edits both fell, at 03:00 UTC to 6\% and 16\% of the median hour. The raw
 zone has no more events for those hours, so the drop is in what the feed delivered, not a loss in the
 pipeline.
 They are kept and marked on the dashboard's completeness tile. Pageview files are missing for 13 hours,
-which failed while the laptop was offline and were never retried (\cref{tab:incidents}), so no attention
-spike can be found in those hours.
+which failed while the laptop was offline and were not reloaded before the window was frozen
+(\cref{tab:incidents}), so no attention spike can be found in those hours.

@@ -54,7 +54,7 @@ You edit only the files you own. To change someone else's file, ask them or open
 | S1 setup | Section 1 above. Post a screenshot of the dashboard + `docker compose ps` in the chat |
 | S5 ask Dr. Bouguelia | Presentation date (25 Nov or 2 Dec?), report template preference, 2-person group OK |
 | S6 diagram | The README's text diagram + [docs/design.md](docs/design.md) §3–§5. Draw it in draw.io; save `.drawio` + `.svg` + `.png` + `.pdf` in `docs/diagram/` |
-| S7 tool table | README's "Layer / Tool / Job / Why" table is a start; add 1–2 alternatives per tool and why we didn't pick them. Goes in [paper/sections/04_design_choices.tex](paper/sections/04_design_choices.tex) at the `\todo` |
+| S7 tool table | README's "Layer / Tool / Job / Why" table is a start; add 1–2 alternatives per tool and why we didn't pick them. Goes in [paper/sections/04_design_choices.tex](paper/sections/04_design_choices.tex) |
 | S9 dashboard | Metabase at http://localhost:3000 already has the "Wiki serving" connection and all 8 tiles. Build new tiles on the `mart_*` tables (each table's grain and meaning: [docs/design.md](docs/design.md) §6). When a tile is final, add its SQL to `CARDS` in [scripts/metabase_setup.py](scripts/metabase_setup.py) (or send it to Lynn) so a fresh install recreates it |
 | S8, S10, S11 | After the analysis window closes (11 Nov): numbers from the dashboard/marts into the report sections |
 
