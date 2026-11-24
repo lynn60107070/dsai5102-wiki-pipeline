@@ -6,8 +6,8 @@
 <title>Wikipedia Live Edits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="deck.css?v=wq7">
-<link rel="stylesheet" href="theme.css?v=wq7">
+<link rel="stylesheet" href="deck.css?v=wq9">
+<link rel="stylesheet" href="theme.css?v=wq9">
 </head>
 <body>
 <div id="progress"></div>
@@ -67,25 +67,32 @@
     <div class="rc-lbl">a day, on 771 wikis</div>
     <div class="rc-one">
       <!-- the patroller: eyes scan the feed to the left, blinks, sweat drop, frantic typing -->
-      <svg class="person" viewBox="0 0 160 150" width="150" height="140">
-        <circle cx="80" cy="78" r="70" fill="#F1EAF8"/>
-        <path d="M28 150c0-36 22-50 52-50s52 14 52 50z" fill="#A989C5"/>
-        <rect x="72" y="86" width="16" height="16" rx="6" fill="#E2A97E"/>
-        <g class="hd">
-          <circle cx="80" cy="62" r="29" fill="#EDB98F"/>
-          <path d="M51 60c-2-22 12-35 30-35s32 11 29 34c-6-9-14-14-25-15-10 4-22 7-34 16z" fill="#3B2A26"/>
-          <g class="brows" stroke="#3B2A26" stroke-width="3" stroke-linecap="round"><path d="M64 51l10 3"/><path d="M96 51l-10 3"/></g>
-          <g class="eyesw"><ellipse cx="70" cy="62" rx="6.5" ry="7" fill="#fff"/><ellipse cx="90" cy="62" rx="6.5" ry="7" fill="#fff"/>
-            <g class="pupils" fill="#1F2937"><circle cx="70" cy="62" r="3.4"/><circle cx="90" cy="62" r="3.4"/></g></g>
-          <ellipse cx="80" cy="78" rx="4" ry="4.6" fill="#8A4B3A"/>
-          <path class="sweat" d="M112 44c3 5 5 8 5 11a5 5 0 0 1-10 0c0-3 2-6 5-11z" fill="#7CC4F2"/>
-        </g>
-        <path d="M34 150l10-30h72l10 30z" fill="#C9D6E3"/>
-        <rect x="44" y="104" width="72" height="18" rx="3" fill="#DCE6F1"/>
-        <circle cx="80" cy="113" r="3.5" fill="#fff"/>
-        <circle class="hand h1" cx="54" cy="124" r="7" fill="#EDB98F"/>
-        <circle class="hand h2" cx="106" cy="124" r="7" fill="#EDB98F"/>
-        <g class="bang"><circle cx="134" cy="26" r="15" fill="#E5484D"/><text x="134" y="33" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="21" font-weight="800" fill="#fff">!</text></g>
+      <svg class="person" viewBox="0 0 200 180" width="168" height="151">
+        <defs><clipPath id="ptClip"><circle cx="100" cy="98" r="82"/><rect x="0" y="0" width="200" height="98"/></clipPath></defs>
+        <circle cx="100" cy="98" r="82" fill="#F1EAF8"/>
+        <g clip-path="url(#ptClip)"><g class="body">
+          <path d="M34 190c0-50 28-72 66-72s66 22 66 72z" fill="#A989C5"/>
+          <path d="M34 190c0-50 28-72 66-72-28 7-48 30-48 72z" fill="#9A78BC"/>
+          <rect x="90" y="98" width="20" height="24" rx="9" fill="#DFA67C"/>
+          <path d="M86 118q14 18 28 0z" fill="#E8B48C"/>
+          <g class="hd">
+            <circle cx="70" cy="76" r="7" fill="#E8B48C"/><circle cx="130" cy="76" r="7" fill="#E8B48C"/>
+            <ellipse cx="100" cy="72" rx="30" ry="33" fill="#F2C29A"/>
+            <ellipse class="glow" cx="100" cy="82" rx="26" ry="20" fill="#7CC4F2"/>
+            <path d="M69 76c-5-30 11-42 32-42 22 0 36 14 30 42-2-12-7-19-15-23-12 7-30 9-44 11-1.4 4-2.4 8-3 12z" fill="#2F2420"/>
+            <circle cx="80" cy="89" r="5" fill="#F29C9C" opacity=".45"/><circle cx="120" cy="89" r="5" fill="#F29C9C" opacity=".45"/>
+            <g class="brows" fill="none" stroke="#2F2420" stroke-width="3" stroke-linecap="round"><path d="M79 64q7-5 15-4"/><path d="M106 60q8-1 15 4"/></g>
+            <g class="eyesw"><g class="pupils" fill="#1F2937"><ellipse cx="88" cy="76" rx="3.2" ry="4"/><ellipse cx="112" cy="76" rx="3.2" ry="4"/></g></g>
+            <g fill="#fff" fill-opacity=".18" stroke="#102A43" stroke-width="2.6"><circle cx="88" cy="76" r="10"/><circle cx="112" cy="76" r="10"/></g>
+            <path d="M98 75q2-2 4 0" fill="none" stroke="#102A43" stroke-width="2.6"/>
+            <path d="M94 95q6-4 12 0" fill="none" stroke="#8A4B3A" stroke-width="2.6" stroke-linecap="round"/>
+            <path class="sweat" d="M131 47c3 5 5 8 5 11a5 5 0 0 1-10 0c0-3 2-6 5-11z" fill="#7CC4F2"/>
+          </g>
+        </g></g>
+        <rect x="54" y="132" width="92" height="50" rx="7" fill="#DCE6F1"/>
+        <rect x="54" y="132" width="92" height="4" rx="2" fill="#EEF3F9"/>
+        <circle cx="100" cy="158" r="5" fill="#fff"/>
+        <g class="bang"><circle cx="162" cy="36" r="15" fill="#E5484D"/><text x="162" y="43" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="21" font-weight="800" fill="#fff">!</text></g>
       </svg>
       <span>One volunteer can't read them all.</span>
     </div>
@@ -1064,7 +1071,7 @@
 <div id="notes"></div>
 <div id="help" style="display:none">→ next · ← back · D details · B back · A appendix · O overview · S presenter · N notes · F full screen</div>
 <script src="vendor/chart.umd.min.js"></script>
-<script src="data.js?v=wq7"></script>
-<script src="deck.js?v=wq7"></script>
+<script src="data.js?v=wq9"></script>
+<script src="deck.js?v=wq9"></script>
 </body>
 </html>

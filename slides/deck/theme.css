@@ -210,22 +210,20 @@ html[data-preview] #bar { display: none !important; }
   background: linear-gradient(90deg, rgba(249,212,92,.75), rgba(249,212,92,.75)) no-repeat left center / 0% 100%; }
 #s2.active .rc-punch mark { animation: hlSwipe .8s ease-out 2.5s forwards; }
 @keyframes hlSwipe { to { background-size: 100% 100%; } }
-/* the patroller */
+/* the patroller: reads down the feed, blinks, screen glow, sweat drop, "!" */
 #s2 .person { flex: none; overflow: visible; }
-#s2 .person .hd { transform-origin: 80px 95px; animation: hdShake 4.2s ease-in-out infinite; }
-@keyframes hdShake { 0%, 60%, 100% { transform: rotate(0); } 66% { transform: rotate(-6deg); } 72% { transform: rotate(5deg); } 78% { transform: rotate(-3deg); } 84% { transform: rotate(0); } }
-#s2 .person .pupils { animation: scan 1.1s steps(1) infinite, scanX 1.1s ease-in-out infinite; }
-@keyframes scan { 0% { transform: translate(-3px,-2px); } 25% { transform: translate(-3px,0); } 50% { transform: translate(-3px,2px); } 75% { transform: translate(-3px,3px); } }
-@keyframes scanX { 0%, 100% { translate: 0 0; } 50% { translate: -0.8px 0; } }
-#s2 .person .eyesw { transform-origin: 80px 62px; animation: blink 3.3s infinite; }
-@keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
-#s2 .person .brows { transform-origin: 80px 52px; animation: brow 2.2s ease-in-out infinite; }
-@keyframes brow { 50% { transform: translateY(-2.5px); } }
-#s2 .person .sweat { transform-box: fill-box; animation: sweat 2.6s ease-in infinite; }
-@keyframes sweat { 0% { transform: translateY(-4px) scale(.4); opacity: 0; } 20% { opacity: 1; transform: none; } 80% { opacity: 1; transform: translateY(18px); } 100% { opacity: 0; transform: translateY(24px); } }
-#s2 .person .hand { transform-box: fill-box; animation: typeA .22s ease-in-out infinite alternate; }
-#s2 .person .h2 { animation-delay: -.11s; }
-@keyframes typeA { to { transform: translateY(-4px); } }
-#s2 .person .bang { transform-box: fill-box; transform-origin: center; opacity: 0; animation: bang 4.2s infinite; animation-delay: 2s; }
+#s2 .person .body { animation: breathe 3.6s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: translateY(1.5px); } }
+#s2 .person .pupils { animation: read 1.6s ease-in-out infinite; }
+@keyframes read { 0% { transform: translate(-3px,-2px); } 20% { transform: translate(-2px,-0.5px); } 40% { transform: translate(-3px,1px); } 60% { transform: translate(-2px,2px); } 80% { transform: translate(-3px,3px); } 100% { transform: translate(-3px,-2px); } }
+#s2 .person .eyesw { transform-origin: 100px 76px; animation: blink 3.4s infinite; }
+@keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+#s2 .person .brows { animation: brow 2.4s ease-in-out infinite; }
+@keyframes brow { 50% { transform: translateY(-2px); } }
+#s2 .person .glow { opacity: .12; animation: glow 1.3s steps(3) infinite; }
+@keyframes glow { 0% { opacity: .06; } 50% { opacity: .16; } 100% { opacity: .1; } }
+#s2 .person .sweat { transform-box: fill-box; animation: sweat 2.8s ease-in infinite; }
+@keyframes sweat { 0% { transform: translateY(-4px) scale(.4); opacity: 0; } 20% { opacity: 1; transform: none; } 80% { opacity: 1; transform: translateY(16px); } 100% { opacity: 0; transform: translateY(22px); } }
+#s2 .person .bang { transform-box: fill-box; transform-origin: center; opacity: 0; animation: bang 4.4s 2s infinite; }
 @keyframes bang { 0%, 58% { opacity: 0; transform: scale(.3); } 64% { opacity: 1; transform: scale(1.15); } 70%, 86% { opacity: 1; transform: scale(1); } 92%, 100% { opacity: 0; transform: scale(.6); } }
 @media (prefers-reduced-motion: reduce) { #s2 * { animation-duration: .01s !important; animation-delay: 0s !important; } }
