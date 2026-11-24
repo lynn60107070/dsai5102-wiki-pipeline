@@ -181,6 +181,73 @@ table.t.compact { font-size: 15px; } table.t.compact td { padding: 7px 10px; }
 @keyframes pulse { 70% { box-shadow: 0 0 0 12px rgba(229,72,77,0); } 100% { box-shadow: 0 0 0 0 rgba(229,72,77,0); } }
 
 /* incident cards */
+/* slide 16: where it broke — pipeline stages, incidents revealed two per click, mini animated diagrams */
+.brk { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-top: 22px; }
+.brk-flow { position: absolute; left: 0; top: 17px; width: 100%; height: 20px; z-index: 0; overflow: visible; }
+.brk-flow line { stroke: var(--sky, #A9D0F2); stroke-width: 3; stroke-dasharray: 10 8; animation: brkFlow 1.2s linear infinite; }
+@keyframes brkFlow { to { stroke-dashoffset: -18; } }
+.bcol { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: stretch; gap: 22px; }
+.node { align-self: center; display: flex; align-items: center; gap: 8px; background: #fff; border: 2px solid var(--hair); border-radius: 999px;
+  padding: 9px 16px; font: 700 15px var(--sans); color: var(--ink2); white-space: nowrap; box-shadow: 0 6px 18px rgba(16,42,67,.06); }
+.node i { width: 10px; height: 10px; border-radius: 50%; background: var(--hair); flex: none; }
+.bcol.stream .node i { background: var(--stream); } .bcol.batch .node i { background: var(--batch); } .bcol.ana .node i { background: var(--spike); }
+.bcol:has(.bcard.shown) .node { animation: nodeFix 1.8s ease forwards; }
+@keyframes nodeFix { 0% { border-color: var(--hair); } 20%, 45% { border-color: var(--bad); background: #FDEDED; color: var(--bad); transform: scale(1.06); }
+  100% { border-color: var(--good); background: #E9F6F0; color: var(--good); transform: none; } }
+.bcol:has(.bcard.shown) .node::after { content: "✓"; font-weight: 800; color: var(--good); opacity: 0; animation: fadeIn .4s 1.5s forwards; }
+@keyframes fadeIn { to { opacity: 1; } }
+.bcard { padding: 16px 18px 20px; border-radius: 20px; }
+.bcard .viz { width: 100%; height: 150px; display: block; margin-bottom: 6px; overflow: visible; }
+.bcard .stat { font: 800 36px/1.1 var(--sans); letter-spacing: -.02em; color: var(--bad); font-variant-numeric: tabular-nums; }
+.bcard .pb { font-size: 16px; line-height: 1.35; color: var(--ink2); margin-top: 6px; min-height: 87px; }
+.bcard .fx { font: 700 13px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--good); margin: 14px 0 6px; padding-top: 12px; border-top: 1.5px dashed var(--hair); }
+.bcard p:last-child { font-size: 16px; line-height: 1.4; }
+.bcard code { font-size: 12.5px; white-space: nowrap; }
+/* mini diagrams */
+.viz text { font: 600 12px var(--sans); }
+.viz .pl { fill: var(--ink2); font-weight: 600; }
+.viz .lbl-good { fill: var(--good); } .viz .lbl-bad { fill: var(--bad); }
+.viz .ln { fill: none; stroke: var(--stream); stroke-width: 3; stroke-linecap: round; }
+.viz .gapl { stroke: var(--bad); stroke-width: 2; stroke-dasharray: 4 4; }
+.viz .gapt { fill: var(--bad); font-size: 14px; }
+.viz .fill-in { stroke: var(--good); stroke-dasharray: 90; stroke-dashoffset: 90; }
+.viz .lbl-good, .viz .dd, .viz .dk-g, .viz .rr, .viz .rv-t2 { opacity: 0; }
+.f.shown .viz .fill-in { animation: brkDraw 1.1s .7s ease forwards; }
+.f.shown .viz .gapt, .f.shown .viz .gapl { animation: fadeOut .5s 1.6s forwards; }
+.f.shown .viz .lbl-good { animation: fadeIn .4s 1.8s forwards; }
+@keyframes brkDraw { to { stroke-dashoffset: 0; } }
+@keyframes fadeOut { to { opacity: 0; } }
+.viz .pbar { fill: var(--sky, #A9D0F2); } .viz .pbar:first-of-type { fill: var(--stream); }
+.viz .oldclock { stroke: var(--bad); stroke-width: 2; stroke-dasharray: 5 4; }
+.viz .wm line { stroke: var(--good); stroke-width: 3; }
+.f.shown .viz .wm { animation: wmSlide 1.2s .8s cubic-bezier(.3,.8,.3,1) forwards; }
+@keyframes wmSlide { to { transform: translateX(-72px); } }
+.viz .doc rect { fill: #fff; stroke: var(--stream); stroke-width: 2.5; } .viz .doc line { stroke: var(--sky, #A9D0F2); stroke-width: 3; stroke-linecap: round; }
+.viz .doc.dup rect { stroke: var(--bad); } .viz .x2 { fill: var(--bad); font-size: 16px; font-weight: 800; }
+.f.shown .viz .dup { animation: dupMerge 1.1s .8s ease-in forwards; }
+.f.shown .viz .x2 { animation: fadeOut .4s 1.3s forwards; }
+@keyframes dupMerge { to { transform: translateX(-68px); opacity: 0; } }
+.viz .dk-out { fill: #F3F6FA; stroke: var(--hair); stroke-width: 2; }
+.viz .dk-fill { fill: var(--bad); opacity: .8; transform-box: fill-box; transform-origin: left; transform: scaleX(0); }
+.viz .dk-used { fill: var(--stream); }
+.f.shown .viz .dk-fill { animation: diskGrow 2.6s .4s ease forwards; }
+@keyframes diskGrow { 40%, 60% { transform: scaleX(1); fill: var(--bad); } 100% { transform: scaleX(.14); fill: var(--good); } }
+.f.shown .viz .dk-t { animation: fadeOut .4s 2.4s forwards; }
+.f.shown .viz .dk-g { animation: fadeIn .4s 2.8s forwards; }
+.viz .runs rect { fill: var(--good); opacity: .85; }
+.f.shown .viz .runs .flip { animation: runFlip .5s 1.2s forwards; }
+.f.shown .viz .rr { animation: fadeIn .4s 1.6s forwards; }
+@keyframes runFlip { to { fill: var(--bad); opacity: 1; } }
+.viz .axis { stroke: var(--hair); stroke-width: 2; }
+.viz .rv-s, .viz .rv-b { transform-box: fill-box; transform-origin: bottom; }
+.viz .rv-s { fill: var(--spike); } .viz .rv-b { fill: var(--base); transform: scaleY(.33); }
+.f.shown .viz .rv-s { animation: rvS 1.2s 1.2s ease forwards; }
+.f.shown .viz .rv-b { animation: rvB 1.2s 1.2s ease forwards; }
+@keyframes rvS { to { transform: scaleY(.6); } }
+@keyframes rvB { to { transform: scaleY(.88); } }
+.f.shown .viz .rv-t1 { animation: fadeOut .4s 1.1s forwards; }
+.f.shown .viz .rv-t2 { animation: fadeIn .4s 2.2s forwards; }
+@media (prefers-reduced-motion: reduce) { .brk *, .brk *::after { animation-duration: .01s !important; animation-delay: 0s !important; } }
 .inc { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .inc .card { padding: 20px 22px; }
 .inc .k { font: 600 12px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--bad); margin-bottom: 6px; }

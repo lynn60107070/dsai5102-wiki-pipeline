@@ -6,8 +6,8 @@
 <title>Wikipedia Live Edits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="deck.css?v=plateau1">
-<link rel="stylesheet" href="theme.css?v=plateau1">
+<link rel="stylesheet" href="deck.css?v=brk1">
+<link rel="stylesheet" href="theme.css?v=brk1">
 </head>
 <body>
 <div id="progress"></div>
@@ -521,15 +521,118 @@
 <section class="slide" id="s15" data-apx="a12">
   <div class="eyebrow"><b>05</b><span class="sec-name">Challenges, decisions &amp; lessons</span><i class="sec-line"></i><span class="sub-name">What broke</span><span class="who">Lynn</span></div>
   <h2>What broke, and the design decision it forced</h2>
-  <div class="inc" style="margin-top:26px">
-    <div class="card f" data-f="1"><h3>The laptop slept</h3><div class="k">Problem</div><p>Standby up to 5 h 47 min; Wikimedia drops long connections every few minutes.</p><div class="k fix">Decision</div><p>Queue every gap on disk, replay it by time (<code style="white-space:nowrap">?since=</code>), resume where it stopped.</p></div>
-    <div class="card f" data-f="1"><h3>One partition raced ahead</h3><div class="k">Problem</div><p><b>205,814</b> events wrongly dropped as "late" during a backlog.</p><div class="k fix">Decision</div><p>A per-partition watermark: a minute closes only when every partition has passed it.</p></div>
-    <div class="card f" data-f="2"><h3>Sinks killed mid-backlog</h3><div class="k">Problem</div><p><b>381,066</b> duplicate events written.</p><div class="k fix">Decision</div><p>Hourly compaction, 60 s graceful shutdown, dedupe by event id in dbt.</p></div>
-    <div class="card f" data-f="2"><h3>Docker's disk hit 351 GB</h3><div class="k">Problem</div><p>File-system errors; some warehouse writes lost.</p><div class="k fix">Decision</div><p>Checked every lake file, rebuilt the warehouse from the lake: <b>why the raw zone exists</b>.</p></div>
-    <div class="card f" data-f="3"><h3>Green runs, missing hours</h3><div class="k">Problem</div><p>13 pageview hours failed, but a clean-up step made the runs look green.</p><div class="k fix">Decision</div><p>Clean-up is now a teardown task, so failures show red.</p></div>
-    <div class="card f" data-f="3"><h3>Checking our own analysis</h3><div class="k">Problem</div><p>Main pages in finding 5's comparison group made spikes look 3× as edited.</p><div class="k fix">Decision</div><p>A seed of non-article pages from each wiki's API. <b>The finding reversed</b>, and we say so.</p></div>
+  <!-- Where it broke: six pipeline stages joined by a flowing line. Each click reveals two incidents;
+       the stage flashes red, then turns green once the fix is shown. Mini diagrams animate on reveal. -->
+  <div class="brk">
+    <svg class="brk-flow" viewBox="0 0 1440 20" preserveAspectRatio="none"><line x1="120" y1="10" x2="1320" y2="10"/></svg>
+    <!-- 1. producer -->
+    <div class="bcol stream">
+      <div class="node"><i></i>Producer</div>
+      <div class="card bcard f" data-f="1">
+        <svg class="viz" viewBox="0 0 200 100">
+          <path class="ln" d="M4,62 C20,40 32,70 48,52 S72,40 84,58"/>
+          <line class="gapl" x1="86" y1="72" x2="134" y2="72"/>
+          <text text-anchor="middle" class="gapt" x="110" y="40">zzz</text>
+          <path class="ln fill-in" d="M84,58 C96,34 108,74 120,50 S130,46 136,56"/>
+          <path class="ln" d="M136,56 C150,36 162,70 176,50 S190,48 196,56"/>
+          <text text-anchor="middle" class="lbl-good" x="110" y="96">replayed</text>
+        </svg>
+        <div class="stat">5 h 47 min</div>
+        <p class="pb">laptop asleep; Wikimedia also drops long connections</p>
+        <div class="fx">Decision</div>
+        <p>Queue every gap on disk, replay it by time (<code>?since=</code>), resume where it stopped.</p>
+      </div>
+    </div>
+    <!-- 2. processor -->
+    <div class="bcol stream">
+      <div class="node"><i></i>Processor</div>
+      <div class="card bcard f" data-f="1">
+        <svg class="viz" viewBox="0 0 200 100">
+          <text class="pl" x="2" y="26">P0</text><text class="pl" x="2" y="52">P1</text><text class="pl" x="2" y="78">P2</text>
+          <rect class="pbar" x="24" y="14" width="150" height="16" rx="4"/>
+          <rect class="pbar" x="24" y="40" width="78" height="16" rx="4"/>
+          <rect class="pbar" x="24" y="66" width="96" height="16" rx="4"/>
+          <line class="oldclock" x1="174" y1="6" x2="174" y2="90"/>
+          <g class="wm"><line x1="174" y1="6" x2="174" y2="90"/></g>
+          <text text-anchor="middle" class="lbl-bad" x="174" y="99">old clock</text><text text-anchor="middle" class="lbl-good" x="102" y="99">watermark</text>
+        </svg>
+        <div class="stat"><span class="count" data-to="205814">0</span></div>
+        <p class="pb">events wrongly dropped as “late” while one partition raced ahead</p>
+        <div class="fx">Decision</div>
+        <p>A per-partition watermark: a minute closes only when every partition has passed it.</p>
+      </div>
+    </div>
+    <!-- 3. sinks -->
+    <div class="bcol stream">
+      <div class="node"><i></i>Sinks → lake</div>
+      <div class="card bcard f" data-f="2">
+        <svg class="viz" viewBox="0 0 200 100">
+          <g class="doc"><rect x="44" y="18" width="44" height="58" rx="5"/><line x1="52" y1="34" x2="80" y2="34"/><line x1="52" y1="44" x2="80" y2="44"/><line x1="52" y1="54" x2="72" y2="54"/></g>
+          <g class="doc dup"><rect x="112" y="18" width="44" height="58" rx="5"/><line x1="120" y1="34" x2="148" y2="34"/><line x1="120" y1="44" x2="148" y2="44"/><line x1="120" y1="54" x2="140" y2="54"/></g>
+          <text class="x2" x="168" y="30">×2</text>
+          <text text-anchor="middle" class="lbl-good dd" x="66" y="96">deduplicated</text>
+        </svg>
+        <div class="stat"><span class="count" data-to="381066">0</span></div>
+        <p class="pb">duplicate events after the sinks were killed mid-backlog</p>
+        <div class="fx">Decision</div>
+        <p>60 s graceful shutdown, hourly compaction, dedupe by event id in dbt.</p>
+      </div>
+    </div>
+    <!-- 4. docker / warehouse -->
+    <div class="bcol batch">
+      <div class="node"><i></i>Warehouse disk</div>
+      <div class="card bcard f" data-f="2">
+        <svg class="viz" viewBox="0 0 200 100">
+          <rect class="dk-out" x="8" y="34" width="184" height="30" rx="8"/>
+          <rect class="dk-fill" x="8" y="34" width="184" height="30" rx="8"/>
+          <rect class="dk-used" x="8" y="34" width="24" height="30" rx="8"/>
+          <text class="pl" x="8" y="24">46 GB in use</text>
+          <text class="lbl-bad dk-t" x="192" y="24" text-anchor="end">351 GB file</text>
+          <text text-anchor="middle" class="lbl-good dk-g" x="100" y="90">lake checked, warehouse rebuilt</text>
+        </svg>
+        <div class="stat"><span class="count" data-to="351" data-suf=" GB">0</span></div>
+        <p class="pb">Docker’s disk file; file-system errors lost some warehouse writes</p>
+        <div class="fx">Decision</div>
+        <p>Checked every lake file, rebuilt the warehouse from the lake: <b>why the raw zone exists</b>.</p>
+      </div>
+    </div>
+    <!-- 5. airflow -->
+    <div class="bcol batch">
+      <div class="node"><i></i>Airflow</div>
+      <div class="card bcard f" data-f="3">
+        <svg class="viz" viewBox="0 0 200 100">
+          <g class="runs">
+            <rect x="14" y="14" width="24" height="24" rx="5"/><rect x="44" y="14" width="24" height="24" rx="5"/><rect class="flip" x="74" y="14" width="24" height="24" rx="5"/><rect x="104" y="14" width="24" height="24" rx="5"/><rect x="134" y="14" width="24" height="24" rx="5"/><rect class="flip" x="164" y="14" width="24" height="24" rx="5"/>
+            <rect x="14" y="46" width="24" height="24" rx="5"/><rect class="flip" x="44" y="46" width="24" height="24" rx="5"/><rect x="74" y="46" width="24" height="24" rx="5"/><rect x="104" y="46" width="24" height="24" rx="5"/><rect x="134" y="46" width="24" height="24" rx="5"/><rect x="164" y="46" width="24" height="24" rx="5"/>
+          </g>
+          <text text-anchor="middle" class="lbl-bad rr" x="100" y="94">failures now show red</text>
+        </svg>
+        <div class="stat"><span class="count" data-to="13" data-suf=" h">0</span></div>
+        <p class="pb">of pageviews failed, but a clean-up step made the runs look green</p>
+        <div class="fx">Decision</div>
+        <p>Clean-up is now a teardown task, so a failed hour shows red.</p>
+      </div>
+    </div>
+    <!-- 6. analysis -->
+    <div class="bcol ana">
+      <div class="node"><i></i>Our analysis</div>
+      <div class="card bcard f" data-f="3">
+        <svg class="viz" viewBox="0 0 200 100">
+          <line class="axis" x1="30" y1="84" x2="170" y2="84"/>
+          <rect class="rv-s" x="58" y="9" width="34" height="75" rx="4"/>
+          <rect class="rv-b" x="108" y="9" width="34" height="75" rx="4"/>
+          <text class="pl" x="75" y="97" text-anchor="middle">spikes</text><text class="pl" x="125" y="97" text-anchor="middle">steady</text>
+          <text class="lbl-bad rv-t1" x="182" y="20" text-anchor="end">3×?</text>
+          <text class="lbl-good rv-t2" x="186" y="20" text-anchor="end">57 vs 84%</text>
+        </svg>
+        <div class="stat"><span class="count" data-to="3" data-suf="×">0</span></div>
+        <p class="pb">as edited, wrongly: main pages sat in finding 5’s comparison group</p>
+        <div class="fx">Decision</div>
+        <p>A seed of non-article pages from each wiki’s API. <b>The finding reversed</b>, and we say so.</p>
+      </div>
+    </div>
   </div>
-  <aside class="notes"><b>Lynn · 0:50.</b> Take over from finding 5: "Getting these numbers right took some work." Three clicks, two cards each. Focus on the decision each problem forced: self-recovering collector, per-partition watermark, compaction + dedupe, the raw zone as the source of truth, teardown, articles-only comparison. Full incident table: A12.</aside>
+  <aside class="notes"><b>Lynn · 0:50.</b> Take over from finding 5: "Getting these numbers right took some work." The row is the pipeline; each click shows where it broke and the decision it forced (stage flashes red, then green). Click 1, stream: the laptop slept → self-recovering collector (gap queued, replayed by time); one partition raced ahead → per-partition watermark. Click 2, storage: sinks killed → 60 s shutdown, compaction, dedupe; 351 GB disk → rebuilt from the lake, which is why the raw zone exists. Click 3, batch and analysis: green runs hid 13 failed hours → teardown, failures show red; main pages made spikes look 3× as edited → articles only, the finding reversed. Full incident table: A12.</aside>
 </section>
 <!-- ============================== 16. CONCLUSION ============================== -->
 <section class="slide" id="s16" data-apx="a13">
@@ -868,7 +971,7 @@
 <div id="notes"></div>
 <div id="help" style="display:none">→ next · ← back · D details · B back · A appendix · O overview · S presenter · N notes · F full screen</div>
 <script src="vendor/chart.umd.min.js"></script>
-<script src="data.js?v=plateau1"></script>
-<script src="deck.js?v=plateau1"></script>
+<script src="data.js?v=brk1"></script>
+<script src="deck.js?v=brk1"></script>
 </body>
 </html>
