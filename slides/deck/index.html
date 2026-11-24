@@ -6,8 +6,8 @@
 <title>Wikipedia Live Edits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="deck.css?v=wq3">
-<link rel="stylesheet" href="theme.css?v=wq3">
+<link rel="stylesheet" href="deck.css?v=wq4">
+<link rel="stylesheet" href="theme.css?v=wq4">
 </head>
 <body>
 <div id="progress"></div>
@@ -51,37 +51,80 @@
   <div class="eyebrow"><b>01</b><span class="sec-name">Problem &amp; dataset</span><i class="sec-line"></i><span class="sub-name">The problem</span><span class="who">Sumaiya</span></div>
   <h2 style="margin-top:6px">Too many edits, <em>too few patrollers</em></h2>
   <!-- the flood: every edit as a dot (purple human, yellow bot), narrowing into one patroller -->
-  <div class="flood" style="position:absolute;left:80px;top:214px;width:1130px;height:330px;border-radius:22px 0 0 22px;background:linear-gradient(90deg,#102A43,#183B5C);clip-path:polygon(0 0,84% 0,100% 38%,100% 62%,84% 100%,0 100%);overflow:hidden">
+  <div class="flood" style="position:absolute;left:80px;top:212px;width:1150px;height:440px;border-radius:26px 0 0 26px;background:linear-gradient(90deg,#0E2238,#183B5C);clip-path:polygon(0 0,82% 0,100% 40%,100% 60%,82% 100%,0 100%);overflow:hidden">
     <canvas class="sub" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
-    <div style="position:absolute;left:34px;top:26px;color:#F2F1EC">
-      <div class="bignum" style="font-size:64px">~20<span style="font-size:30px;color:#9FB3C8"> edits / second</span></div>
-      <div style="color:#9FB3C8;font-size:22px;margin-top:6px">1.7 million a day, on 771 wikis</div>
+    <div style="position:absolute;left:40px;top:34px;color:#F2F1EC;text-shadow:0 0 18px #0E2238,0 0 6px #0E2238">
+      <div class="bignum" style="font-size:88px">~20<span style="font-size:36px;color:#9FB3C8"> edits / second</span></div>
+      <div style="color:#9FB3C8;font-size:24px;margin-top:8px">1.7 million a day, on 771 wikis</div>
     </div>
-    <div style="position:absolute;left:34px;bottom:24px;color:#C9D6E3;font-size:17px;display:flex;gap:22px;align-items:center">
-      <span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#A989C5;margin-right:8px"></span>human</span>
-      <span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#F9D45C;margin-right:8px"></span>bot</span>
+    <div style="position:absolute;left:40px;bottom:30px;color:#C9D6E3;font-size:18px;display:flex;gap:24px;align-items:center">
+      <span><span class="ldot" style="background:#A989C5"></span>human</span>
+      <span><span class="ldot" style="background:#F9D45C"></span>bot</span>
     </div>
   </div>
   <!-- the patroller -->
-  <div style="position:absolute;left:1236px;top:250px;width:284px;text-align:center">
-    <svg viewBox="0 0 200 200" width="200" height="200" style="display:block;margin:0 auto">
+  <div style="position:absolute;left:1250px;top:268px;width:270px;text-align:center">
+    <svg viewBox="0 0 200 200" width="220" height="220" style="display:block;margin:0 auto;filter:drop-shadow(0 10px 24px rgba(16,42,67,.12))">
       <circle cx="100" cy="100" r="92" fill="#fff" stroke="#DCE6F1" stroke-width="3"/>
       <circle cx="92" cy="74" r="24" fill="#A989C5"/>
       <path d="M44 150c0-30 21-48 48-48s48 18 48 48z" fill="#A989C5"/>
       <circle cx="140" cy="132" r="22" fill="#fff" stroke="#102A43" stroke-width="7"/>
       <path d="M156 148l18 18" stroke="#102A43" stroke-width="9" stroke-linecap="round"/>
     </svg>
-    <div style="font-weight:700;font-size:24px;color:var(--navy);margin-top:10px">A volunteer patroller</div>
-    <div class="muted" style="font-size:19px">limited time to review</div>
+    <div style="font-weight:700;font-size:26px;color:var(--navy);margin-top:14px">A volunteer patroller</div>
+    <div class="muted" style="font-size:20px">limited time to review</div>
   </div>
-  <div style="position:absolute;left:1236px;top:570px;width:284px;text-align:center;font-size:15px" class="muted"><span class="pulse"></span>edits since this slide opened<br><b id="live2" style="color:var(--navy);font-size:30px">0</b></div>
-  <!-- the three questions, one per click -->
-  <div style="position:absolute;left:80px;right:80px;top:664px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
-    <div class="card f q3" data-f="1"><span class="qi" style="background:var(--blue-fill)"><svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"><path d="M10 40V24M20 40V10M30 40V28M40 40V18"/></svg></span><h3>Which wikis need review most?</h3></div>
-    <div class="card f q3" data-f="2"><span class="qi" style="background:#F9D45C"><svg viewBox="0 0 48 48" fill="none" stroke="#102A43" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="17" width="28" height="22" rx="6"/><path d="M24 17v-7"/><circle cx="24" cy="8" r="2.2" fill="#102A43"/><circle cx="18.5" cy="28" r="2.4" fill="#102A43"/><circle cx="29.5" cy="28" r="2.4" fill="#102A43"/></svg></span><h3>How much of it is bots?</h3></div>
-    <div class="card f q3" data-f="3"><span class="qi" style="background:var(--blue-fill)"><svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 36h10l6-26 6 26h18"/></svg></span><h3>Do reader spikes warn of edit surges?</h3></div>
+  <div style="position:absolute;left:80px;top:700px;font-size:34px;font-weight:700;color:var(--navy);letter-spacing:-.01em">The raw stream doesn't say <em style="font-style:normal;color:var(--blue)">where to look.</em></div>
+  <div style="position:absolute;right:80px;top:694px;text-align:right;font-size:15px" class="muted"><span class="pulse"></span>edits since this slide opened<br><b id="live2" style="color:var(--navy);font-size:34px">0</b></div>
+  <aside class="notes"><b>Sumaiya · 0:30.</b> Every dot is an edit: about 20 a second (we keep edits and new pages, about half the raw feed), 1.7 million a day. The counter runs at that rate; it isn't live. Volunteer patrollers review recent changes for vandalism; their time is limited and the raw stream doesn't say where to spend it. Audience: patrollers and wiki admins.</aside>
+</section>
+<!-- ============================== 2b. THE QUESTIONS ============================== -->
+<section class="slide" id="s2q" data-apx="a1">
+  <div class="eyebrow"><b>01</b><span class="sec-name">Problem &amp; dataset</span><i class="sec-line"></i><span class="sub-name">The questions</span><span class="who">Sumaiya</span></div>
+  <h2 style="margin-top:6px">Where does <em>editing pressure</em> go?</h2>
+  <p class="muted" style="font-size:22px;margin-top:14px">Editing pressure = edits per wiki over time that may need review.</p>
+  <div class="qgrid">
+    <div class="card qcard f" data-f="1">
+      <div class="qn">1</div>
+      <svg class="vis" viewBox="0 0 320 180">
+        <rect x="20" y="18" width="270" height="22" rx="11" fill="#509EE3"/>
+        <rect x="20" y="52" width="205" height="22" rx="11" fill="#509EE3" opacity=".8"/>
+        <rect x="20" y="86" width="150" height="22" rx="11" fill="#509EE3" opacity=".6"/>
+        <rect x="20" y="120" width="105" height="22" rx="11" fill="#509EE3" opacity=".45"/>
+        <rect x="20" y="154" width="65" height="22" rx="11" fill="#509EE3" opacity=".3"/>
+        <circle cx="250" cy="110" r="30" fill="#fff" fill-opacity=".85" stroke="#102A43" stroke-width="7"/>
+        <path d="M272 132l22 22" stroke="#102A43" stroke-width="9" stroke-linecap="round"/>
+      </svg>
+      <h3>Which wikis need review most?</h3>
+      <span class="tag">→ findings 2, 3</span>
+    </div>
+    <div class="card qcard f" data-f="2">
+      <div class="qn">2</div>
+      <svg class="vis" viewBox="0 0 320 180">
+        <circle cx="160" cy="90" r="64" fill="none" stroke="#A989C5" stroke-width="28"/>
+        <circle cx="160" cy="90" r="64" fill="none" stroke="#F9D45C" stroke-width="28" stroke-dasharray="195.4 402.1" transform="rotate(-90 160 90)"/>
+        <g transform="translate(136 66)" fill="none" stroke="#102A43" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="17" width="28" height="22" rx="6"/><path d="M24 17v-7"/><circle cx="24" cy="8" r="2.2" fill="#102A43"/><circle cx="18.5" cy="28" r="2.4" fill="#102A43"/><circle cx="29.5" cy="28" r="2.4" fill="#102A43"/></g>
+        <text x="250" y="52" font-family="Plus Jakarta Sans, sans-serif" font-size="17" font-weight="600" fill="#8A6A00">bots</text>
+        <text x="40" y="150" font-family="Plus Jakarta Sans, sans-serif" font-size="17" font-weight="600" fill="#7B5EA0">humans</text>
+      </svg>
+      <h3>How much of it is bots?</h3>
+      <span class="tag">→ findings 1, 4</span>
+    </div>
+    <div class="card qcard f" data-f="3">
+      <div class="qn">3</div>
+      <svg class="vis" viewBox="0 0 320 180">
+        <path d="M14 118 L120 114 L150 22 L180 110 L306 116" fill="none" stroke="#509EE3" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M14 160 L150 158" fill="none" stroke="#A989C5" stroke-width="5" stroke-linecap="round"/>
+        <path d="M150 158 L306 158" fill="none" stroke="#A989C5" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+        <text x="166" y="36" font-family="Plus Jakarta Sans, sans-serif" font-size="17" font-weight="600" fill="#2F80D0">readers spike</text>
+        <text x="14" y="148" font-family="Plus Jakarta Sans, sans-serif" font-size="17" font-weight="600" fill="#7B5EA0">edits</text>
+        <text x="236" y="150" font-family="Plus Jakarta Sans, sans-serif" font-size="40" font-weight="800" fill="#7B5EA0">?</text>
+      </svg>
+      <h3>Do reader spikes warn of edit surges?</h3>
+      <span class="tag">→ finding 5</span>
+    </div>
   </div>
-  <aside class="notes"><b>Sumaiya · 1:00.</b> Every dot is an edit: about 20 a second (we keep edits and new pages, about half the raw feed), 1.7 million a day. The counter runs at that rate; it isn't live. Volunteer patrollers review recent changes for vandalism; their time is limited and the raw stream doesn't say where to spend it. Our question: where does <i>editing pressure</i> (edits per wiki over time that may need review) concentrate across languages, how much of it is bots, and do spikes in readers bring edit surges? For patrollers and wiki admins. Click 3× for the three questions: wikis → findings 2–3; bots → findings 1 and 4; spikes → finding 5. <b>Trap:</b> "Does attention cause edits?" → we show timing, not cause (Details · A1).</aside>
+  <aside class="notes"><b>Sumaiya · 0:30.</b> So our question: where does editing pressure (edits per wiki over time that may need review) concentrate across languages, how much of it is bots, and do spikes in readers bring edit surges? Click 3×, one decision each: which wikis need review most; how much of the volume is flagged bot work, hidden from the default review list; does a jump in readers warn of a rush of edits. <b>Trap:</b> "Does attention cause edits?" → we show timing, not cause (Details · A1).</aside>
 </section>
 <!-- ============================== 3. DATA ============================== -->
 <section class="slide" id="s3" data-apx="a2">
@@ -1006,7 +1049,7 @@
 <div id="notes"></div>
 <div id="help" style="display:none">→ next · ← back · D details · B back · A appendix · O overview · S presenter · N notes · F full screen</div>
 <script src="vendor/chart.umd.min.js"></script>
-<script src="data.js?v=wq3"></script>
-<script src="deck.js?v=wq3"></script>
+<script src="data.js?v=wq4"></script>
+<script src="deck.js?v=wq4"></script>
 </body>
 </html>

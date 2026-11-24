@@ -310,7 +310,7 @@
   // ---------- per-slide hooks ----------
   const hooks = {
     enter_s1(s) { globeCanvas(s, s.querySelector('canvas.bg')); liveCounter(s, s.querySelector('#live1')); },
-    enter_s2(s) { streamCanvas(s, s.querySelector('canvas.sub'), { lanes: [40, 290], alpha: 0.9, labelColor: '#6b7079' }); liveCounter(s, s.querySelector('#live2')); },
+    enter_s2(s) { streamCanvas(s, s.querySelector('canvas.sub'), { lanes: [40, 400], alpha: 0.9, labelColor: '#6b7079' }); liveCounter(s, s.querySelector('#live2')); },
     enter_s17(s) { globeCanvas(s, s.querySelector('canvas.bg'));
       // edits to Wikimedia wikis during a 15-minute talk at the window's average (25,093,717 in 15 days = 19.4/s):
       // count up to ~17,400, then keep ticking at that rate while the slide is open

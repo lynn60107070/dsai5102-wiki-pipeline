@@ -171,8 +171,10 @@ html[data-preview] #bar { display: none !important; }
 .rubmap span:not(.k) { background: rgba(255,255,255,.85); border: 1.5px solid var(--sky); border-radius: 999px; padding: 6px 14px; font-weight: 500; }
 .rubmap b { color: var(--blue); margin-right: 6px; }
 
-/* problem slide: the three question cards */
-.q3 { display: flex; align-items: center; gap: 18px; padding: 20px 24px; }
-.q3 h3 { font-size: 24px; line-height: 1.2; color: var(--navy); }
-.q3 .qi { flex: none; width: 58px; height: 58px; border-radius: 14px; display: grid; place-items: center; }
-.q3 .qi svg { width: 34px; height: 34px; }
+/* problem slides: legend dots and the three question cards */
+.ldot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+.qgrid { position: absolute; left: 80px; right: 80px; top: 300px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.qcard { position: relative; display: flex; flex-direction: column; align-items: flex-start; padding: 30px 30px 28px; height: 470px; box-shadow: 0 14px 34px rgba(16,42,67,.07); }
+.qcard .qn { width: 40px; height: 40px; border-radius: 50%; background: var(--navy); color: #fff; font: 700 19px/40px var(--sans); text-align: center; }
+.qcard .vis { width: 100%; height: 200px; margin: 22px 0 26px; background: #F4F8FC; border-radius: 16px; padding: 14px; box-sizing: border-box; overflow: visible; }
+.qcard h3 { font-size: 29px; line-height: 1.2; color: var(--navy); flex: 1; }
