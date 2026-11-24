@@ -259,7 +259,7 @@ table.t.compact { font-size: 15px; } table.t.compact td { padding: 7px 10px; }
 .atile .anum { font: 800 40px/1 var(--sans); letter-spacing: -.02em; }
 .atile .anum.bot { color: var(--bot-ink); } .atile .anum.human { color: var(--human-ink); } .atile .anum.spk { color: var(--spike-ink); }
 .atile p { font-size: 17px; line-height: 1.35; margin-top: 6px; }
-.atile { flex-direction: row; align-items: center; gap: 18px; } .atile:has(.wide) { flex-direction: column; align-items: stretch; gap: 8px; }
+.atile { flex-direction: column; align-items: stretch; gap: 8px; } .atile .aviz:not(.wide) { align-self: center; }
 .d-l { font: 700 12px var(--sans); fill: var(--ink2); } .bot-t { fill: var(--bot-ink); } .hum-t { fill: var(--human-ink); }
 .d-bg { fill: none; stroke: var(--human); stroke-width: 16; }
 .d-bot { fill: none; stroke: var(--bot); stroke-width: 16; stroke-dasharray: 0 276.5; transform: rotate(-90deg); transform-origin: 60px 60px; }
