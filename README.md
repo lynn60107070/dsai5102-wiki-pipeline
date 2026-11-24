@@ -5,6 +5,7 @@
 DSAI5102 Data Architecture & Engineering, final project · Lynn Younes & Sumaiya Rizwan
 
 **Report (PDF):** [report/DSAI5102_report_Younes_Rizwan.pdf](report/DSAI5102_report_Younes_Rizwan.pdf) · LaTeX source in [paper/](paper/)
+**Slides:** [lynn60107070.github.io/dsai5102-wiki-pipeline/slides/deck/](https://lynn60107070.github.io/dsai5102-wiki-pipeline/slides/deck/) (arrow keys or Space to move, P plays the demo video on slide 10) · source in [slides/deck/](slides/deck/)
 
 **Question:** Wikipedia's volunteer patrollers have limited time: where does editing pressure
 concentrate, how much of it comes from bots, and are spikes in reader attention followed by edit surges?
