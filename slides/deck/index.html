@@ -217,6 +217,7 @@
       <tr style="animation:slideIn .4s .40s both"><td class="muted">Transformations</td><td><b>dbt</b> <span class="tag new">not in course</span></td><td class="muted">Spark, SQL scripts</td><td>Lineage, incremental models, tests as a gate</td></tr>
       <tr style="animation:slideIn .4s .47s both"><td class="muted">Serving</td><td><b>Postgres</b></td><td class="muted">read DuckDB directly</td><td>A DuckDB file allows one writer; the dashboard must never block</td></tr>
       <tr style="animation:slideIn .4s .54s both"><td class="muted">Dashboard</td><td><b>Metabase</b> <span class="tag new">not in course</span></td><td class="muted">Superset, Looker Studio</td><td>One container; the whole dashboard is rebuilt by a script through its API</td></tr>
+      <tr style="animation:slideIn .4s .61s both"><td class="muted">Containers</td><td><b>Docker Compose</b></td><td class="muted">manual installs, Kubernetes</td><td>All 14 services start with one command on any laptop</td></tr>
     </tbody>
   </table>
   <aside class="notes"><b>Lynn · 1:00.</b> Don't read the table: pick Kafka (replay), DuckDB (in-process, columnar), dbt (tests as a gate), Postgres (one writer). "The goal is not to use as many technologies as possible." <b>Traps:</b> why both DuckDB and Postgres (Q13), why not Spark (Q15) → A7.</aside>

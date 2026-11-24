@@ -108,13 +108,13 @@ warehouse run). To try the batch path, leave it paused and run one recent hour (
 warehouse's 3-day lookback) end to end:
 
 ```bash
-docker compose exec airflow-scheduler airflow dags test pageviews_hourly "$(date -u -d '-1 day' +%Y-%m-%dT%H:00:00+00:00)"
+docker compose exec airflow-scheduler bash -c 'airflow dags test pageviews_hourly "$(date -u -d "-1 day" +%Y-%m-%dT%H:00:00+00:00)"'
 ```
 
 This runs wait_for_file, fetch, upload and cleanup for that hour (about a minute) and then triggers
 `warehouse_hourly`. The warehouse loads only the last 3 days incrementally, so after loading hours older
 than that, rebuild once with a longer lookback:
-`docker compose exec airflow-scheduler bash -c 'cd $DBT_PROJECT_DIR && dbt build --vars "{lookback_days: 30}"'`. On a fresh install the hourly tiles show the 6 sample hours (4 Nov) and then the live hours,
+`docker compose exec airflow-scheduler bash -c 'cd $DBT_PROJECT_DIR && /opt/airflow/dbt-venv/bin/dbt build --vars "{lookback_days: 30}"'`. On a fresh install the hourly tiles show the 6 sample hours (4 Nov) and then the live hours,
 with an empty stretch between them; that is expected.
 
 ## Repository layout
