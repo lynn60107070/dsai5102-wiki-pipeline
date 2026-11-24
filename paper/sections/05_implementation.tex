@@ -46,12 +46,14 @@ dbt organises the SQL in three layers (\cref{tab:schema} in the appendix): \emph
 incremental: each run reloads only the last three days and replaces rows by key. Thirty-five data tests check
 unique and non-null keys, accepted values, and relationships from every key of \texttt{fact\_edit}, and
 from the wiki and article keys of the pageview facts, to their dimensions.
-\Cref{fig:lineage} in the appendix shows how the models depend on each other.
+\Cref{fig:lineage} in the appendix shows how the models depend on each other. \Cref{app:perf-tests}
+adds measured latency and build times and the 43 Python unit tests that run in CI.
+
 \subsection{Reproducibility}\label{sec:impl-repro}
 
 \texttt{docker compose up -d -{}-build} on a fresh clone is the only step: every setting has a default,
 and a one-off bootstrap service loads six bundled hours of real edits and 30 hours of pageviews into the empty lake (never into
 one that already has data), runs the warehouse DAG once through Airflow, and configures Metabase
-through its API. Fresh-clone tests (25 Oct, 20 Nov and 23 Nov, the last with no new problems) found four problems, all fixed: file paths longer than
-Windows allows, two dashboard tiles that failed before their tables existed, and a red first run of the
-freshness check.
+through its API. Fresh-clone tests (25 Oct on Windows, 27 Oct on macOS, 20 and 23 Nov, the last with no new problems) found six problems, all fixed: file paths longer than
+Windows allows, two dashboard tiles that failed before their tables existed, a red first run of the
+freshness check, and on macOS a non-executable Postgres init script and a first build that failed with no pageview files.

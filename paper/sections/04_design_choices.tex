@@ -90,9 +90,9 @@ and Metabase reads only those copies.
 
 \paragraph{Star schema.} The warehouse follows a star schema~\cite{kimball2013toolkit} with three fact tables
 sharing conformed dimensions: edits at the finest grain (one row per edit), linked to dimensions for time, wiki,
-article and editor type, and two hourly pageview facts linked to the wiki and article dimensions
-(not yet to \texttt{dim\_time}; their grain is enforced by the incremental key, not by a test). Natural keys are used instead of surrogate integers because they are stable across full rebuilds
-and readable in the dashboard. The four marts are each pre-aggregated for one or more dashboard tiles and store counts, not shares,
+article and editor type, and two hourly pageview facts, per article (linked to wiki and article) and per wiki
+(linked to wiki), neither yet to \texttt{dim\_time}. Natural keys replace surrogate integers because they are
+stable across rebuilds; the article key is an md5 of wiki and title, so edits and pageviews join without a lookup. The four marts are each pre-aggregated for one or more dashboard tiles and store counts, not shares,
 so that any date range can be summed correctly before dividing (distinct-editor counts are the
 exception and are never summed across rows).
 
