@@ -23,8 +23,7 @@ diagram, design choices and justification, implementation, results and insights,
 | `refs.bib` | Shared bibliography (add entries, never edit others') | Both |
 | `figures/` | Images (PDF or PNG), named `<section>_<what>.png`, e.g. `06_bot_share.png` | Both |
 
-Each section file starts with `\todo{...}` notes saying what goes there. Replace them as you write.
-They show in red in the PDF, so any left over are easy to spot.
+Each section file starts with a comment naming its owner and the brief it answers.
 
 ## Workflow
 
