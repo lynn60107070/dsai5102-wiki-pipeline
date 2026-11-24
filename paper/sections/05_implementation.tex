@@ -57,3 +57,5 @@ one that already has data), runs the warehouse DAG once through Airflow, and con
 through its API. Fresh-clone tests (25 Oct on Windows, 27 Oct on macOS, 20 and 23 Nov, the last with no new problems) found six problems, all fixed: file paths longer than
 Windows allows, two dashboard tiles that failed before their tables existed, a red first run of the
 freshness check, and on macOS a non-executable Postgres init script and a first build that failed with no pageview files.
+\texttt{pageviews\_hourly} starts paused, since unpausing it backfills every hour since 25 Oct; the README
+shows how to run one hour.

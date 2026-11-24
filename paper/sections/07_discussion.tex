@@ -31,7 +31,8 @@ popular (57\% against 84\% of hours above 20{,}000 views, \cref{sec:results}).
     Finding 5 is descriptive, with no significance test, and above 20{,}000 views compares with only 39 articles,
     which are not matched to the spikes by topic or age. Consecutive spike hours of the same story are
     counted separately, so they are not independent observations, and a story's later hours can fall
-    in the comparison group (dropping them did not change the result).
+    in the comparison group. We did not repeat the finding with a different jump threshold
+    (3$\times$ or 10$\times$) or with human edits only.
   \item \textbf{Built for one laptop's volume.} The marts are rebuilt in full every hour, and the live
     per-minute counts are approximate: open minutes are held in memory, so a processor restart can drop
     or repeat part of a minute. Larger volumes would need incremental marts, lake reads by date

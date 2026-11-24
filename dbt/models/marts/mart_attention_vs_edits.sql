@@ -1,5 +1,5 @@
 {{ config(enabled=var("pageviews_enabled")) }}
--- Reader attention vs edits per article-hour (tile: do attention spikes cause edit surges?).
+-- Reader attention vs edits per article-hour (tile: do attention spikes bring edits? timing, not cause).
 -- Grain: hour_ts x article_key, for article-hours with >= 1,000 views (kept small enough to serve).
 --   prev_24h_avg_views  average views per hour over the previous 24 hours; hours under the 10-view
 --                       threshold count as 0, so a sudden jump from obscurity shows as a large ratio

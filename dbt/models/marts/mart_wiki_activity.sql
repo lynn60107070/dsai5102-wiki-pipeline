@@ -1,4 +1,4 @@
--- Activity per wiki and UTC day (tiles: bot share by wiki, top languages, who reverts).
+-- Activity per wiki and UTC day (tiles: bot share by wiki, top languages; revert counts kept for analysis).
 -- Grain: date x wiki_id. Sum the counts over any date range, then divide: bot share =
 -- sum(bot_edits) / sum(edits). Shares are not stored, because shares can't be added up across days.
 

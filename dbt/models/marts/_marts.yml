@@ -13,7 +13,7 @@ models:
 
   - name: mart_wiki_activity
     description: >
-      Activity per wiki and UTC day. Tiles - bot share by wiki, top languages, reverts.
+      Activity per wiki and UTC day. Tiles - bot share by wiki, top languages (revert counts are kept for analysis, not shown).
       Sum counts over a date range before dividing (shares are not stored).
     columns:
       - name: date
