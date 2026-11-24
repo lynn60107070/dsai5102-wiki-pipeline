@@ -6,8 +6,8 @@
 <title>Wikipedia Live Edits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="deck.css?v=wq2">
-<link rel="stylesheet" href="theme.css?v=wq2">
+<link rel="stylesheet" href="deck.css?v=wq3">
+<link rel="stylesheet" href="theme.css?v=wq3">
 </head>
 <body>
 <div id="progress"></div>
@@ -49,35 +49,44 @@
 <!-- ============================== 2. PROBLEM ============================== -->
 <section class="slide" id="s2" data-apx="a1">
   <div class="eyebrow"><b>01</b><span class="sec-name">Problem &amp; dataset</span><i class="sec-line"></i><span class="sub-name">The problem</span><span class="who">Sumaiya</span></div>
-  <div class="row" style="margin-top:6px">
-    <div class="col" style="flex:1.15">
-      <h2 style="font-size:44px;line-height:1.14">Where does <em>editing pressure</em> concentrate across Wikipedia's languages, how much of it is bots, and do spikes in readers bring edit surges?</h2>
-      <p class="muted" style="margin-top:22px;font-size:20px"><b style="color:var(--ink)">Editing pressure</b> = edits per wiki over time that may need review.<br><b style="color:var(--ink)">For:</b> volunteer patrollers and wiki admins, who review recent changes for vandalism.</p>
+  <h2 style="margin-top:6px">Too many edits, <em>too few patrollers</em></h2>
+  <!-- the flood: every edit as a dot (purple human, yellow bot), narrowing into one patroller -->
+  <div class="flood" style="position:absolute;left:80px;top:214px;width:1130px;height:330px;border-radius:22px 0 0 22px;background:linear-gradient(90deg,#102A43,#183B5C);clip-path:polygon(0 0,84% 0,100% 38%,100% 62%,84% 100%,0 100%);overflow:hidden">
+    <canvas class="sub" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+    <div style="position:absolute;left:34px;top:26px;color:#F2F1EC">
+      <div class="bignum" style="font-size:64px">~20<span style="font-size:30px;color:#9FB3C8"> edits / second</span></div>
+      <div style="color:#9FB3C8;font-size:22px;margin-top:6px">1.7 million a day, on 771 wikis</div>
     </div>
-    <div class="col" style="flex:.85">
-      <div class="card navy" style="padding:0;overflow:hidden;position:relative;height:300px">
-        <canvas class="sub" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
-        <div style="position:absolute;left:24px;top:20px;color:#F2F1EC">
-          <div class="small" style="color:#9A9EA6"><span class="pulse"></span>edits and new pages we keep</div>
-          <div class="bignum" style="font-size:54px">~20 / second</div>
-          <div style="color:#9A9EA6;font-size:18px">about 1.7 million edits a day</div>
-        </div>
-        <div style="position:absolute;right:22px;bottom:16px;color:#9A9EA6;font-size:15px;text-align:right">at that rate, since this slide opened<br><b id="live2" style="color:#F2F1EC;font-size:26px">0</b></div>
-      </div>
-      <p class="small muted" style="margin-top:14px">Patrollers' time is limited, and the raw stream doesn't say where to spend it.</p>
+    <div style="position:absolute;left:34px;bottom:24px;color:#C9D6E3;font-size:17px;display:flex;gap:22px;align-items:center">
+      <span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#A989C5;margin-right:8px"></span>human</span>
+      <span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#F9D45C;margin-right:8px"></span>bot</span>
     </div>
   </div>
-  <div class="grid2" style="grid-template-columns:repeat(3,1fr);gap:22px;margin-top:34px">
-    <div class="card f" data-f="1"><div class="tag">Decision 1</div><h3 style="margin-top:12px">Which wikis need review most?</h3><p class="small muted" style="margin-top:6px">→ findings 2 and 3</p></div>
-    <div class="card f" data-f="2"><div class="tag">Decision 2</div><h3 style="margin-top:12px">How much of the volume is flagged bot work, hidden from the default review list?</h3><p class="small muted" style="margin-top:6px">→ findings 1 and 4</p></div>
-    <div class="card f" data-f="3"><div class="tag">Decision 3</div><h3 style="margin-top:12px">Does a jump in readers warn of a rush of edits?</h3><p class="small muted" style="margin-top:6px">→ finding 5</p></div>
+  <!-- the patroller -->
+  <div style="position:absolute;left:1236px;top:250px;width:284px;text-align:center">
+    <svg viewBox="0 0 200 200" width="200" height="200" style="display:block;margin:0 auto">
+      <circle cx="100" cy="100" r="92" fill="#fff" stroke="#DCE6F1" stroke-width="3"/>
+      <circle cx="92" cy="74" r="24" fill="#A989C5"/>
+      <path d="M44 150c0-30 21-48 48-48s48 18 48 48z" fill="#A989C5"/>
+      <circle cx="140" cy="132" r="22" fill="#fff" stroke="#102A43" stroke-width="7"/>
+      <path d="M156 148l18 18" stroke="#102A43" stroke-width="9" stroke-linecap="round"/>
+    </svg>
+    <div style="font-weight:700;font-size:24px;color:var(--navy);margin-top:10px">A volunteer patroller</div>
+    <div class="muted" style="font-size:19px">limited time to review</div>
   </div>
-  <aside class="notes"><b>Sumaiya · 1:00.</b> About 20 edits a second (we keep edits and new pages, about half the raw feed), 1.7 million a day. The counters run at that rate; they are not live. Volunteer patrollers review recent changes for vandalism; their time is limited and the raw stream doesn't say where to spend it. Define editing pressure. Click 3× for the three decisions. <b>Trap:</b> "Does attention cause edits?" → we show timing, not cause (Details · A1).</aside>
+  <div style="position:absolute;left:1236px;top:570px;width:284px;text-align:center;font-size:15px" class="muted"><span class="pulse"></span>edits since this slide opened<br><b id="live2" style="color:var(--navy);font-size:30px">0</b></div>
+  <!-- the three questions, one per click -->
+  <div style="position:absolute;left:80px;right:80px;top:664px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+    <div class="card f q3" data-f="1"><span class="qi" style="background:var(--blue-fill)"><svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"><path d="M10 40V24M20 40V10M30 40V28M40 40V18"/></svg></span><h3>Which wikis need review most?</h3></div>
+    <div class="card f q3" data-f="2"><span class="qi" style="background:#F9D45C"><svg viewBox="0 0 48 48" fill="none" stroke="#102A43" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="17" width="28" height="22" rx="6"/><path d="M24 17v-7"/><circle cx="24" cy="8" r="2.2" fill="#102A43"/><circle cx="18.5" cy="28" r="2.4" fill="#102A43"/><circle cx="29.5" cy="28" r="2.4" fill="#102A43"/></svg></span><h3>How much of it is bots?</h3></div>
+    <div class="card f q3" data-f="3"><span class="qi" style="background:var(--blue-fill)"><svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 36h10l6-26 6 26h18"/></svg></span><h3>Do reader spikes warn of edit surges?</h3></div>
+  </div>
+  <aside class="notes"><b>Sumaiya · 1:00.</b> Every dot is an edit: about 20 a second (we keep edits and new pages, about half the raw feed), 1.7 million a day. The counter runs at that rate; it isn't live. Volunteer patrollers review recent changes for vandalism; their time is limited and the raw stream doesn't say where to spend it. Our question: where does <i>editing pressure</i> (edits per wiki over time that may need review) concentrate across languages, how much of it is bots, and do spikes in readers bring edit surges? For patrollers and wiki admins. Click 3× for the three questions: wikis → findings 2–3; bots → findings 1 and 4; spikes → finding 5. <b>Trap:</b> "Does attention cause edits?" → we show timing, not cause (Details · A1).</aside>
 </section>
 <!-- ============================== 3. DATA ============================== -->
 <section class="slide" id="s3" data-apx="a2">
   <div class="eyebrow"><b>01</b><span class="sec-name">Problem &amp; dataset</span><i class="sec-line"></i><span class="sub-name">The data</span><span class="who">Sumaiya</span></div>
-  <h2>Three sources, arriving <em>three different ways</em></h2>
+  <h2>Three sources, <em>three speeds</em></h2>
   <svg viewBox="0 0 1440 400" style="position:absolute;left:80px;top:196px;width:1440px;height:400px">
     <defs><linearGradient id="fadeR" x1="0" x2="1"><stop offset="0" stop-color="#FAFAF7" stop-opacity="0"/><stop offset="1" stop-color="#FAFAF7"/></linearGradient></defs>
     <!-- lane 1: stream -->
@@ -96,7 +105,7 @@
       <circle r="4" fill="#A989C5"><animateMotion dur="2.2s" repeatCount="indefinite" path="M280,56 L820,56" begin="-2s"/></circle>
     </g>
     <text x="870" y="40" font-family="Plus Jakarta Sans, sans-serif" font-size="20" font-weight="600" fill="#3366CC">Stream (SSE) · continuous</text>
-    <text x="870" y="66" font-family="Plus Jakarta Sans, sans-serif" font-size="17" fill="#5B5F66">~20 kept events/s · 1.7 M a day · can't be re-downloaded later</text>
+    <text x="870" y="66" font-family="Plus Jakarta Sans, sans-serif" font-size="17" fill="#5B5F66">~20 edits/s · gone if missed</text>
     <!-- lane 2: batch files -->
     <text x="0" y="170" font-family="Plus Jakarta Sans, sans-serif" font-size="27" font-weight="600" fill="#111214">Pageview dumps</text>
     <text x="0" y="196" font-family="JetBrains Mono, Consolas, monospace" font-size="14" fill="#5B5F66">views per article per hour</text>
@@ -108,7 +117,7 @@
         <animateMotion dur="4s" begin="-2s" repeatCount="indefinite" path="M300,180 L800,180" keyPoints="0;0;1" keyTimes="0;.55;1" calcMode="linear"/></g>
     </g>
     <text x="870" y="170" font-family="Plus Jakarta Sans, sans-serif" font-size="20" font-weight="600" fill="#2E8B6E">Batch files · one per hour</text>
-    <text x="870" y="196" font-family="Plus Jakarta Sans, sans-serif" font-size="17" fill="#5B5F66">~57 MB, 6.4 M rows each → we keep ~193,000 + per-wiki totals</text>
+    <text x="870" y="196" font-family="Plus Jakarta Sans, sans-serif" font-size="17" fill="#5B5F66">6.4 M rows each → we keep ~193,000</text>
     <!-- lane 3: reference -->
     <text x="0" y="300" font-family="Plus Jakarta Sans, sans-serif" font-size="27" font-weight="600" fill="#111214">Sitematrix + siteinfo</text>
     <text x="0" y="326" font-family="JetBrains Mono, Consolas, monospace" font-size="14" fill="#5B5F66">wiki names, namespaces</text>
@@ -116,16 +125,16 @@
     <g transform="translate(530,286)"><rect width="76" height="48" rx="5" fill="#F7F0E8" stroke="#9A6B3F" stroke-width="1.5"/>
       <line x1="0" x2="76" y1="16" y2="16" stroke="#9A6B3F"/><line x1="0" x2="76" y1="32" y2="32" stroke="#9A6B3F" opacity=".5"/><line x1="30" x2="30" y1="0" y2="48" stroke="#9A6B3F" opacity=".5"/></g>
     <text x="870" y="300" font-family="Plus Jakarta Sans, sans-serif" font-size="20" font-weight="600" fill="#9A6B3F">Reference API · rarely changes</text>
-    <text x="870" y="326" font-family="Plus Jakarta Sans, sans-serif" font-size="17" fill="#5B5F66">1,073 wikis listed (771 edited) · non-article pages for 364 Wikipedias → dbt seeds</text>
+    <text x="870" y="326" font-family="Plus Jakarta Sans, sans-serif" font-size="17" fill="#5B5F66">1,073 wikis · names and page types</text>
   </svg>
-  <div class="f" data-f="1" style="position:absolute;left:80px;top:552px;font-family:var(--serif);font-size:26px">Different arrival → <span style="color:var(--stream)">a stream path</span> <i>and</i> <span style="color:var(--batch)">a batch path</span>. <span class="muted" style="font-size:20px;font-family:var(--sans)">Missed stream data is gone for good; missed pageview hours can be fetched again.</span></div>
+  <div class="f" data-f="1" style="position:absolute;left:80px;top:552px;font-family:var(--serif);font-size:26px">So: <span style="color:var(--stream)">a stream path</span> <i>and</i> <span style="color:var(--batch)">a batch path</span>.</div>
   <div class="f" data-f="2" style="position:absolute;left:80px;right:80px;top:622px;display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:26px;border-top:1.5px solid var(--ink);padding-top:16px">
-    <div><div class="bignum count" data-to="25093717">0</div><div class="muted small">edits kept, 28 Oct – 11 Nov (UTC)</div></div>
-    <div><div class="bignum count" data-to="771">0</div><div class="muted small">wikis, 347 of them Wikipedias</div></div>
+    <div><div class="bignum count" data-to="25093717">0</div><div class="muted small">edits, 28 Oct – 11 Nov</div></div>
+    <div><div class="bignum count" data-to="771">0</div><div class="muted small">wikis</div></div>
     <div><div class="bignum"><span class="count" data-to="360">0</span><span style="font-size:30px" class="muted"> h</span></div><div class="muted small">hours, <b style="color:var(--good)">0 empty</b></div></div>
-    <div><div class="bignum count" data-to="10.8" data-dec="1" data-suf=" M">0</div><div class="muted small">duplicates removed (30% of raw)</div></div>
+    <div><div class="bignum count" data-to="10.8" data-dec="1" data-suf=" M">0</div><div class="muted small">duplicates removed</div></div>
   </div>
-  <aside class="notes"><b>Sumaiya · 1:15.</b> The sources arrive differently, which is why the pipeline has a stream path and a batch path. The stream can't be re-downloaded, so the collector runs all the time; the pageview files stay online, so missed hours can be backfilled. Click: profile. Raw 7.52 GB → clean 1.08 GB; 492 dead-letter events; pageviews for 347 of 360 hours. The only low hours (28 Oct 02–06) are just as low in the raw zone, so the drop is in the feed. <b>Trap:</b> why drop pageviews under 10? A spike needs ≥ 1,000 views, so every spike is kept (A2). <b>Handover:</b> "Lynn will show you how the pipeline turns these three sources into answers."</aside>
+  <aside class="notes"><b>Sumaiya · 1:15.</b> <i>Off the slide, say if useful:</i> stream ~20 kept events/s, can't be re-downloaded; each hourly pageview file is ~57 MB / 6.4 M rows, we keep ~193,000 + per-wiki totals; Sitematrix lists 1,073 wikis (771 edited, 347 of them Wikipedias), plus non-article pages for 364 Wikipedias as dbt seeds; duplicates were 30% of the raw zone. The sources arrive differently, which is why the pipeline has a stream path and a batch path. The stream can't be re-downloaded, so the collector runs all the time; the pageview files stay online, so missed hours can be backfilled. Click: profile. Raw 7.52 GB → clean 1.08 GB; 492 dead-letter events; pageviews for 347 of 360 hours. The only low hours (28 Oct 02–06) are just as low in the raw zone, so the drop is in the feed. <b>Trap:</b> why drop pageviews under 10? A spike needs ≥ 1,000 views, so every spike is kept (A2). <b>Handover:</b> "Lynn will show you how the pipeline turns these three sources into answers."</aside>
 </section>
 <!-- ============================== 9. ARCHITECTURE ============================== -->
 <section class="slide" id="s9" data-apx="a6">
@@ -997,7 +1006,7 @@
 <div id="notes"></div>
 <div id="help" style="display:none">→ next · ← back · D details · B back · A appendix · O overview · S presenter · N notes · F full screen</div>
 <script src="vendor/chart.umd.min.js"></script>
-<script src="data.js?v=wq2"></script>
-<script src="deck.js?v=wq2"></script>
+<script src="data.js?v=wq3"></script>
+<script src="deck.js?v=wq3"></script>
 </body>
 </html>

@@ -170,3 +170,9 @@ html[data-preview] #bar { display: none !important; }
 .rubmap .k { font: 700 13px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--blue); margin-right: 6px; }
 .rubmap span:not(.k) { background: rgba(255,255,255,.85); border: 1.5px solid var(--sky); border-radius: 999px; padding: 6px 14px; font-weight: 500; }
 .rubmap b { color: var(--blue); margin-right: 6px; }
+
+/* problem slide: the three question cards */
+.q3 { display: flex; align-items: center; gap: 18px; padding: 20px 24px; }
+.q3 h3 { font-size: 24px; line-height: 1.2; color: var(--navy); }
+.q3 .qi { flex: none; width: 58px; height: 58px; border-radius: 14px; display: grid; place-items: center; }
+.q3 .qi svg { width: 34px; height: 34px; }
