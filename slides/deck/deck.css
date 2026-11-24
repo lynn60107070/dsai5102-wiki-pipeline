@@ -292,7 +292,7 @@ table.t.compact { font-size: 15px; } table.t.compact td { padding: 7px 10px; }
 .ans-side.shown .pill { animation: pop .4s .7s ease both; } .ans-side.shown .pill.chk { animation-delay: .9s; }
 @media (prefers-reduced-motion: reduce) { .ans *, .atile { animation-duration: .01s !important; animation-delay: 0s !important; } }
 /* slide 18: thanks + questions, as a Wikipedia article */
-.wq { position: absolute; left: 80px; top: 200px; width: 900px; z-index: 2; }
+.wq { position: absolute; left: 80px; top: 250px; width: 880px; z-index: 2; }
 .wq > * { opacity: 0; }
 .slide.active .wq > * { animation: riseIn .8s cubic-bezier(.2,.7,.2,1) forwards; }
 .slide.active .wq > :nth-child(2) { animation-delay: .15s; } .slide.active .wq > :nth-child(3) { animation-delay: .35s; }
@@ -314,7 +314,7 @@ table.t.compact { font-size: 15px; } table.t.compact td { padding: 7px 10px; }
 .ambox .ic { font-size: 30px; color: #3366CC; } .ambox .edit { color: #3366CC; font-size: 17px; }
 .wq-names { margin-top: 26px; font-size: 22px; }
 #s17 .wqc { opacity: 0; }
-#s17 .fc1 { left: 1000px; top: 118px; } #s17 .fc2 { left: 1120px; top: 420px; } #s17 .fc3 { left: 1010px; top: 700px; }
+#s17 .fc1 { left: 1060px; top: 150px; } #s17 .fc2 { left: 1130px; top: 520px; } #s17 .fc3 { left: 1010px; top: 700px; }
 #s17.active .fc1 { animation: cardIn .8s cubic-bezier(.2,.7,.2,1) 1.8s both, bob 5s ease-in-out 2.6s infinite; }
 #s17.active .fc2 { animation: cardIn .8s cubic-bezier(.2,.7,.2,1) .4s both, bob 5s ease-in-out 1.2s infinite; }
 #s17.active .fc3 { animation: cardIn .8s cubic-bezier(.2,.7,.2,1) 2.1s both, bob 5s ease-in-out 2.9s infinite; }
@@ -364,3 +364,6 @@ html[data-preview] #progress, html[data-preview] #help, html[data-preview] #note
 /* big answer/incident numbers: proportional figures so '.' and ',' don't leave gaps */
 .atile .count, .bcard .count { font-variant-numeric: normal; }
 .tight { letter-spacing: -.06em; margin-left: -.05em; }
+/* slide 18 uses the title slide's globe, placed the same way */
+#s17 .hero-orb { right: -260px; top: -60px; }
+#s17.active .hero-orb { animation: orbIn 1.4s cubic-bezier(.2,.7,.2,1) both; }
