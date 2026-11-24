@@ -334,3 +334,4 @@ html[data-preview] #progress, html[data-preview] #help, html[data-preview] #note
 
 /* big answer/incident numbers: proportional figures so '.' and ',' don't leave gaps */
 .atile .count, .bcard .count { font-variant-numeric: normal; }
+.tight { letter-spacing: -.06em; margin-left: -.05em; }

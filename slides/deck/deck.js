@@ -142,10 +142,12 @@
     const to = parseFloat(el.dataset.to), d = +(el.dataset.dec || 0), dur = +(el.dataset.dur || 1400);
     const pre = el.dataset.pre || '', suf = el.dataset.suf || '';
     const t0 = performance.now(), delay = +(el.dataset.delay || 0);
-    el.textContent = pre + fmt(0, d) + suf;
+    // big numbers on slides 16-17: tighten the font's wide '.' and ',' (see .tight in deck.css)
+    const tight = el.closest('.atile, .bcard'); const put = s => { if (tight) el.innerHTML = s.replace(/([.,])/g, '<span class="tight">$1</span>'); else el.textContent = s; };
+    put(pre + fmt(0, d) + suf);
     const tick = t => {
       const p = Math.min(1, Math.max(0, (t - t0 - delay) / dur)), e = 1 - Math.pow(1 - p, 3);
-      el.textContent = pre + fmt(to * e, d) + suf;
+      put(pre + fmt(to * e, d) + suf);
       if (p < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
