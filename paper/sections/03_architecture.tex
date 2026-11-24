@@ -8,7 +8,8 @@ in Docker Compose and start with one command.
 % A sideways A4 page: the diagram is too wide to read at text width (rotating package, main.tex).
 \begin{sidewaysfigure}
   \centering
-  \includegraphics[width=\linewidth]{architecture.pdf}
+  % Wider than the text block (into the side margins of the turned page) so the labels are larger.
+  \makebox[\linewidth][c]{\includegraphics[width=27cm]{architecture.pdf}}
   \caption{End-to-end architecture. Arrow colour shows the path (blue stream, green batch, brown
     reference, black shared); solid arrows move data, dashed arrows are schedules or task order; numbers
     in brackets are Kafka partitions.}

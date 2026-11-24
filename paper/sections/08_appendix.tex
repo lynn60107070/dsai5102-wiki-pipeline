@@ -49,16 +49,44 @@ the lighter LocalExecutor, which needs no Redis or Celery workers on a single ma
   \label{fig:lineage}
 \end{figure}
 
-% The dashboard is a page tall, so it gets its own appendix page; section 6 refers to it.
+\subsection{Performance and testing}\label{app:perf-tests}
+
+\paragraph{Performance.} All figures were measured on the one laptop that ran the stack (dates in brackets). \emph{Latency:}
+an edit reaches the live tile about two to three minutes after it happens, because a minute is counted
+only once every partition is two minutes past it; it reaches the lake within the sinks' five-minute flush;
+and a finished hour reaches the hourly tiles at the next warehouse run, 20 minutes past the hour.
+\emph{Warehouse:} a full \texttt{dbt build} took 19\,s on 630{,}405 edits (25 Oct); the incremental
+\texttt{fact\_edit} took 1.3\,s instead of 6.5\,s for a full rebuild; with the pageview models on and
+one model at a time, a full build took about 30\,s, and each mart alone 0.5--1.7\,s (27 Oct). Running
+models in parallel under a 1.5\,GB memory cap was slower, not faster: the marts spilled to disk and one
+took 510\,s, which is why dbt runs with one thread.
+
+\paragraph{Testing.} Besides the 35 dbt data tests, 43 Python unit tests cover the logic that runs outside dbt: event
+validation and privacy (personal fields dropped), bot and human splitting, per-minute windows with
+per-partition watermarks, gap detection and replay, the rule that offsets are not committed after a failed
+send, the pageview line parser, and the Metabase setup script. They need no running services and run with
+\texttt{python -m unittest} in under a second. GitHub Actions runs them on every push and pull request,
+together with a compile check of the DAGs, a check of the Compose file and \texttt{dbt parse}.
+
+% The dashboard is two pages tall at text width, so it is split between its tile rows into two pages
+% (\ContinuedFloat, caption package); section 6 refers to it.
 \clearpage
 \section{Full dashboard}\label{app:dashboard}
 \begin{figure}[!h]
   \centering
-  \includegraphics[height=0.8\textheight]{06_dashboard.png}
+  \includegraphics[width=\linewidth]{06_dashboard_top.png}
   \caption{The \emph{Wikipedia edits} dashboard over the analysis window, 28 Oct -- 11 Nov 2026 (UTC),
-    taken on 23 Nov. The date filter does not apply to the live tile, which always shows the last three hours
-    of the stream (here 23 Nov).}
+    taken on 23 Nov (continued on the next page). The date filter does not apply to the live tile, which
+    always shows the last three hours of the stream (here 23 Nov).}
   \label{fig:dashboard}
+\end{figure}
+
+\clearpage
+\begin{figure}[!h]
+  \ContinuedFloat
+  \centering
+  \includegraphics[width=\linewidth]{06_dashboard_bottom.png}
+  \caption{(continued) The spikes table and the data-completeness tile.}
 \end{figure}
 
 \clearpage
