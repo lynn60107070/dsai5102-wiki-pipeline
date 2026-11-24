@@ -193,6 +193,37 @@
     };
     s._timers = s._timers || []; s._timers.push(requestAnimationFrame(frame));
   }
+  // ---------- problem slide: glowing edits flow right and squeeze into the funnel tip; each arrival nudges the patroller ----------
+  function floodCanvas(s, canvas, onArrive) {
+    const ctx = canvas.getContext('2d'); const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = canvas.offsetWidth || 1150, H = canvas.offsetHeight || 440;
+    canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cy = H / 2, dots = []; let last = performance.now(), acc = 0, lastHit = 0;
+    const mk = x => { const bot = Math.random() < 0.486; return { x, y0: 26 + Math.random() * (H - 52), v: 150 + Math.random() * 170, ph: Math.random() * 6.3, bot, r: bot ? 3 : 3.6,
+      label: Math.random() < 0.07 ? WIKIS[Math.floor(Math.random() * WIKIS.length)] : null }; };
+    for (let i = 0; i < 46; i++) dots.push(mk(Math.random() * W * 0.85));
+    const yAt = (d, x) => { const k = Math.min(1, Math.max(0, (x - W * 0.45) / (W * 0.55))), e = k * k * (3 - 2 * k);
+      return d.y0 + (cy + (d.y0 - cy) * 0.1 - d.y0) * e + Math.sin(x / 85 + d.ph) * 5 * (1 - e); };
+    const frame = t => {
+      const dt = Math.min(0.05, (t - last) / 1000); last = t; acc += dt * 19.4;
+      while (acc >= 1) { acc -= 1; dots.push(mk(-12)); }
+      ctx.clearRect(0, 0, W, H);
+      for (let i = dots.length - 1; i >= 0; i--) {
+        const d = dots[i]; d.x += d.v * dt * (1 + 0.5 * Math.max(0, (d.x - W * 0.6) / W));
+        if (d.x > W + 8) { dots.splice(i, 1); if (onArrive && t - lastHit > 120) { lastHit = t; onArrive(); } continue; }
+        const col = d.bot ? '249,212,92' : '195,166,224', a = Math.min(1, (d.x + 12) / 120);
+        const L = 30 + d.v * 0.14, x0 = d.x - L, y = yAt(d, d.x), y0 = yAt(d, x0);
+        const g = ctx.createLinearGradient(x0, y0, d.x, y); g.addColorStop(0, 'rgba(' + col + ',0)'); g.addColorStop(1, 'rgba(' + col + ',' + 0.5 * a + ')');
+        ctx.strokeStyle = g; ctx.lineWidth = d.r * 1.2; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(d.x - L / 2, yAt(d, d.x - L / 2), d.x, y); ctx.stroke();
+        ctx.shadowColor = 'rgba(' + col + ',' + 0.9 * a + ')'; ctx.shadowBlur = 12; ctx.fillStyle = 'rgba(' + col + ',' + a + ')';
+        ctx.beginPath(); ctx.arc(d.x, y, d.r, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+        if (d.label) { ctx.fillStyle = 'rgba(201,214,227,' + 0.45 * a * Math.max(0, 1 - Math.max(0, (d.x - W * 0.55) / (W * 0.3))) + ')'; ctx.font = '13px "JetBrains Mono", Consolas, monospace'; ctx.fillText(d.label, d.x + 9, y + 4); }
+      }
+      s._timers.push(requestAnimationFrame(frame));
+    };
+    s._timers = s._timers || []; s._timers.push(requestAnimationFrame(frame));
+  }
   // ---------- title slide: a turning dotted globe; each edit pings where its wiki's language is mainly spoken ----------
   // Coarse continent outlines [lon, lat], only used to place land dots.
   const LAND = [
@@ -310,7 +341,7 @@
   // ---------- per-slide hooks ----------
   const hooks = {
     enter_s1(s) { globeCanvas(s, s.querySelector('canvas.bg')); liveCounter(s, s.querySelector('#live1')); },
-    enter_s2(s) { streamCanvas(s, s.querySelector('canvas.sub'), { lanes: [40, 400], alpha: 0.9, labelColor: '#6b7079' }); liveCounter(s, s.querySelector('#live2')); },
+    enter_s2(s) { const disc = s.querySelector('.pt-disc'); floodCanvas(s, s.querySelector('canvas.sub'), () => { disc.classList.remove('hit'); void disc.offsetWidth; disc.classList.add('hit'); }); liveCounter(s, s.querySelector('#live2')); },
     enter_s17(s) { globeCanvas(s, s.querySelector('canvas.bg'));
       // edits to Wikimedia wikis during a 15-minute talk at the window's average (25,093,717 in 15 days = 19.4/s):
       // count up to ~17,400, then keep ticking at that rate while the slide is open
