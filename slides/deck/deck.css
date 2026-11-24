@@ -291,6 +291,35 @@ table.t.compact { font-size: 15px; } table.t.compact td { padding: 7px 10px; }
 .pill.rec { background: var(--stream); } .pill.chk { background: var(--good); }
 .ans-side.shown .pill { animation: pop .4s .7s ease both; } .ans-side.shown .pill.chk { animation-delay: .9s; }
 @media (prefers-reduced-motion: reduce) { .ans *, .atile { animation-duration: .01s !important; animation-delay: 0s !important; } }
+/* slide 18: thanks + questions, as a Wikipedia article */
+.wq { position: absolute; left: 80px; top: 200px; width: 900px; z-index: 2; }
+.wq > * { opacity: 0; }
+.slide.active .wq > * { animation: riseIn .8s cubic-bezier(.2,.7,.2,1) forwards; }
+.slide.active .wq > :nth-child(2) { animation-delay: .15s; } .slide.active .wq > :nth-child(3) { animation-delay: .35s; }
+.slide.active .wq > :nth-child(4) { animation-delay: .9s; } .slide.active .wq > :nth-child(5) { animation-delay: 2.6s; } .slide.active .wq > :nth-child(6) { animation-delay: 2.9s; }
+.wq-title { white-space: nowrap; font: 400 52px/1.12 Georgia, "Linux Libertine", "Times New Roman", serif; color: var(--navy, #102A43); letter-spacing: 0; margin-top: 18px;
+  padding-bottom: 10px; border-bottom: 1px solid #A2A9B1; }
+.wq-title .cn { font: 400 20px var(--sans); color: #3366CC; margin-left: 4px; vertical-align: super; white-space: nowrap; display: inline-block; opacity: 0; transform: scale(.6); }
+.wq-title .cn i { font-style: italic; }
+.slide.active .wq-title .cn { animation: cnPop .5s cubic-bezier(.3,1.6,.5,1) 1.6s forwards; }
+@keyframes cnPop { to { opacity: 1; transform: none; } }
+.wq-from { font: italic 400 19px Georgia, serif; color: #54595D; margin-top: 8px; }
+.wq-q { margin-top: 34px; display: flex; align-items: flex-end; height: 128px; }
+.wq-q .typed { font: 800 124px/1 var(--sans); letter-spacing: -.035em; color: var(--navy, #102A43); clip-path: inset(0 100% 0 0); }
+.slide.active .wq-q .typed { animation: typeIn 1.1s steps(10, end) 1.1s forwards; }
+@keyframes typeIn { to { clip-path: inset(0 0 0 0); } }
+.wq-q .caret { width: 7px; height: 104px; background: var(--blue-fill, #509EE3); margin-left: 8px; margin-bottom: 8px; animation: blink 1s steps(1) infinite; }
+.ambox { margin-top: 34px; display: flex; gap: 16px; align-items: center; background: #F8F9FA; border: 1px solid #A2A9B1; border-left: 10px solid #3366CC;
+  padding: 14px 20px; font: 400 21px/1.35 var(--sans); color: #202122; max-width: 700px; }
+.ambox .ic { font-size: 30px; color: #3366CC; } .ambox .edit { color: #3366CC; font-size: 17px; }
+.wq-names { margin-top: 26px; font-size: 22px; }
+#s17 .wqc { opacity: 0; }
+#s17 .fc1 { left: 1000px; top: 118px; } #s17 .fc2 { left: 1120px; top: 420px; } #s17 .fc3 { left: 1010px; top: 700px; }
+#s17.active .fc1 { animation: cardIn .8s cubic-bezier(.2,.7,.2,1) 1.8s both, bob 5s ease-in-out 2.6s infinite; }
+#s17.active .fc2 { animation: cardIn .8s cubic-bezier(.2,.7,.2,1) .4s both, bob 5s ease-in-out 1.2s infinite; }
+#s17.active .fc3 { animation: cardIn .8s cubic-bezier(.2,.7,.2,1) 2.1s both, bob 5s ease-in-out 2.9s infinite; }
+#s17 .fc2 .m { font-size: 46px; color: var(--navy, #102A43); }
+#s17 .fc2 .wq-live { font-variant-numeric: tabular-nums; }
 .inc { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .inc .card { padding: 20px 22px; }
 .inc .k { font: 600 12px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--bad); margin-bottom: 6px; }
