@@ -402,3 +402,26 @@ html[data-preview] #progress, html[data-preview] #help, html[data-preview] #note
 .pvarrow::after { content: ""; position: absolute; right: -6px; top: -8px; border: 10px solid transparent; border-left: 12px solid var(--blue-fill); }
 .pvarrow span { position: absolute; top: -28px; left: 0; right: 0; text-align: center; font: 600 13px var(--sans); color: var(--blue); }
 .sm-list { padding-left: 20px; margin: 0; } .sm-list li { font-size: 15px; line-height: 1.5; margin-bottom: 6px; }
+
+/* ---------- appendix A17: relational diagram ---------- */
+.erd { width: 100%; height: auto; display: block; }
+.erd .box { fill: #fff; stroke: var(--brand-line); stroke-width: 1.5; }
+.erd .fact .box { stroke: var(--blue-fill); stroke-width: 2; }
+.erd .hd { fill: var(--brand-tint); } .erd .fact .hd { fill: var(--blue-fill); }
+.erd .tn { font: 700 17px ui-monospace, Consolas, monospace; fill: var(--brand-ink); }
+.erd .ts { font: 400 12.5px var(--sans); fill: var(--ink2); }
+.erd .fact .tn, .erd .fact .ts { fill: #fff; }
+.erd .zebra { fill: var(--brand-paper); }
+.erd .cn { font: 400 14px ui-monospace, Consolas, monospace; fill: #2a2c30; } .erd .cn.k { font-weight: 700; }
+.erd .ct { font: 400 12px var(--sans); fill: var(--ink2); }
+.erd .bg.pk { fill: #E8B23A; } .erd .bg.fk { fill: var(--blue-fill); }
+.erd .bt { font: 700 10px var(--sans); fill: #fff; }
+.erd .erl { fill: none; stroke: var(--blue-fill); stroke-width: 2; }
+.erd .erl.pv { stroke: #2e8b57; stroke-dasharray: 6 4; }
+.erd .erm { fill: var(--blue-fill); } .erd .ero { stroke: var(--brand-ink); stroke-width: 2.5; }
+.erd .gap { font: 600 12.5px var(--sans); fill: #c0504d; }
+.erleg { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 10px; font-size: 14px; color: var(--ink2); align-items: center; }
+.erleg .bgk { display: inline-block; font: 700 10px var(--sans); color: #fff; padding: 2px 6px; border-radius: 4px; margin-right: 6px; }
+.erleg .bgk.pk { background: #E8B23A; } .erleg .bgk.fk { background: var(--blue-fill); }
+.erleg .lk { display: inline-block; width: 34px; height: 0; border-top: 2.5px solid var(--blue-fill); vertical-align: middle; margin-right: 6px; }
+.erleg .lk.pv { border-top: 2.5px dashed #2e8b57; }
