@@ -367,3 +367,38 @@ html[data-preview] #progress, html[data-preview] #help, html[data-preview] #note
 /* slide 18 uses the title slide's globe, placed the same way */
 #s17 .hero-orb { right: -260px; top: -60px; }
 #s17.active .hero-orb { animation: orbIn 1.4s cubic-bezier(.2,.7,.2,1) both; }
+
+/* ---------- appendix A14-A16: lake vs lakehouse, wikis, pageview files ---------- */
+.foot .more .chipb + .chipb { margin-left: 6px; }
+.xcmp { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 18px; }
+.xc { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 22px; }
+.xc.ours { border: 2px solid var(--blue-fill); background: var(--brand-paper2); }
+.xc h4 { font: 700 20px/1.25 var(--sans); margin: 4px 0 6px; }
+.xc p { font-size: 15px; color: var(--ink2); margin-bottom: 10px; }
+.xc ul { list-style: none; padding: 0; margin: 0; }
+.xc li { font-size: 15px; line-height: 1.4; padding: 4px 0 4px 24px; position: relative; }
+.xc li.ok::before { content: "✓"; position: absolute; left: 2px; color: #2e8b57; font-weight: 700; }
+.xc li.no::before { content: "✕"; position: absolute; left: 2px; color: #c0504d; font-weight: 700; }
+.pbars { display: flex; flex-direction: column; gap: 12px; }
+.pbar { display: grid; grid-template-columns: 210px 1fr 64px 110px; align-items: center; gap: 12px; font-size: 16px; }
+.pbar .pn { font-weight: 600; } .pbar .pn i { display: block; font-style: normal; font-weight: 400; font-size: 13px; color: var(--ink2); }
+.pbar .tr { height: 22px; background: var(--brand-line-soft); border-radius: 6px; overflow: hidden; }
+.pbar .tr b { display: block; height: 100%; background: var(--brand-light); border-radius: 6px; }
+.pbar.hi .tr b { background: var(--blue-fill); }
+.pbar .pv { font-weight: 700; text-align: right; } .pbar .pb { font-size: 13px; color: var(--ink2); }
+.wid { display: flex; align-items: baseline; gap: 2px; margin-bottom: 8px; font: 600 20px var(--sans); }
+.wid .l { background: var(--blue-fill); color: #fff; padding: 2px 8px; border-radius: 6px 0 0 6px; }
+.wid .p { background: var(--brand-tint); color: var(--brand-ink); padding: 2px 8px; border-radius: 6px; }
+.wid .l + .p { border-radius: 0 6px 6px 0; }
+.wid em { font: 400 15px var(--sans); color: var(--ink2); margin-left: 12px; font-style: normal; }
+.pvflow { display: grid; grid-template-columns: 1fr 90px 1.1fr; align-items: center; }
+.pvbox { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; }
+.pvbox.src { background: var(--brand-paper); }
+.pvbox h4 { font: 700 18px/1.3 var(--sans); margin: 4px 0 6px; } .pvbox h4 em { font: 400 14px var(--sans); color: var(--ink2); font-style: normal; margin-left: 8px; }
+.pvbox p { font-size: 15px; line-height: 1.4; margin-bottom: 6px; }
+.pvbox pre { font: 13px/1.5 ui-monospace, Consolas, monospace; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin: 8px 0; white-space: pre; }
+.pvouts { display: flex; flex-direction: column; gap: 14px; }
+.pvarrow { position: relative; height: 4px; background: var(--blue-fill); margin: 0 10px; border-radius: 2px; }
+.pvarrow::after { content: ""; position: absolute; right: -6px; top: -8px; border: 10px solid transparent; border-left: 12px solid var(--blue-fill); }
+.pvarrow span { position: absolute; top: -28px; left: 0; right: 0; text-align: center; font: 600 13px var(--sans); color: var(--blue); }
+.sm-list { padding-left: 20px; margin: 0; } .sm-list li { font-size: 15px; line-height: 1.5; margin-bottom: 6px; }

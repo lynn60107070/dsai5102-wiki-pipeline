@@ -6,8 +6,8 @@
 <title>Wikipedia Live Edits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="deck.css?v=wqD">
-<link rel="stylesheet" href="theme.css?v=wqD">
+<link rel="stylesheet" href="deck.css?v=wqE">
+<link rel="stylesheet" href="theme.css?v=wqE">
 </head>
 <body>
 <div id="progress"></div>
@@ -149,7 +149,7 @@
   <aside class="notes"><b>Sumaiya · 0:30.</b> So our question: where does editing pressure (edits per wiki over time that may need review) concentrate across languages, how much of it is bots, and do spikes in readers bring edit surges? Click 3×, one decision each: which wikis need review most; how much of the volume is flagged bot work, hidden from the default review list; does a jump in readers warn of a rush of edits. <b>Trap:</b> "Does attention cause edits?" → we show timing, not cause (Details · A1).</aside>
 </section>
 <!-- ============================== 3. DATA ============================== -->
-<section class="slide" id="s3" data-apx="a2">
+<section class="slide" id="s3" data-apx="a2 a15">
   <div class="eyebrow"><b>01</b><span class="sec-name">Problem &amp; dataset</span><i class="sec-line"></i><span class="sub-name">The data</span><span class="who">Sumaiya</span></div>
   <h2>Three sources, <em>three speeds</em></h2>
   <svg viewBox="0 0 1440 400" style="position:absolute;left:80px;top:196px;width:1440px;height:400px">
@@ -202,7 +202,7 @@
   <aside class="notes"><b>Sumaiya · 1:15.</b> <i>Off the slide, say if useful:</i> stream ~20 kept events/s, can't be re-downloaded; each hourly pageview file is ~57 MB / 6.4 M rows, we keep ~193,000 + per-wiki totals; Sitematrix lists 1,073 wikis (771 edited, 347 of them Wikipedias), plus non-article pages for 364 Wikipedias as dbt seeds; duplicates were 30% of the raw zone. The sources arrive differently, which is why the pipeline has a stream path and a batch path. The stream can't be re-downloaded, so the collector runs all the time; the pageview files stay online, so missed hours can be backfilled. Click: profile. Raw 7.52 GB → clean 1.08 GB; 492 dead-letter events; pageviews for 347 of 360 hours. The only low hours (28 Oct 02–06) are just as low in the raw zone, so the drop is in the feed. <b>Trap:</b> why drop pageviews under 10? A spike needs ≥ 1,000 views, so every spike is kept (A2). <b>Handover:</b> "Lynn will show you how the pipeline turns these three sources into answers."</aside>
 </section>
 <!-- ============================== 9. ARCHITECTURE ============================== -->
-<section class="slide" id="s9" data-apx="a6">
+<section class="slide" id="s9" data-apx="a6 a14">
   <div class="eyebrow"><b>02</b><span class="sec-name">Architecture &amp; tools</span><i class="sec-line"></i><span class="sub-name">Architecture</span><span class="who">Lynn</span></div>
   <h2>Two ingestion paths, one lake, one warehouse</h2>
   <svg viewBox="0 0 1600 620" style="position:absolute;left:80px;top:205px;width:1440px;height:558px">
@@ -277,7 +277,7 @@
   <aside class="notes"><b>Lynn · 1:00.</b> Three clicks. (1) Stream path: producer reads EventStreams, Kafka carries it, the processor splits bots and humans, sinks write raw JSON and clean Parquet into MinIO. (2) Batch path: Airflow fetches each hourly pageview file and uploads Parquet to the same lake. (3) The warehouse: dbt on DuckDB builds a star schema from the lake, every hour or when new pageviews land; marts are copied into Postgres, which Metabase reads. Live-stats writes the live tile straight to Postgres. 14 services, one command. Full diagram: A6.</aside>
 </section>
 <!-- ============================== 10. TOOLS ============================== -->
-<section class="slide" id="s10" data-apx="a7">
+<section class="slide" id="s10" data-apx="a7 a14">
   <div class="eyebrow"><b>02</b><span class="sec-name">Architecture &amp; tools</span><i class="sec-line"></i><span class="sub-name">Tools and why</span><span class="who">Lynn</span></div>
   <h2>Every tool has a job, <em>and a reason</em></h2>
   <table class="t" style="margin-top:26px">
@@ -297,7 +297,7 @@
   <aside class="notes"><b>Lynn · 1:00.</b> Don't read the table: pick Kafka (replay), DuckDB (in-process, columnar), dbt (tests as a gate), Postgres (one writer). "The goal is not to use as many technologies as possible." <b>Traps:</b> why both DuckDB and Postgres (Q13), why not Spark (Q15) → A7.</aside>
 </section>
 <!-- ============================== 11. KAFKA ============================== -->
-<section class="slide" id="s11" data-apx="a8">
+<section class="slide" id="s11" data-apx="a8 a15">
   <div class="eyebrow"><b>03</b><span class="sec-name">The pipeline</span><i class="sec-line"></i><span class="sub-name">Stream ingestion</span><span class="who">Lynn</span></div>
   <h2>Not one-to-one: <em>5 topics, 4 consumer groups</em></h2>
   <svg viewBox="0 0 1000 600" style="position:absolute;left:80px;top:200px;width:1000px;height:600px">
@@ -369,7 +369,7 @@
   <aside class="notes"><b>Lynn · 0:50.</b> Click through: two independent consumer groups on wiki.raw (archive + processor); processor splits bots/humans into topics read by ONE consumer group of 2 sinks (scaling = adding containers); per-minute counts → live tile; bad events → dead-letter with the reason. Then the three guarantees. <b>Traps:</b> exactly-once? (Q5) late events? (Q6) laptop sleeps? (Q7) why key by wiki? (Q23) → A8.</aside>
 </section>
 <!-- ============================== 12. AIRFLOW ============================== -->
-<section class="slide" id="s12" data-apx="a9">
+<section class="slide" id="s12" data-apx="a9 a16">
   <div class="eyebrow"><b>03</b><span class="sec-name">The pipeline</span><i class="sec-line"></i><span class="sub-name">Batch and orchestration</span><span class="who">Lynn</span></div>
   <h2>Two DAGs run the batch path end to end</h2>
   <div style="margin-top:34px">
@@ -797,6 +797,9 @@
       <a data-go="a11"><b>A11</b>Reproducibility and the demo<span>Q18, 20, 32, 43</span></a>
       <a data-go="a12"><b>A12</b>All incidents<span>report table</span></a>
       <a data-go="a13"><b>A13</b>Limits, privacy and scale<span>Q17, 25, 30, 39</span></a>
+      <a data-go="a14"><b>A14</b>Storage: lake + warehouse, not a lakehouse<span>zones, sizes</span></a>
+      <a data-go="a15"><b>A15</b>Which wikis: 771 wikis, 48 projects<span>edit shares, keys</span></a>
+      <a data-go="a16"><b>A16</b>Batch: one hourly file → two Parquet files<span>the 10-view cut</span></a>
     </div>
     <p class="small muted" style="margin-top:26px">Keys: → / ← step, <b>D</b> details of this slide, <b>B</b> or Esc back, <b>A</b> this index, <b>O</b> overview of all slides, <b>S</b> presenter window (script, next slide, timer), <b>N</b> notes drawer, <b>F</b> full screen, ↑ ↓ scroll an appendix page.</p>
   </div>
@@ -1067,11 +1070,121 @@
   </div></div>
 </section>
 
+<section class="slide apx" id="a14" data-label="A14" data-from="s9">
+  <div class="eyebrow"><b>A14</b><span class="sec-name">for slides 6–7</span><i class="sec-line"></i></div><h2>Storage: a lake plus a warehouse, not a lakehouse</h2>
+  <div class="apx-scroll">
+    <div class="xcmp">
+      <div class="xc"><div class="lbl muted">Option 1</div><h4>Warehouse only</h4><p>Sinks write straight into database tables.</p>
+        <ul><li class="ok">Fewest parts</li><li class="no">No raw copy: a broken warehouse loses data</li><li class="no">One writer (DuckDB) for the whole stream</li></ul></div>
+      <div class="xc ours"><div class="lbl" style="color:var(--blue)">What we built</div><h4>Lake + warehouse</h4><p>Parquet files on MinIO (S3 API); dbt builds DuckDB tables that read them directly.</p>
+        <ul><li class="ok">Raw zone = replayable backup (we rebuilt the warehouse from it, 9–12 Nov)</li><li class="ok">Both paths drop files in one place</li><li class="ok">No extra services on a laptop</li><li class="no">No updates inside files, no table versions</li></ul></div>
+      <div class="xc"><div class="lbl muted">Option 3</div><h4>Lakehouse (Delta Lake, Iceberg)</h4><p>A table format on top of the lake files.</p>
+        <ul><li class="ok">Safe (ACID) writes from many writers</li><li class="ok">Updates, deletes, time travel</li><li class="no">Usually needs Spark or a catalog service</li><li class="no">Solves problems we don't have</li></ul></div>
+    </div>
+    <div class="lbl muted" style="margin:26px 0 10px">What is in our lake (MinIO bucket <code>lake</code>)</div>
+    <table class="t compact">
+      <thead><tr><th>Zone</th><th>Written by</th><th>Format and layout</th><th>Size</th></tr></thead>
+      <tr><td><code>raw/edits</code></td><td>raw sink</td><td>every event exactly as received, <code>dt=/hour=</code> folders</td><td>7.52 GB</td></tr>
+      <tr><td><code>clean/edits</code></td><td>2 clean sinks, then compaction</td><td>validated Parquet, no user names, <code>dt=/hour=</code></td><td>1.08 GB</td></tr>
+      <tr><td><code>raw/pageviews</code></td><td>Airflow <code>pageviews_hourly</code></td><td>2 Parquet files per hour (A16), <code>dt=/hour=</code></td><td>943 MB, 946 files</td></tr>
+    </table>
+    <div class="qa" style="margin-top:22px">
+      <div class="q"><h4><span>·</span>Why don't we need a table format?</h4><p>Our data is append-only: edits are added, never changed. Each hour folder has one known writer, so writers never collide, and compaction rewrites a whole hour at once. dbt and DuckDB already give tables, tests and incremental loads on top.</p></div>
+      <div class="q"><h4><span>·</span>When would we switch?</h4><p>If we needed to delete or correct rows (for example a privacy request), many writers on one table, or several engines sharing the tables. Apache Iceberg would be the next step; the folder layout would stay the same.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide apx" id="a15" data-label="A15" data-from="s3">
+  <div class="eyebrow"><b>A15</b><span class="sec-name">for slides 5 and 8</span><i class="sec-line"></i></div><h2>Which wikis? 771 wikis in 48 projects</h2>
+  <div class="apx-scroll">
+    <div class="row" style="gap:44px;align-items:flex-start">
+      <div class="col" style="flex:1.25">
+        <div class="lbl muted" style="margin-bottom:14px">Share of the 25.1 M edits, 28 Oct – 11 Nov</div>
+        <div class="pbars"><div class="pbar hi"><span class="pn">Wikipedia<i>347 wikis</i></span><span class="tr"><b style="width:100.0%"></b></span><span class="pv">33.8%</span><span class="pb">45.3% bots</span></div><div class="pbar"><span class="pn">Commons<i>1 wiki</i></span><span class="tr"><b style="width:78.1%"></b></span><span class="pv">26.4%</span><span class="pb">67.9% bots</span></div><div class="pbar"><span class="pn">Wikidata<i>1 wiki</i></span><span class="tr"><b style="width:76.9%"></b></span><span class="pv">26.0%</span><span class="pb">15.4% bots</span></div><div class="pbar"><span class="pn">Wiktionary<i>137 wikis</i></span><span class="tr"><b style="width:27.8%"></b></span><span class="pv">9.4%</span><span class="pb">89.1% bots</span></div><div class="pbar"><span class="pn">Wikisource<i>75 wikis</i></span><span class="tr"><b style="width:9.8%"></b></span><span class="pv">3.3%</span><span class="pb">80.3% bots</span></div><div class="pbar"><span class="pn">43 other projects<i>210 wikis</i></span><span class="tr"><b style="width:3.3%"></b></span><span class="pv">1.1%</span><span class="pb"></span></div></div>
+        <p class="small muted" style="margin-top:12px">From <code>mart_wiki_activity</code>. Commons and Wikidata are one wiki each, yet over half of all edits, mostly automated. That is why findings 1–4 use only the 347 Wikipedias.</p>
+      </div>
+      <div class="col" style="flex:1">
+        <div class="lbl muted" style="margin-bottom:14px">A wiki = one language of one project</div>
+        <div class="wid"><span class="l">en</span><span class="p">wiki</span><em>English · Wikipedia</em></div>
+        <div class="wid"><span class="l">fr</span><span class="p">wiktionary</span><em>French · Wiktionary</em></div>
+        <div class="wid"><span class="p">wikidatawiki</span><em>Wikidata (no language)</em></div>
+        <div class="wid"><span class="p">commonswiki</span><em>Commons: images and files</em></div>
+        <table class="t compact" style="margin-top:18px">
+          <thead><tr><th>Busiest wikis</th><th>Edits</th><th>Bots</th></tr></thead>
+          <tr><td>Commons</td><td>6.62 M</td><td>67.9%</td></tr>
+          <tr><td>Wikidata</td><td>6.52 M</td><td>15.4%</td></tr>
+          <tr><td>English Wikipedia</td><td>2.75 M</td><td>30.9%</td></tr>
+          <tr><td>English Wiktionary</td><td>1.00 M</td><td>89.6%</td></tr>
+          <tr><td>Chinese Wikisource</td><td>0.62 M</td><td>98.3%</td></tr>
+          <tr><td>Chechen Wikipedia</td><td>0.57 M</td><td>99.5%</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="qa" style="margin-top:22px">
+      <div class="q"><h4><span>·</span>Where does the list of wikis come from?</h4><p>The Sitematrix API lists all 1,073 Wikimedia wikis; siteinfo gives each Wikipedia's non-article page names. Both are saved as dbt seeds. <code>dim_wiki</code> also parses the server name (<code>en.wikipedia.org</code> → English, Wikipedia), so every wiki in the stream has a row.</p></div>
+      <div class="q"><h4><span>·</span>What does "keyed by wiki" mean in Kafka?</h4><p>Each message's key is its wiki id, and the same key always goes to the same partition, so one wiki's per-minute count stays in one place. The cost: Commons and Wikidata make some partitions busier. Fine at 20 events/s; at higher volume we would split hot keys.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide apx" id="a16" data-label="A16" data-from="s12">
+  <div class="eyebrow"><b>A16</b><span class="sec-name">for slide 9</span><i class="sec-line"></i></div><h2>Batch ingestion: one hourly file becomes two Parquet files</h2>
+  <div class="apx-scroll">
+    <div class="pvflow">
+      <div class="pvbox src">
+        <div class="lbl muted">Wikimedia dump · one file per hour</div>
+        <h4><code>pageviews-20261105-150000.gz</code></h4>
+        <p class="small muted">~57 MB, 6.4 M lines (5.25 M on Wikipedias). One line = one page and how often it was read that hour.</p>
+        <pre>en.m  Doha            412  0
+en    Taylor_Swift   9830  0
+de    Berlin           57  0
+en    Some_page         1  0
+wiki  title         views  bytes (unused)</pre>
+        <p class="small muted">Example lines. The file is streamed and filtered in memory and never stored; it stays online at Wikimedia.</p>
+      </div>
+      <div class="pvarrow"><span>fetch</span></div>
+      <div class="pvouts">
+        <div class="pvbox"><div class="lbl" style="color:var(--blue)">1 · Filtered: the details, only the big ones</div>
+          <h4><code>articles.parquet</code> <em>~193,000 rows · 2.3 MB</em></h4>
+          <p>One row per wiki × article × access, <b>only rows with ≥ 10 views</b>.</p>
+          <p class="small muted"><code>hour_ts · wiki · access · article · views</code> → <code>fact_pageviews_hourly</code>, used to find spikes (finding 5).</p></div>
+        <div class="pvbox"><div class="lbl" style="color:var(--blue)">2 · Summed: the full totals, no details</div>
+          <h4><code>wiki_totals.parquet</code> <em>one row per wiki × access · 7 KB</em></h4>
+          <p>Adds up <b>every</b> Wikipedia row, including those under 10 views.</p>
+          <p class="small muted"><code>hour_ts · wiki · access · views · articles_viewed</code> → <code>fact_wiki_views_hourly</code>: exact reader totals and the completeness tile.</p></div>
+      </div>
+    </div>
+    <div class="row" style="gap:36px;margin-top:24px;align-items:flex-start">
+      <div class="col" style="flex:1">
+        <div class="lbl muted" style="margin-bottom:10px">Why 10 views? (measured on one file, 25 Oct)</div>
+        <table class="t compact">
+          <thead><tr><th>Keep articles with…</th><th>Rows / hour</th><th>Share of views</th></tr></thead>
+          <tr><td>any views</td><td>5.25 M</td><td>100%</td></tr>
+          <tr><td>≥ 2</td><td>1.85 M</td><td>78%</td></tr>
+          <tr><td>≥ 5</td><td>498 k</td><td>55%</td></tr>
+          <tr style="font-weight:600"><td>≥ 10 (chosen)</td><td>193 k</td><td>43%</td></tr>
+        </table>
+        <p class="small muted" style="margin-top:8px">Keeping everything would be ~126 M rows a day. A spike needs ≥ 1,000 views in an hour, so no spike is lost, and the per-wiki totals keep 100% of views.</p>
+      </div>
+      <div class="col" style="flex:1">
+        <div class="lbl muted" style="margin-bottom:10px">Upload, clean-up, re-runs</div>
+        <ul class="sm-list">
+          <li><code>upload</code> writes both to <code>raw/pageviews/dt=2026-11-05/hour=14/</code>, always the same names for that hour, so a re-run <b>replaces</b> them: no duplicates.</li>
+          <li><code>cleanup</code> (a teardown task) then deletes the local copies in the Airflow container. It runs even after a failure, and a failed run still shows red.</li>
+          <li>The file named <code>…-150000</code> holds 14:00–15:00: a file is named after the hour it <i>ends</i> (checked against the Pageview API).</li>
+          <li>The upload updates an Airflow Dataset, which starts <code>warehouse_hourly</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
 </div></div>
 <div id="notes"></div>
 <div id="help" style="display:none">→ next · ← back · D details · B back · A appendix · O overview · S presenter · N notes · F full screen</div>
 <script src="vendor/chart.umd.min.js"></script>
-<script src="data.js?v=wqD"></script>
-<script src="deck.js?v=wqD"></script>
+<script src="data.js?v=wqE"></script>
+<script src="deck.js?v=wqE"></script>
 </body>
 </html>

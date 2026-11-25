@@ -32,9 +32,11 @@
   main.forEach((s, i) => s.dataset.n = i + 1);
   // appendix markers say which slides they back up, from the current order ("for slide 12", "for slides 12-14")
   slides.filter(s => s.classList.contains('apx') && s.id !== 'a0').forEach(s => {
-    const ns = main.filter(m => m.dataset.apx === s.id).map(m => +m.dataset.n);
+    const ns = main.filter(m => (m.dataset.apx || '').split(' ').includes(s.id)).map(m => +m.dataset.n);
     const el = s.querySelector('.eyebrow .sec-name'); if (!el || !ns.length) return;
-    el.textContent = ns.length === 1 ? `for slide ${ns[0]}` : `for slides ${Math.min(...ns)}–${Math.max(...ns)}`;
+    ns.sort((a, b) => a - b);
+    const run = ns[ns.length - 1] - ns[0] === ns.length - 1;  // consecutive: "5–7"; otherwise "5 and 8"
+    el.textContent = ns.length === 1 ? `for slide ${ns[0]}` : run ? `for slides ${ns[0]}–${ns[ns.length - 1]}` : `for slides ${ns.slice(0, -1).join(', ')} and ${ns[ns.length - 1]}`;
   });
   slides.forEach(s => {
     const f = document.createElement('div'); f.className = 'foot';
@@ -44,7 +46,8 @@
       html += `<span class="more"><a class="chipb" data-back>← back to slide</a><a class="chipb" data-go="a0">index</a></span>`;
       html += `<span class="pn"><b>${s.dataset.label || ''}</b></span>`;
     } else {
-      if (s.dataset.apx) html += `<span class="more">More:<a class="chipb" data-apx="${s.dataset.apx}">${byId[s.dataset.apx]?.dataset.label || ''}</a></span>`;
+      // data-apx may list several appendix pages ("a6 a14"): one chip each
+      if (s.dataset.apx) html += `<span class="more">More:${s.dataset.apx.split(' ').map(id => `<a class="chipb" data-apx="${id}">${byId[id]?.dataset.label || ''}</a>`).join('')}</span>`;
       html += `<span class="pn"><b>${s.dataset.n}</b> / ${main.length}</span>`;
     }
     f.innerHTML = html; s.appendChild(f);
@@ -144,7 +147,7 @@
     else if (k === 'End') go(main.length - 1);
     else if (k === 'n' || k === 'N') notes.classList.toggle('open');
     else if (k === 'a' || k === 'A') { if (!slides[cur].classList.contains('apx')) backStack.push(slides[cur].id); go(slides.indexOf(byId.a0), true); }
-    else if (k === 'd' || k === 'D') { const s = slides[cur]; if (s.dataset.apx) { backStack.push(s.id); go(slides.indexOf(byId[s.dataset.apx]), true); } }
+    else if (k === 'd' || k === 'D') { const s = slides[cur]; if (s.dataset.apx) { backStack.push(s.id); go(slides.indexOf(byId[s.dataset.apx.split(' ')[0]]), true); } }
     else if (k === 'b' || k === 'B' || k === 'Escape') { if (slides[cur].classList.contains('apx')) back(); }
     else if (k === 'f' || k === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
   });
